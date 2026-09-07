@@ -182,6 +182,12 @@ export function CreateReachTaskDialog({
   const setLinks: React.Dispatch<React.SetStateAction<string[]>> =
     findMode === "group" ? setGroupLinks : setPostLinks;
   const [activeWindow, setActiveWindow] = useState<string>("近两周");
+  /** 任务截止日期（时间固定 13:59:59），默认今天 */
+  const [deadline, setDeadline] = useState<Date | undefined>(() => startOfToday());
+  const [deadlineOpen, setDeadlineOpen] = useState(false);
+  /** 指定关键词语言 + 关键词翻译 */
+  const [keywordLang, setKeywordLang] = useState<string>("en");
+  const [kwTrLoading, setKwTrLoading] = useState(false);
   /** 链接批量导入弹窗 */
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");

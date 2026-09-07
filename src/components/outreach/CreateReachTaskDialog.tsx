@@ -188,6 +188,12 @@ export function CreateReachTaskDialog({
   /** 指定关键词语言 + 关键词翻译 */
   const [keywordLang, setKeywordLang] = useState<string>("en");
   const [kwTrLoading, setKwTrLoading] = useState(false);
+  /** 指定群组搜索 · 搜索目标范围（默认群内成员，可多选） */
+  const [groupScopes, setGroupScopes] = useState<GroupScope[]>(["member"]);
+  const toggleGroupScope = (v: GroupScope) =>
+    setGroupScopes((prev) =>
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
+    );
   /** 链接批量导入弹窗 */
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");

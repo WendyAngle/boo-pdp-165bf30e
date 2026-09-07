@@ -607,6 +607,8 @@ export function CreateReachTaskDialog({
         description: "请修正为 Facebook 的 http(s) 链接，或删除后再提交",
       });
     if (findMode !== "smart" && !deadline) return toast.error("请选择任务截止日期");
+    if (findMode === "group" && groupScopes.length === 0)
+      return toast.error("请选择搜索目标");
     if (targetCap <= 0)
       return toast.error(`${action}目标数量需大于 0`);
     if (needsContent && !content.trim()) return toast.error("请填写私信内容");

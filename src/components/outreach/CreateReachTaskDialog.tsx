@@ -649,9 +649,12 @@ export function CreateReachTaskDialog({
           ? `系统按推广产品与关键词自动搜索 · 活跃时间 ${activeWindow} · 关键词语言 ${
               langByCode(keywordLang)?.zh ?? keywordLang
             }`
-          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）· 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
+          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）${
+              findMode === "group" ? ` · 搜索目标 ${groupScopeLabels(groupScopes)}` : ""
+            } · 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
               langByCode(keywordLang)?.zh ?? keywordLang
             }）`,
+
 
       sendMode: "创建后立即执行",
       schedule:

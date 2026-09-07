@@ -512,20 +512,27 @@ function NewListDialog({
                 : "一行一个含区号的完整手机号（如 +8613800138000）"
             }
           />
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <UploadTemplateButton
+              label="上传模板"
+              onLoaded={(content) =>
+                setText((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${content}` : content))
+              }
+            />
             <Button
               size="sm"
               variant="ghost"
               className="h-8 text-xs text-muted-foreground"
               onClick={() => downloadContactTemplate(channel)}
             >
-              <Upload className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5" />
               下载导入模板
             </Button>
-            <span className="text-[11px] text-muted-foreground">
-              模板字段：{TEMPLATE_HEADERS[channel].join(" / ")}；数量不限，格式不正确与重复的数据将自动过滤
-            </span>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            支持上传已填写的模板文件（.csv / .txt），内容会填入上方输入框；数量不限，格式不正确与重复的数据将自动过滤。模板字段：
+            {TEMPLATE_HEADERS[channel].join(" / ")}
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

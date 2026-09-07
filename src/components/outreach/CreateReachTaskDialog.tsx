@@ -122,7 +122,7 @@ const ACTIVE_WINDOWS = ["近一周", "近两周", "近一个月", "近三个月"
 type GroupScope = "post" | "member";
 const GROUP_SCOPES: { value: GroupScope; label: string; desc: string }[] = [
   { value: "post", label: "贴文", desc: "在群内贴文正文与评论中匹配关键词" },
-  { value: "member", label: "群内成员", desc: "在群成员的发帖与评论中匹配关键词" },
+  { value: "member", label: "群内成员", desc: "搜索昵称中包含关键词的群成员" },
 ];
 const groupScopeLabels = (v: GroupScope[]) =>
   GROUP_SCOPES.filter((s) => v.includes(s.value))

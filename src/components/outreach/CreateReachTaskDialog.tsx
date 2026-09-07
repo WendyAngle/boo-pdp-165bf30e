@@ -251,6 +251,7 @@ export function CreateReachTaskDialog({
     if (!open) return;
     const l = REGION_LANG[region];
     if (l && !translated) setTargetLang(l);
+    if (l) setKeywordLang(l);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region, open]);
 

@@ -244,6 +244,7 @@ export function CreateReachTaskDialog({
     setDeadline(startOfToday());
     setDeadlineOpen(false);
     setKeywordLang("en");
+    setGroupScopes(["member"]);
     setImportOpen(false);
     setImportText("");
 

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import {
@@ -117,6 +118,17 @@ const FIND_MODES: { value: FindMode; label: string; desc: string }[] = [
 ];
 const ACTIVE_WINDOWS = ["近一周", "近两周", "近一个月", "近三个月", "近半年"] as const;
 
+/** 指定群组搜索 · 搜索目标范围 */
+type GroupScope = "post" | "member";
+const GROUP_SCOPES: { value: GroupScope; label: string; desc: string }[] = [
+  { value: "post", label: "贴文", desc: "在群内贴文正文与评论中匹配关键词" },
+  { value: "member", label: "群内成员", desc: "在群成员的发帖与评论中匹配关键词" },
+];
+const groupScopeLabels = (v: GroupScope[]) =>
+  GROUP_SCOPES.filter((s) => v.includes(s.value))
+    .map((s) => s.label)
+    .join("、");
+
 /** 任务截止时间固定为所选日期的 13:59:59 */
 const DEADLINE_CLOCK = "13:59:59";
 function startOfToday(): Date {
@@ -188,6 +200,12 @@ export function CreateReachTaskDialog({
   /** 指定关键词语言 + 关键词翻译 */
   const [keywordLang, setKeywordLang] = useState<string>("en");
   const [kwTrLoading, setKwTrLoading] = useState(false);
+  /** 指定群组搜索 · 搜索目标范围（默认群内成员，可多选） */
+  const [groupScopes, setGroupScopes] = useState<GroupScope[]>(["member"]);
+  const toggleGroupScope = (v: GroupScope) =>
+    setGroupScopes((prev) =>
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
+    );
   /** 链接批量导入弹窗 */
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -227,6 +245,7 @@ export function CreateReachTaskDialog({
     setDeadline(startOfToday());
     setDeadlineOpen(false);
     setKeywordLang("en");
+    setGroupScopes(["member"]);
     setImportOpen(false);
     setImportText("");
 
@@ -572,6 +591,7 @@ export function CreateReachTaskDialog({
     (!needsContent || content.trim().length > 0) &&
     keywords.trim().length > 0 &&
     (findMode === "smart" ? true : validLinks.length > 0 && invalidLinksCount === 0 && !!deadline) &&
+    (findMode !== "group" || groupScopes.length > 0) &&
     targetCap > 0 &&
     availableAccounts.length > 0 &&
     balance.balance >= sendCost;
@@ -588,6 +608,8 @@ export function CreateReachTaskDialog({
         description: "请修正为 Facebook 的 http(s) 链接，或删除后再提交",
       });
     if (findMode !== "smart" && !deadline) return toast.error("请选择任务截止日期");
+    if (findMode === "group" && groupScopes.length === 0)
+      return toast.error("请选择搜索目标");
     if (targetCap <= 0)
       return toast.error(`${action}目标数量需大于 0`);
     if (needsContent && !content.trim()) return toast.error("请填写私信内容");
@@ -628,9 +650,12 @@ export function CreateReachTaskDialog({
           ? `系统按推广产品与关键词自动搜索 · 活跃时间 ${activeWindow} · 关键词语言 ${
               langByCode(keywordLang)?.zh ?? keywordLang
             }`
-          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）· 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
+          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）${
+              findMode === "group" ? ` · 搜索目标 ${groupScopeLabels(groupScopes)}` : ""
+            } · 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
               langByCode(keywordLang)?.zh ?? keywordLang
             }）`,
+
 
       sendMode: "创建后立即执行",
       schedule:
@@ -1036,10 +1061,45 @@ export function CreateReachTaskDialog({
                 <p className="text-[10px] text-muted-foreground">
                   {findMode === "post"
                     ? "系统将在贴文互动用户的评论内容中匹配这些关键词。"
-                    : "系统将在群组成员的发帖与评论中匹配这些关键词。"}
+                    : "系统将在所选搜索目标的内容中匹配这些关键词。"}
                   搜索按「{langByCode(keywordLang)?.zh ?? keywordLang}」语言执行，可一键翻译。
                 </p>
               </div>
+
+              {findMode === "group" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    搜索目标 * <span className="text-[10px]">（可多选）</span>
+                  </Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {GROUP_SCOPES.map((s) => {
+                      const checked = groupScopes.includes(s.value);
+                      return (
+                        <button
+                          key={s.value}
+                          type="button"
+                          onClick={() => toggleGroupScope(s.value)}
+                          className={`flex items-start gap-2 rounded-md border p-2.5 text-left transition-colors ${
+                            checked ? "border-primary bg-primary/5" : "hover:bg-accent"
+                          }`}
+                        >
+                          <Checkbox checked={checked} className="pointer-events-none mt-0.5" />
+                          <span className="space-y-0.5">
+                            <span className="block text-xs font-medium">{s.label}</span>
+                            <span className="block text-[10px] text-muted-foreground">
+                              {s.desc}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    默认仅搜索群内成员；至少选择一项。当前：
+                    {groupScopes.length > 0 ? groupScopeLabels(groupScopes) : "未选择"}
+                  </p>
+                </div>
+              )}
 
             </div>
           )}

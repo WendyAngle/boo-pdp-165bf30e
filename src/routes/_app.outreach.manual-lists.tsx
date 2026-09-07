@@ -454,7 +454,7 @@ function AppendPanel({
           追加
         </Button>
         <UploadTemplateButton
-          label="上传模板"
+          label="批量导入"
           onLoaded={(content) =>
             setText((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${content}` : content))
           }

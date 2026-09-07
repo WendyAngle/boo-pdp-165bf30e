@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Sparkles, Loader2, Send, Zap, Wand2, Languages, Package, X, Plus, Check, Upload, Download } from "lucide-react";
+import { Sparkles, Loader2, Send, Zap, Wand2, Languages, Package, X, Plus, Check, Upload, Download, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 import {
@@ -115,6 +117,22 @@ const FIND_MODES: { value: FindMode; label: string; desc: string }[] = [
 ];
 const ACTIVE_WINDOWS = ["近一周", "近两周", "近一个月", "近三个月", "近半年"] as const;
 
+/** 任务截止时间固定为所选日期的 13:59:59 */
+const DEADLINE_CLOCK = "13:59:59";
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function formatDeadline(d: Date | undefined): string {
+  return d ? `${format(d, "yyyy-MM-dd")} ${DEADLINE_CLOCK}` : "";
+}
+
+/** 关键词语言候选（含中文） */
+const KEYWORD_LANGS = LANGUAGES;
+
+
+
 /** 链接格式校验：必须为 Facebook 域名的 http(s) 链接且包含有效路径 */
 function isValidFacebookLink(s: string): boolean {
   const v = s.trim();
@@ -164,6 +182,12 @@ export function CreateReachTaskDialog({
   const setLinks: React.Dispatch<React.SetStateAction<string[]>> =
     findMode === "group" ? setGroupLinks : setPostLinks;
   const [activeWindow, setActiveWindow] = useState<string>("近两周");
+  /** 任务截止日期（时间固定 13:59:59），默认今天 */
+  const [deadline, setDeadline] = useState<Date | undefined>(() => startOfToday());
+  const [deadlineOpen, setDeadlineOpen] = useState(false);
+  /** 指定关键词语言 + 关键词翻译 */
+  const [keywordLang, setKeywordLang] = useState<string>("en");
+  const [kwTrLoading, setKwTrLoading] = useState(false);
   /** 链接批量导入弹窗 */
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -200,6 +224,9 @@ export function CreateReachTaskDialog({
     setPostLinks([""]);
     setGroupLinks([""]);
     setActiveWindow("近两周");
+    setDeadline(startOfToday());
+    setDeadlineOpen(false);
+    setKeywordLang("en");
     setImportOpen(false);
     setImportText("");
 
@@ -224,6 +251,7 @@ export function CreateReachTaskDialog({
     if (!open) return;
     const l = REGION_LANG[region];
     if (l && !translated) setTargetLang(l);
+    if (l) setKeywordLang(l);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [region, open]);
 
@@ -403,6 +431,41 @@ export function CreateReachTaskDialog({
     }
   }
 
+  /** 将已填写的关键词翻译为「指定关键词语言」（免费） */
+  async function handleTranslateKeywords(code = keywordLang) {
+    const list = keywords
+      .split(/[,，]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (list.length === 0) return toast.error("请先填写关键词");
+    const opt = langByCode(code);
+    if (!opt) return;
+    setKwTrLoading(true);
+    try {
+      const res = await callTranslate({
+        data: {
+          text: list.join("\n"),
+          targetLanguageName: opt.en,
+          tone: "friendly",
+        },
+      });
+      const out = (res.content ?? "")
+        .split(/\n+/)
+        .map((s) => s.replace(/^[\d.、-]+\s*/, "").trim())
+        .filter(Boolean);
+      if (out.length === 0) throw new Error("未返回可用译文");
+      setKeywords(Array.from(new Set(out)).join(", "));
+      toast.success(`关键词已翻译为${opt.zh}（免费）`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error("关键词翻译失败", { description: msg });
+    } finally {
+      setKwTrLoading(false);
+    }
+  }
+
+
+
   /** 格式校验通过的链接（用于提交与计费口径） */
   const validLinks = links.map((l) => l.trim()).filter(Boolean).filter(isValidFacebookLink);
   /** 非空但格式不正确的链接数量（用于提交前拦截提示） */
@@ -507,9 +570,8 @@ export function CreateReachTaskDialog({
     !overLimit &&
     !!name.trim() &&
     (!needsContent || content.trim().length > 0) &&
-    (findMode === "smart"
-      ? keywords.trim().length > 0
-      : validLinks.length > 0 && invalidLinksCount === 0) &&
+    keywords.trim().length > 0 &&
+    (findMode === "smart" ? true : validLinks.length > 0 && invalidLinksCount === 0 && !!deadline) &&
     targetCap > 0 &&
     availableAccounts.length > 0 &&
     balance.balance >= sendCost;
@@ -517,13 +579,15 @@ export function CreateReachTaskDialog({
 
   function handleConfirm() {
     if (!name.trim()) return toast.error("请填写任务名");
-    if (findMode === "smart" && !keywords.trim()) return toast.error("请填写目标关键词");
+    if (!keywords.trim())
+      return toast.error(findMode === "smart" ? "请填写目标关键词" : "请填写搜索关键词");
     if (findMode !== "smart" && validLinks.length === 0)
       return toast.error(findMode === "post" ? "请填写贴文链接" : "请填写群组链接");
     if (findMode !== "smart" && invalidLinksCount > 0)
       return toast.error(`${invalidLinksCount} 条链接格式不正确`, {
         description: "请修正为 Facebook 的 http(s) 链接，或删除后再提交",
       });
+    if (findMode !== "smart" && !deadline) return toast.error("请选择任务截止日期");
     if (targetCap <= 0)
       return toast.error(`${action}目标数量需大于 0`);
     if (needsContent && !content.trim()) return toast.error("请填写私信内容");
@@ -561,13 +625,18 @@ export function CreateReachTaskDialog({
       accounts: availableAccounts.map((a) => a.handle || a.displayName),
       targetSource:
         findMode === "smart"
-          ? "系统按推广产品与关键词自动搜索"
-          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）· 活跃时间 ${activeWindow}${
-              keywords.trim() ? ` · 关键词 ${keywords.trim()}` : ""
-            }`,
+          ? `系统按推广产品与关键词自动搜索 · 活跃时间 ${activeWindow} · 关键词语言 ${
+              langByCode(keywordLang)?.zh ?? keywordLang
+            }`
+          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）· 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
+              langByCode(keywordLang)?.zh ?? keywordLang
+            }）`,
 
       sendMode: "创建后立即执行",
-      schedule: "创建后立即执行",
+      schedule:
+        findMode === "smart"
+          ? "创建后立即执行"
+          : `创建后立即执行 · 截止 ${formatDeadline(deadline)}`,
       sourceZh: content.trim(),
       targetLang,
       sendContent: finalContent,
@@ -882,52 +951,182 @@ export function CreateReachTaskDialog({
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
-                    {findMode === "post" ? "搜索关键词" : "群内搜索关键词"}
-                    <span className="text-[10px]">（选填，英文逗号分隔）</span>
-                  </Label>
-                  <Input
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    placeholder="例如：price, MOQ, 采购"
-                  />
+                  <Label className="text-xs text-muted-foreground">任务截止日期 *</Label>
+                  <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={`w-full justify-start font-normal ${
+                          deadline ? "" : "text-muted-foreground"
+                        }`}
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                        {deadline ? formatDeadline(deadline) : "选择截止日期"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={deadline}
+                        onSelect={(d) => {
+                          setDeadline(d ?? undefined);
+                          if (d) setDeadlineOpen(false);
+                        }}
+                        disabled={{ before: startOfToday() }}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <p className="text-[10px] text-muted-foreground">
-                    {findMode === "post"
-                      ? "留空则系统自动选取活跃时间段内的潜在目标"
-                      : "留空则采集该群组内全部活跃目标。"}
+                    截止时间固定为所选日期的 {DEADLINE_CLOCK}，到点后未执行完的目标自动终止。
                   </p>
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label className="text-xs text-muted-foreground">
+                    {findMode === "post" ? "搜索关键词" : "群内搜索关键词"} *
+                    <span className="text-[10px]">（英文逗号分隔）</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={keywordLang}
+                      onValueChange={(v) => {
+                        setKeywordLang(v);
+                        if (keywords.trim()) void handleTranslateKeywords(v);
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-[140px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[280px]">
+                        {KEYWORD_LANGS.map((l) => (
+                          <SelectItem key={l.code} value={l.code}>
+                            {l.flag} {l.zh}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1"
+                      disabled={kwTrLoading || !keywords.trim()}
+                      onClick={() => void handleTranslateKeywords()}
+                    >
+                      {kwTrLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Languages className="h-3.5 w-3.5 text-primary" />
+                      )}
+                      翻译
+                      <span className="text-[11px] text-emerald-600">免费</span>
+                    </Button>
+                  </div>
+                </div>
+                <Input
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="例如：price, MOQ, 采购"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  {findMode === "post"
+                    ? "系统将在贴文互动用户的评论内容中匹配这些关键词。"
+                    : "系统将在群组成员的发帖与评论中匹配这些关键词。"}
+                  搜索按「{langByCode(keywordLang)?.zh ?? keywordLang}」语言执行，可一键翻译。
+                </p>
+              </div>
+
             </div>
           )}
 
           {findMode === "smart" && (
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
+            <div className="space-y-1.5 pb-1">
+              <Label className="text-xs text-muted-foreground">目标活跃时间 *</Label>
+              <Select value={activeWindow} onValueChange={setActiveWindow}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACTIVE_WINDOWS.map((w) => (
+                    <SelectItem key={w} value={w}>
+                      {w}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">
+                仅推荐在该时间范围内有活跃行为的目标账号。
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <Label className="text-xs text-muted-foreground">
                 目标关键词 * <span className="text-[10px]">（英文逗号分隔）</span>
               </Label>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={recommendKeywords}
-                disabled={kwLoading || promoProducts.length === 0}
-                title={
-                  promoProducts.length === 0
-                    ? "请先选择推广产品，AI 将按产品推荐关键词"
-                    : undefined
-                }
-                className="h-7 gap-1"
-              >
-                {kwLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Wand2 className="h-3.5 w-3.5 text-primary" />
-                )}
-                {kwLoading ? "推荐中…" : "AI 推荐"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={keywordLang}
+                  onValueChange={(v) => {
+                    setKeywordLang(v);
+                    if (keywords.trim()) void handleTranslateKeywords(v);
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-[140px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[280px]">
+                    {KEYWORD_LANGS.map((l) => (
+                      <SelectItem key={l.code} value={l.code}>
+                        {l.flag} {l.zh}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1"
+                  disabled={kwTrLoading || !keywords.trim()}
+                  onClick={() => void handleTranslateKeywords()}
+                >
+                  {kwTrLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Languages className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  翻译
+                  <span className="text-[11px] text-emerald-600">免费</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={recommendKeywords}
+                  disabled={kwLoading || promoProducts.length === 0}
+                  title={
+                    promoProducts.length === 0
+                      ? "请先选择推广产品，AI 将按产品推荐关键词"
+                      : undefined
+                  }
+                  className="h-7 gap-1"
+                >
+                  {kwLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {kwLoading ? "推荐中…" : "AI 推荐"}
+                </Button>
+              </div>
             </div>
+
             <Textarea
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}

@@ -374,6 +374,54 @@ function useImportBox(channel: ManualChannel, existing: string[]) {
   return { text, setText, collect };
 }
 
+/** 上传已填写的导入模板（CSV / TXT），内容合并到输入框 */
+function UploadTemplateButton({
+  onLoaded,
+  label = "上传模板",
+}: {
+  onLoaded: (content: string) => void;
+  label?: string;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-8"
+        onClick={() => fileRef.current?.click()}
+      >
+        <Upload className="h-3.5 w-3.5" />
+        {label}
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".csv,.txt"
+        className="hidden"
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (!f) return;
+          try {
+            const content = (await f.text()).replace(/^\uFEFF/, "");
+            if (!content.trim()) {
+              toast.error("文件内容为空");
+              return;
+            }
+            onLoaded(content);
+            toast.success(`已读取文件「${f.name}」，请确认后提交`);
+          } catch {
+            toast.error("文件读取失败，请重试");
+          }
+        }}
+      />
+    </>
+  );
+}
+
+
 function AppendPanel({
   listId,
   channel,

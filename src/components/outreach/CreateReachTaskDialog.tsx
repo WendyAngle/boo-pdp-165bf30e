@@ -570,9 +570,8 @@ export function CreateReachTaskDialog({
     !overLimit &&
     !!name.trim() &&
     (!needsContent || content.trim().length > 0) &&
-    (findMode === "smart"
-      ? keywords.trim().length > 0
-      : validLinks.length > 0 && invalidLinksCount === 0) &&
+    keywords.trim().length > 0 &&
+    (findMode === "smart" ? true : validLinks.length > 0 && invalidLinksCount === 0 && !!deadline) &&
     targetCap > 0 &&
     availableAccounts.length > 0 &&
     balance.balance >= sendCost;
@@ -580,13 +579,15 @@ export function CreateReachTaskDialog({
 
   function handleConfirm() {
     if (!name.trim()) return toast.error("请填写任务名");
-    if (findMode === "smart" && !keywords.trim()) return toast.error("请填写目标关键词");
+    if (!keywords.trim())
+      return toast.error(findMode === "smart" ? "请填写目标关键词" : "请填写搜索关键词");
     if (findMode !== "smart" && validLinks.length === 0)
       return toast.error(findMode === "post" ? "请填写贴文链接" : "请填写群组链接");
     if (findMode !== "smart" && invalidLinksCount > 0)
       return toast.error(`${invalidLinksCount} 条链接格式不正确`, {
         description: "请修正为 Facebook 的 http(s) 链接，或删除后再提交",
       });
+    if (findMode !== "smart" && !deadline) return toast.error("请选择任务截止日期");
     if (targetCap <= 0)
       return toast.error(`${action}目标数量需大于 0`);
     if (needsContent && !content.trim()) return toast.error("请填写私信内容");

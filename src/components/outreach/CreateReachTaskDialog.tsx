@@ -590,6 +590,7 @@ export function CreateReachTaskDialog({
     (!needsContent || content.trim().length > 0) &&
     keywords.trim().length > 0 &&
     (findMode === "smart" ? true : validLinks.length > 0 && invalidLinksCount === 0 && !!deadline) &&
+    (findMode !== "group" || groupScopes.length > 0) &&
     targetCap > 0 &&
     availableAccounts.length > 0 &&
     balance.balance >= sendCost;

@@ -224,6 +224,9 @@ export function CreateReachTaskDialog({
     setPostLinks([""]);
     setGroupLinks([""]);
     setActiveWindow("近两周");
+    setDeadline(startOfToday());
+    setDeadlineOpen(false);
+    setKeywordLang("en");
     setImportOpen(false);
     setImportText("");
 

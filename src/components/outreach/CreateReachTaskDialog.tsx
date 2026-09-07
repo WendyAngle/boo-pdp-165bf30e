@@ -1046,31 +1046,87 @@ export function CreateReachTaskDialog({
 
           {findMode === "smart" && (
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
+            <div className="space-y-1.5 pb-1">
+              <Label className="text-xs text-muted-foreground">目标活跃时间 *</Label>
+              <Select value={activeWindow} onValueChange={setActiveWindow}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACTIVE_WINDOWS.map((w) => (
+                    <SelectItem key={w} value={w}>
+                      {w}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[10px] text-muted-foreground">
+                仅推荐在该时间范围内有活跃行为的目标账号。
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <Label className="text-xs text-muted-foreground">
                 目标关键词 * <span className="text-[10px]">（英文逗号分隔）</span>
               </Label>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={recommendKeywords}
-                disabled={kwLoading || promoProducts.length === 0}
-                title={
-                  promoProducts.length === 0
-                    ? "请先选择推广产品，AI 将按产品推荐关键词"
-                    : undefined
-                }
-                className="h-7 gap-1"
-              >
-                {kwLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Wand2 className="h-3.5 w-3.5 text-primary" />
-                )}
-                {kwLoading ? "推荐中…" : "AI 推荐"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={keywordLang}
+                  onValueChange={(v) => {
+                    setKeywordLang(v);
+                    if (keywords.trim()) void handleTranslateKeywords(v);
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-[140px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[280px]">
+                    {KEYWORD_LANGS.map((l) => (
+                      <SelectItem key={l.code} value={l.code}>
+                        {l.flag} {l.zh}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1"
+                  disabled={kwTrLoading || !keywords.trim()}
+                  onClick={() => void handleTranslateKeywords()}
+                >
+                  {kwTrLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Languages className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  翻译
+                  <span className="text-[11px] text-emerald-600">免费</span>
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={recommendKeywords}
+                  disabled={kwLoading || promoProducts.length === 0}
+                  title={
+                    promoProducts.length === 0
+                      ? "请先选择推广产品，AI 将按产品推荐关键词"
+                      : undefined
+                  }
+                  className="h-7 gap-1"
+                >
+                  {kwLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-3.5 w-3.5 text-primary" />
+                  )}
+                  {kwLoading ? "推荐中…" : "AI 推荐"}
+                </Button>
+              </div>
             </div>
+
             <Textarea
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}

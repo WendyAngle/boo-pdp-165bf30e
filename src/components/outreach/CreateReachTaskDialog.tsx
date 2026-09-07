@@ -1060,10 +1060,45 @@ export function CreateReachTaskDialog({
                 <p className="text-[10px] text-muted-foreground">
                   {findMode === "post"
                     ? "系统将在贴文互动用户的评论内容中匹配这些关键词。"
-                    : "系统将在群组成员的发帖与评论中匹配这些关键词。"}
+                    : "系统将在所选搜索目标的内容中匹配这些关键词。"}
                   搜索按「{langByCode(keywordLang)?.zh ?? keywordLang}」语言执行，可一键翻译。
                 </p>
               </div>
+
+              {findMode === "group" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">
+                    搜索目标 * <span className="text-[10px]">（可多选）</span>
+                  </Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {GROUP_SCOPES.map((s) => {
+                      const checked = groupScopes.includes(s.value);
+                      return (
+                        <button
+                          key={s.value}
+                          type="button"
+                          onClick={() => toggleGroupScope(s.value)}
+                          className={`flex items-start gap-2 rounded-md border p-2.5 text-left transition-colors ${
+                            checked ? "border-primary bg-primary/5" : "hover:bg-accent"
+                          }`}
+                        >
+                          <Checkbox checked={checked} className="pointer-events-none mt-0.5" />
+                          <span className="space-y-0.5">
+                            <span className="block text-xs font-medium">{s.label}</span>
+                            <span className="block text-[10px] text-muted-foreground">
+                              {s.desc}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    默认仅搜索群内成员；至少选择一项。当前：
+                    {groupScopes.length > 0 ? groupScopeLabels(groupScopes) : "未选择"}
+                  </p>
+                </div>
+              )}
 
             </div>
           )}

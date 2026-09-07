@@ -441,7 +441,7 @@ function AppendPanel({
         placeholder={channel === "email" ? "一行一个邮箱，追加到本名单" : "一行一个含区号手机号，追加到本名单"}
         className="text-xs bg-background"
       />
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
           className="h-8"
@@ -453,6 +453,12 @@ function AppendPanel({
         >
           追加
         </Button>
+        <UploadTemplateButton
+          label="上传模板"
+          onLoaded={(content) =>
+            setText((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${content}` : content))
+          }
+        />
         <Button
           size="sm"
           variant="ghost"

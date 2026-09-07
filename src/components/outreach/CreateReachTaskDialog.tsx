@@ -951,22 +951,96 @@ export function CreateReachTaskDialog({
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">
-                    {findMode === "post" ? "搜索关键词" : "群内搜索关键词"}
-                    <span className="text-[10px]">（选填，英文逗号分隔）</span>
-                  </Label>
-                  <Input
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    placeholder="例如：price, MOQ, 采购"
-                  />
+                  <Label className="text-xs text-muted-foreground">任务截止日期 *</Label>
+                  <Popover open={deadlineOpen} onOpenChange={setDeadlineOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={`w-full justify-start font-normal ${
+                          deadline ? "" : "text-muted-foreground"
+                        }`}
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                        {deadline ? formatDeadline(deadline) : "选择截止日期"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={deadline}
+                        onSelect={(d) => {
+                          setDeadline(d ?? undefined);
+                          if (d) setDeadlineOpen(false);
+                        }}
+                        disabled={{ before: startOfToday() }}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <p className="text-[10px] text-muted-foreground">
-                    {findMode === "post"
-                      ? "留空则系统自动选取活跃时间段内的潜在目标"
-                      : "留空则采集该群组内全部活跃目标。"}
+                    截止时间固定为所选日期的 {DEADLINE_CLOCK}，到点后未执行完的目标自动终止。
                   </p>
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Label className="text-xs text-muted-foreground">
+                    {findMode === "post" ? "搜索关键词" : "群内搜索关键词"} *
+                    <span className="text-[10px]">（英文逗号分隔）</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={keywordLang}
+                      onValueChange={(v) => {
+                        setKeywordLang(v);
+                        if (keywords.trim()) void handleTranslateKeywords(v);
+                      }}
+                    >
+                      <SelectTrigger className="h-7 w-[140px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[280px]">
+                        {KEYWORD_LANGS.map((l) => (
+                          <SelectItem key={l.code} value={l.code}>
+                            {l.flag} {l.zh}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-7 gap-1"
+                      disabled={kwTrLoading || !keywords.trim()}
+                      onClick={() => void handleTranslateKeywords()}
+                    >
+                      {kwTrLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Languages className="h-3.5 w-3.5 text-primary" />
+                      )}
+                      翻译
+                      <span className="text-[11px] text-emerald-600">免费</span>
+                    </Button>
+                  </div>
+                </div>
+                <Input
+                  value={keywords}
+                  onChange={(e) => setKeywords(e.target.value)}
+                  placeholder="例如：price, MOQ, 采购"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  {findMode === "post"
+                    ? "系统将在贴文互动用户的评论内容中匹配这些关键词。"
+                    : "系统将在群组成员的发帖与评论中匹配这些关键词。"}
+                  搜索按「{langByCode(keywordLang)?.zh ?? keywordLang}」语言执行，可一键翻译。
+                </p>
+              </div>
+
             </div>
           )}
 

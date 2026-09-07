@@ -431,6 +431,41 @@ export function CreateReachTaskDialog({
     }
   }
 
+  /** 将已填写的关键词翻译为「指定关键词语言」（免费） */
+  async function handleTranslateKeywords(code = keywordLang) {
+    const list = keywords
+      .split(/[,，]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (list.length === 0) return toast.error("请先填写关键词");
+    const opt = langByCode(code);
+    if (!opt) return;
+    setKwTrLoading(true);
+    try {
+      const res = await callTranslate({
+        data: {
+          text: list.join("\n"),
+          targetLanguageName: opt.en,
+          tone: "friendly",
+        },
+      });
+      const out = (res.content ?? "")
+        .split(/\n+/)
+        .map((s) => s.replace(/^[\d.、-]+\s*/, "").trim())
+        .filter(Boolean);
+      if (out.length === 0) throw new Error("未返回可用译文");
+      setKeywords(Array.from(new Set(out)).join(", "));
+      toast.success(`关键词已翻译为${opt.zh}（免费）`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      toast.error("关键词翻译失败", { description: msg });
+    } finally {
+      setKwTrLoading(false);
+    }
+  }
+
+
+
   /** 格式校验通过的链接（用于提交与计费口径） */
   const validLinks = links.map((l) => l.trim()).filter(Boolean).filter(isValidFacebookLink);
   /** 非空但格式不正确的链接数量（用于提交前拦截提示） */

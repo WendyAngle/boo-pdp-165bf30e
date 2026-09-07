@@ -117,6 +117,22 @@ const FIND_MODES: { value: FindMode; label: string; desc: string }[] = [
 ];
 const ACTIVE_WINDOWS = ["近一周", "近两周", "近一个月", "近三个月", "近半年"] as const;
 
+/** 任务截止时间固定为所选日期的 13:59:59 */
+const DEADLINE_CLOCK = "13:59:59";
+function startOfToday(): Date {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function formatDeadline(d: Date | undefined): string {
+  return d ? `${format(d, "yyyy-MM-dd")} ${DEADLINE_CLOCK}` : "";
+}
+
+/** 关键词语言候选（含中文） */
+const KEYWORD_LANGS = LANGUAGES;
+
+
+
 /** 链接格式校验：必须为 Facebook 域名的 http(s) 链接且包含有效路径 */
 function isValidFacebookLink(s: string): boolean {
   const v = s.trim();

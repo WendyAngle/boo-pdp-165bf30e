@@ -117,6 +117,17 @@ const FIND_MODES: { value: FindMode; label: string; desc: string }[] = [
 ];
 const ACTIVE_WINDOWS = ["近一周", "近两周", "近一个月", "近三个月", "近半年"] as const;
 
+/** 指定群组搜索 · 搜索目标范围 */
+type GroupScope = "post" | "member";
+const GROUP_SCOPES: { value: GroupScope; label: string; desc: string }[] = [
+  { value: "post", label: "贴文", desc: "在群内贴文正文与评论中匹配关键词" },
+  { value: "member", label: "群内成员", desc: "在群成员的发帖与评论中匹配关键词" },
+];
+const groupScopeLabels = (v: GroupScope[]) =>
+  GROUP_SCOPES.filter((s) => v.includes(s.value))
+    .map((s) => s.label)
+    .join("、");
+
 /** 任务截止时间固定为所选日期的 13:59:59 */
 const DEADLINE_CLOCK = "13:59:59";
 function startOfToday(): Date {

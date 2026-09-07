@@ -625,13 +625,18 @@ export function CreateReachTaskDialog({
       accounts: availableAccounts.map((a) => a.handle || a.displayName),
       targetSource:
         findMode === "smart"
-          ? "系统按推广产品与关键词自动搜索"
-          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）· 活跃时间 ${activeWindow}${
-              keywords.trim() ? ` · 关键词 ${keywords.trim()}` : ""
-            }`,
+          ? `系统按推广产品与关键词自动搜索 · 活跃时间 ${activeWindow} · 关键词语言 ${
+              langByCode(keywordLang)?.zh ?? keywordLang
+            }`
+          : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）· 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
+              langByCode(keywordLang)?.zh ?? keywordLang
+            }）`,
 
       sendMode: "创建后立即执行",
-      schedule: "创建后立即执行",
+      schedule:
+        findMode === "smart"
+          ? "创建后立即执行"
+          : `创建后立即执行 · 截止 ${formatDeadline(deadline)}`,
       sourceZh: content.trim(),
       targetLang,
       sendContent: finalContent,

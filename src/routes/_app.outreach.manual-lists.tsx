@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, ListChecks, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
@@ -374,6 +374,54 @@ function useImportBox(channel: ManualChannel, existing: string[]) {
   return { text, setText, collect };
 }
 
+/** 上传已填写的导入模板（CSV / TXT），内容合并到输入框 */
+function UploadTemplateButton({
+  onLoaded,
+  label = "上传模板",
+}: {
+  onLoaded: (content: string) => void;
+  label?: string;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  return (
+    <>
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="h-8"
+        onClick={() => fileRef.current?.click()}
+      >
+        <Upload className="h-3.5 w-3.5" />
+        {label}
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".csv,.txt"
+        className="hidden"
+        onChange={async (e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (!f) return;
+          try {
+            const content = (await f.text()).replace(/^\uFEFF/, "");
+            if (!content.trim()) {
+              toast.error("文件内容为空");
+              return;
+            }
+            onLoaded(content);
+            toast.success(`已读取文件「${f.name}」，请确认后提交`);
+          } catch {
+            toast.error("文件读取失败，请重试");
+          }
+        }}
+      />
+    </>
+  );
+}
+
+
 function AppendPanel({
   listId,
   channel,
@@ -393,7 +441,7 @@ function AppendPanel({
         placeholder={channel === "email" ? "一行一个邮箱，追加到本名单" : "一行一个含区号手机号，追加到本名单"}
         className="text-xs bg-background"
       />
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
           className="h-8"
@@ -405,6 +453,12 @@ function AppendPanel({
         >
           追加
         </Button>
+        <UploadTemplateButton
+          label="上传模板"
+          onLoaded={(content) =>
+            setText((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${content}` : content))
+          }
+        />
         <Button
           size="sm"
           variant="ghost"
@@ -464,20 +518,27 @@ function NewListDialog({
                 : "一行一个含区号的完整手机号（如 +8613800138000）"
             }
           />
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <UploadTemplateButton
+              label="上传模板"
+              onLoaded={(content) =>
+                setText((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${content}` : content))
+              }
+            />
             <Button
               size="sm"
               variant="ghost"
               className="h-8 text-xs text-muted-foreground"
               onClick={() => downloadContactTemplate(channel)}
             >
-              <Upload className="h-3.5 w-3.5" />
+              <Download className="h-3.5 w-3.5" />
               下载导入模板
             </Button>
-            <span className="text-[11px] text-muted-foreground">
-              模板字段：{TEMPLATE_HEADERS[channel].join(" / ")}；数量不限，格式不正确与重复的数据将自动过滤
-            </span>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            支持上传已填写的模板文件（.csv / .txt），内容会填入上方输入框；数量不限，格式不正确与重复的数据将自动过滤。模板字段：
+            {TEMPLATE_HEADERS[channel].join(" / ")}
+          </p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

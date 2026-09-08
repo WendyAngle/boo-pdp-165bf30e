@@ -56,6 +56,28 @@ function mapHeaderCell(cell: string): keyof ContactRow | null {
 }
 
 /**
+ * 无表头行的字段推断：优先定位「邮箱/手机号」所在列，
+ * 其左侧一列视为国家/地区（短信模板顺序），右侧依次为联系人姓名、所属企业。
+ */
+function rowFromCols(cols: string[]): ContactRow {
+  const idx = cols.findIndex((c) => EMAIL_RE.test(c) || PHONE_RE.test(c));
+  if (idx > 0) {
+    return {
+      value: cols[idx] ?? "",
+      country: cols[idx - 1] || undefined,
+      name: cols[idx + 1] || undefined,
+      company: cols[idx + 2] || undefined,
+    };
+  }
+  return {
+    value: cols[0] ?? "",
+    name: cols[1] || undefined,
+    company: cols[2] || undefined,
+    country: cols[3] || undefined,
+  };
+}
+
+/**
  * 从粘贴文本 / CSV / TXT 中解析导入行。
  * 若首行为表头（含「邮箱/手机号/联系人姓名/所属企业/国家地区」等关键词），
  * 则按表头列顺序映射字段，支持任意列顺序；否则按默认顺序：

@@ -301,8 +301,8 @@ function ManualListsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部类型</SelectItem>
-                <SelectItem value="email">邮件</SelectItem>
-                <SelectItem value="phone">手机号</SelectItem>
+                <SelectItem value="email">邮件（邮箱）</SelectItem>
+                <SelectItem value="phone">短信（手机号）</SelectItem>
               </SelectContent>
             </Select>
             <Select

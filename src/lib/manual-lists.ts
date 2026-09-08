@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 /**
  * 自建名单：批量发邮件/发短信中手动添加或批量导入的目标沉淀，企业内共享。
@@ -195,9 +196,12 @@ export function getManualLists() {
   return store;
 }
 
+const EMPTY_LISTS: ManualList[] = [];
+
 export function useManualLists(): ManualList[] {
+  const hydrated = useHydrated();
   useSyncExternalStore(subscribe, getVersion, () => 0);
-  return store;
+  return hydrated ? store : EMPTY_LISTS;
 }
 
 /** 新建名单；已存在同名同渠道名单则合并去重 */

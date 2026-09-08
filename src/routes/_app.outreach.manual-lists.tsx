@@ -697,6 +697,7 @@ function NewListDialog({
               <Download className="h-3.5 w-3.5" />
               下载导入模板
             </Button>
+            <ClearBoxButton text={text} onClear={() => setText("")} />
           </div>
           <p className="text-[11px] text-muted-foreground">
             支持上传已填写的模板文件（.csv / .txt），内容会填入上方输入框；数量不限，格式不正确与重复的数据将自动过滤。模板字段：

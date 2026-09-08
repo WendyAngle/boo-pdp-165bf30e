@@ -287,17 +287,76 @@ function ManualListsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="targets" className="pt-3">
-          {allTargets.length === 0 ? (
+        <TabsContent value="targets" className="space-y-3 pt-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => {
+                setTypeFilter(v as typeof typeFilter);
+                setTargetPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部类型</SelectItem>
+                <SelectItem value="email">邮件</SelectItem>
+                <SelectItem value="phone">手机号</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={reachedFilter}
+              onValueChange={(v) => {
+                setReachedFilter(v as typeof reachedFilter);
+                setTargetPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部触达状态</SelectItem>
+                <SelectItem value="reached">已触达</SelectItem>
+                <SelectItem value="unreached">未触达</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 text-destructive hover:text-destructive"
+              disabled={selectedTargets.length === 0}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              批量删除{selectedTargets.length > 0 ? `（${selectedTargets.length}）` : ""}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              共 {visibleTargets.length} 条
+            </span>
+          </div>
+
+          {visibleTargets.length === 0 ? (
             <EmptyState />
           ) : (
             <>
             <div className="rounded-lg border divide-y">
+              <div className="flex items-center gap-2 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={pageAllChecked}
+                  onCheckedChange={(v) => togglePage(v === true)}
+                />
+                本页全选（{pagedTargets.length} 条）· 已触达的目标不会被删除
+              </div>
               {pagedTargets.map((t) => (
                 <div
                   key={t.id}
                   className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm"
                 >
+                  <Checkbox
+                    checked={selected.has(t.id)}
+                    onCheckedChange={(v) => toggleTarget(t.id, v === true)}
+                  />
                   <span className="font-medium">{t.value}</span>
                   <Badge variant="outline">{channelLabel(t.channel)}</Badge>
                   {t.name && <span className="text-xs">{t.name}</span>}
@@ -323,12 +382,13 @@ function ManualListsPage() {
             <ListPagination
               page={targetPage}
               pageSize={targetPageSize}
-              total={allTargets.length}
+              total={visibleTargets.length}
               onPageChange={setTargetPage}
             />
             </>
           )}
         </TabsContent>
+
       </Tabs>
 
       <NewListDialog open={openNew} onOpenChange={setOpenNew} />

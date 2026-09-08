@@ -56,6 +56,28 @@ function mapHeaderCell(cell: string): keyof ContactRow | null {
 }
 
 /**
+ * 无表头行的字段推断：优先定位「邮箱/手机号」所在列，
+ * 其左侧一列视为国家/地区（短信模板顺序），右侧依次为联系人姓名、所属企业。
+ */
+function rowFromCols(cols: string[]): ContactRow {
+  const idx = cols.findIndex((c) => EMAIL_RE.test(c) || PHONE_RE.test(c));
+  if (idx > 0) {
+    return {
+      value: cols[idx] ?? "",
+      country: cols[idx - 1] || undefined,
+      name: cols[idx + 1] || undefined,
+      company: cols[idx + 2] || undefined,
+    };
+  }
+  return {
+    value: cols[0] ?? "",
+    name: cols[1] || undefined,
+    company: cols[2] || undefined,
+    country: cols[3] || undefined,
+  };
+}
+
+/**
  * 从粘贴文本 / CSV / TXT 中解析导入行。
  * 若首行为表头（含「邮箱/手机号/联系人姓名/所属企业/国家地区」等关键词），
  * 则按表头列顺序映射字段，支持任意列顺序；否则按默认顺序：
@@ -89,12 +111,7 @@ export function parseContactRows(text: string): ContactRow[] {
         });
         if (row.value) out.push(row);
       } else {
-        out.push({
-          value: first,
-          name: cols[1] || undefined,
-          company: cols[2] || undefined,
-          country: cols[3] || undefined,
-        });
+        out.push(rowFromCols(cols));
       }
       continue;
     }
@@ -197,6 +214,32 @@ export const TEMPLATE_HEADERS: Record<ImportChannel, string[]> = {
     "所属企业（选填）",
   ],
 };
+
+/** 模板示例行（与下载模板中的示例保持一致） */
+export const TEMPLATE_EXAMPLES: Record<ImportChannel, string> = {
+  email: "sales@example-trading.com,John Smith,Example Trading Co.",
+  phone: "中国,+8613800138000,张伟,示例进出口有限公司",
+};
+
+/**
+ * 输入框常显提示文案：字段名、顺序与导入模板完全一致。
+ * simpleHint 为 true 时补充「仅填邮箱/手机号也可」的说明（手动粘贴场景）。
+ */
+export function importPlaceholder(channel: ImportChannel, simpleHint = true) {
+  const lines = [
+    "每行一条，字段顺序与导入模板一致：",
+    TEMPLATE_HEADERS[channel].join("，"),
+    `示例：${TEMPLATE_EXAMPLES[channel]}`,
+  ];
+  if (simpleHint) {
+    lines.push(
+      channel === "email"
+        ? "也可只填邮箱地址，一行一个"
+        : "也可只填含区号的完整手机号（如 +8613800138000），一行一个",
+    );
+  }
+  return lines.join("\n");
+}
 
 /** 下载导入模板（UTF-8 BOM，内置一条示例数据） */
 export function downloadContactTemplate(channel: ImportChannel) {

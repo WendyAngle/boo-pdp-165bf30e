@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, ListChecks, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Download, Eraser, ListChecks, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ import {
   TEMPLATE_HEADERS,
   classifyContactRows,
   downloadContactTemplate,
+  importPlaceholder,
   importSummary,
   parseContactRows,
 } from "@/lib/contact-import";
@@ -567,6 +568,26 @@ function UploadTemplateButton({
 }
 
 
+/** 一键清空输入框 */
+function ClearBoxButton({ text, onClear }: { text: string; onClear: () => void }) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      className="h-8 text-xs text-muted-foreground"
+      disabled={!text.trim()}
+      onClick={() => {
+        onClear();
+        toast.success("已清空输入框");
+      }}
+    >
+      <Eraser className="h-3.5 w-3.5" />
+      一键清空
+    </Button>
+  );
+}
+
 function AppendPanel({
   listId,
   channel,
@@ -580,10 +601,10 @@ function AppendPanel({
   return (
     <div className="space-y-2 rounded-md border bg-muted/30 p-2.5">
       <Textarea
-        rows={2}
+        rows={4}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={channel === "email" ? "一行一个邮箱，追加到本名单" : "一行一个含区号手机号，追加到本名单"}
+        placeholder={importPlaceholder(channel)}
         className="text-xs bg-background"
       />
       <div className="flex flex-wrap items-center gap-2">
@@ -613,6 +634,7 @@ function AppendPanel({
           <Download className="h-3.5 w-3.5" />
           下载模板
         </Button>
+        <ClearBoxButton text={text} onClear={() => setText("")} />
       </div>
     </div>
   );
@@ -657,11 +679,7 @@ function NewListDialog({
             rows={5}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={
-              channel === "email"
-                ? "一行一个邮箱，或粘贴导入模板内容"
-                : "一行一个含区号的完整手机号（如 +8613800138000）"
-            }
+            placeholder={importPlaceholder(channel)}
           />
           <div className="flex flex-wrap items-center gap-2">
             <UploadTemplateButton
@@ -679,6 +697,7 @@ function NewListDialog({
               <Download className="h-3.5 w-3.5" />
               下载导入模板
             </Button>
+            <ClearBoxButton text={text} onClear={() => setText("")} />
           </div>
           <p className="text-[11px] text-muted-foreground">
             支持上传已填写的模板文件（.csv / .txt），内容会填入上方输入框；数量不限，格式不正确与重复的数据将自动过滤。模板字段：

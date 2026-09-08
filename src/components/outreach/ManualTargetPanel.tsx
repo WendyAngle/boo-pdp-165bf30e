@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Download, Upload, ListPlus, CheckCircle2 } from "lucide-react";
+import { Download, Upload, ListPlus, CheckCircle2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ import {
   TEMPLATE_HEADERS,
   classifyContactRows,
   downloadContactTemplate,
+  importPlaceholder,
   importSummary,
   parseContactRows,
   type ContactRow,
@@ -130,13 +131,13 @@ export function ManualTargetPanel({
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        rows={3}
+        rows={4}
         placeholder={
           isEmail
-            ? "一行一个邮箱，也可按「邮箱,联系人姓名,所属企业」填写"
+            ? importPlaceholder("email")
             : dial
-              ? `一行一个手机号（无区号时自动拼接 +${dial}），也可按「手机号,联系人姓名,所属企业,国家/地区」填写`
-              : "一行一个含区号的完整手机号（如 +628…），或先选择国家/地区"
+              ? `${importPlaceholder("phone")}\n未填区号时自动拼接 +${dial}`
+              : importPlaceholder("phone")
         }
         className="text-xs bg-background"
       />
@@ -170,6 +171,20 @@ export function ManualTargetPanel({
         >
           <Download className="h-3.5 w-3.5" />
           下载模板
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8 text-xs text-muted-foreground"
+          disabled={!text.trim()}
+          onClick={() => {
+            setText("");
+            toast.success("已清空输入框");
+          }}
+        >
+          <Eraser className="h-3.5 w-3.5" />
+          一键清空
         </Button>
         {lists.length > 0 && (
           <Button

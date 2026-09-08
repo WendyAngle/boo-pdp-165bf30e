@@ -640,6 +640,21 @@ function AppendPanel({
   );
 }
 
+function FieldLabel({
+  children,
+  required,
+}: {
+  children: React.ReactNode;
+  required?: boolean;
+}) {
+  return (
+    <div className="mb-1.5 text-sm font-medium">
+      {children}
+      {required && <span className="ml-0.5 text-destructive">*</span>}
+    </div>
+  );
+}
+
 function NewListDialog({
   open,
   onOpenChange,
@@ -649,77 +664,253 @@ function NewListDialog({
 }) {
   const [name, setName] = useState("");
   const [channel, setChannel] = useState<ManualChannel>("email");
-  const { text, setText, collect } = useImportBox(channel, []);
+  const [entries, setEntries] = useState<ManualTargetInput[]>([]);
+  const [value, setValue] = useState("");
+  const [contact, setContact] = useState("");
+  const [company, setCompany] = useState("");
+  const [country, setCountry] = useState("");
+  const isEmail = channel === "email";
+  const dial = PHONE_COUNTRIES.find((c) => c.code === country)?.dial;
+  const countryName = PHONE_COUNTRIES.find((c) => c.code === country)?.name;
+
+  function reset() {
+    setName("");
+    setEntries([]);
+    setValue("");
+    setContact("");
+    setCompany("");
+    setCountry("");
+  }
+
+  function addRows(rows: ContactRow[], silentEmpty?: boolean) {
+    const outcome = classifyContactRows(
+      rows,
+      channel,
+      entries.map((e) => e.value),
+      { dial, defaultCountry: isEmail ? undefined : countryName },
+    );
+    const summary = importSummary(outcome);
+    if (outcome.valid.length === 0) {
+      if (!silentEmpty) toast.error(summary || "没有可添加的数据");
+      return 0;
+    }
+    setEntries((prev) => [
+      ...prev,
+      ...outcome.valid.map((v) => ({
+        value: v.value,
+        name: v.name,
+        company: v.company,
+        country: isEmail ? undefined : (v.country ?? countryName),
+      })),
+    ]);
+    toast.success(summary);
+    return outcome.valid.length;
+  }
+
+  function addOne() {
+    const added = addRows([
+      {
+        value: value.trim(),
+        name: contact.trim() || undefined,
+        company: company.trim() || undefined,
+        country: isEmail ? undefined : countryName,
+      },
+    ]);
+    if (added > 0) {
+      setValue("");
+      setContact("");
+      setCompany("");
+    }
+  }
+
+  const canAdd = !!value.trim() && !!contact.trim() && (isEmail || !!country);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) reset();
+        onOpenChange(v);
+      }}
+    >
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>新建自建名单</DialogTitle>
-          <DialogDescription>
-            名单可在批量发邮件 / 批量发短信弹窗中按目标勾选带入，数量不限；已触达的目标会自动过滤。
-          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <Input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="名单名称，如「展会名片 · 广交会」"
-          />
-          <Select value={channel} onValueChange={(v) => setChannel(v as ManualChannel)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="email">邮件（邮箱）</SelectItem>
-              <SelectItem value="phone">短信（手机号）</SelectItem>
-            </SelectContent>
-          </Select>
-          <Textarea
-            rows={5}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={importPlaceholder(channel)}
-          />
-          <div className="flex flex-wrap items-center gap-2">
-            <UploadTemplateButton
-              label="批量导入"
-              onLoaded={(content) =>
-                setText((prev) => (prev.trim() ? `${prev.replace(/\s+$/, "")}\n${content}` : content))
-              }
+
+        <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+          名单可在批量发邮件 / 批量发短信弹窗中按目标勾选带入，数量不限；已触达的目标会自动过滤。
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <FieldLabel required>名单名称</FieldLabel>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="请输入名单名称"
             />
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 text-xs text-muted-foreground"
-              onClick={() => downloadContactTemplate(channel)}
-            >
-              <Download className="h-3.5 w-3.5" />
-              下载导入模板
-            </Button>
-            <ClearBoxButton text={text} onClear={() => setText("")} />
           </div>
+
+          <div>
+            <FieldLabel>名单类型</FieldLabel>
+            <Select
+              value={channel}
+              onValueChange={(v) => {
+                setChannel(v as ManualChannel);
+                setEntries([]);
+                setValue("");
+                setCountry("");
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="email">邮件（邮箱）</SelectItem>
+                <SelectItem value="phone">短信（手机号）</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3 rounded-lg border p-3">
+            {!isEmail && (
+              <div>
+                <FieldLabel required>国家/地区</FieldLabel>
+                <Select value={country} onValueChange={setCountry}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="请选择国家/地区" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PHONE_COUNTRIES.map((c) => (
+                      <SelectItem key={c.code} value={c.code}>
+                        {c.name} +{c.dial}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div>
+              <FieldLabel required>{isEmail ? "邮件地址" : "手机号"}</FieldLabel>
+              <Input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={isEmail ? "请输入邮件地址" : "请输入手机号"}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canAdd) {
+                    e.preventDefault();
+                    addOne();
+                  }
+                }}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FieldLabel required>联系人</FieldLabel>
+                <Input
+                  value={contact}
+                  onChange={(e) => setContact(e.target.value)}
+                  placeholder="请输入联系人姓名"
+                />
+              </div>
+              <div>
+                <FieldLabel>所属企业</FieldLabel>
+                <Input
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="请输入所属企业"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <UploadTemplateButton
+                label="批量导入"
+                onLoaded={(content) => addRows(parseContactRows(content))}
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs text-muted-foreground"
+                onClick={() => downloadContactTemplate(channel)}
+              >
+                <Download className="h-3.5 w-3.5" />
+                下载导入模版
+              </Button>
+              <Button
+                size="sm"
+                className="ml-auto h-8"
+                disabled={!canAdd}
+                onClick={addOne}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                添加名单
+              </Button>
+            </div>
+
+            {entries.length > 0 && (
+              <div className="max-h-56 space-y-2 overflow-y-auto">
+                {entries.map((t, i) => (
+                  <div
+                    key={`${t.value}-${i}`}
+                    className="flex items-start gap-2 rounded-md border px-3 py-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 text-sm">
+                        {isEmail ? (
+                          <Mail className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <Phone className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate">{t.value}</span>
+                      </div>
+                      <div className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {t.name}
+                        {t.company ? ` ｜ ${t.company}` : ""}
+                        {t.country ? ` ｜ ${t.country}` : ""}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="移除"
+                      className="rounded p-1 text-destructive hover:bg-destructive/10"
+                      onClick={() =>
+                        setEntries((prev) => prev.filter((_, k) => k !== i))
+                      }
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <p className="text-[11px] text-muted-foreground">
-            支持上传已填写的模板文件（.csv / .txt），内容会填入上方输入框；数量不限，格式不正确与重复的数据将自动过滤。模板字段：
+            支持上传已填写的模板文件（.csv / .txt），内容会直接添加到下方名单中；数量不限，格式不正确与重复的数据将自动过滤。模板字段：
             {TEMPLATE_HEADERS[channel].join(" / ")}
           </p>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              reset();
+              onOpenChange(false);
+            }}
+          >
             取消
           </Button>
           <Button
-            disabled={!name.trim() || !text.trim()}
+            disabled={!name.trim() || entries.length === 0}
             onClick={() => {
-              const values = collect();
-              if (values.length === 0) return;
-              saveManualList(
-                name.trim(),
-                channel,
-                values,
-                CURRENT_USER.name,
-              );
-              setName("");
+              saveManualList(name.trim(), channel, entries, CURRENT_USER.name);
+              toast.success(`已创建名单「${name.trim()}」，共 ${entries.length} 个目标`);
+              reset();
               onOpenChange(false);
             }}
           >
@@ -730,6 +921,7 @@ function NewListDialog({
     </Dialog>
   );
 }
+
 
 function RenameListDialog({
   list,

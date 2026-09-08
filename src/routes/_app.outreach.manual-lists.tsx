@@ -73,13 +73,19 @@ function ManualListsPage() {
   const [q, setQ] = useState("");
   const [openNew, setOpenNew] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [renameId, setRenameId] = useState<string | null>(null);
   const [listPage, setListPage] = useState(1);
   const [targetPage, setTargetPage] = useState(1);
+  const [typeFilter, setTypeFilter] = useState<"all" | ManualChannel>("all");
+  const [reachedFilter, setReachedFilter] = useState<"all" | "reached" | "unreached">("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const listPageSize = 9;
   const targetPageSize = 10;
 
   const totalTargets = lists.reduce((s, l) => s + l.targets.length, 0);
   const active = lists.find((l) => l.id === activeId) ?? null;
+  const renaming = lists.find((l) => l.id === renameId) ?? null;
 
   const filtered = useMemo(() => {
     const k = q.trim().toLowerCase();
@@ -99,6 +105,17 @@ function ManualListsPage() {
     [lists],
   );
 
+  const visibleTargets = useMemo(
+    () =>
+      allTargets.filter(
+        (t) =>
+          (typeFilter === "all" || t.channel === typeFilter) &&
+          (reachedFilter === "all" ||
+            (reachedFilter === "reached" ? isTargetReached(t) : !isTargetReached(t))),
+      ),
+    [allTargets, typeFilter, reachedFilter],
+  );
+
   const pagedLists = useMemo(
     () => filtered.slice((listPage - 1) * listPageSize, listPage * listPageSize),
     [filtered, listPage],
@@ -106,12 +123,47 @@ function ManualListsPage() {
 
   const pagedTargets = useMemo(
     () =>
-      allTargets.slice(
+      visibleTargets.slice(
         (targetPage - 1) * targetPageSize,
         targetPage * targetPageSize,
       ),
-    [allTargets, targetPage],
+    [visibleTargets, targetPage],
   );
+
+  const selectedTargets = visibleTargets.filter((t) => selected.has(t.id));
+  const selectedReached = selectedTargets.filter(isTargetReached);
+  const deletable = selectedTargets.filter((t) => !isTargetReached(t));
+  const pageAllChecked =
+    pagedTargets.length > 0 && pagedTargets.every((t) => selected.has(t.id));
+
+  function toggleTarget(id: string, v: boolean) {
+    setSelected((p) => {
+      const n = new Set(p);
+      if (v) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+  }
+
+  function togglePage(v: boolean) {
+    setSelected((p) => {
+      const n = new Set(p);
+      pagedTargets.forEach((t) => (v ? n.add(t.id) : n.delete(t.id)));
+      return n;
+    });
+  }
+
+  function doBatchDelete() {
+    deletable.forEach((t) => removeManualTarget(t.listId, t.id));
+    toast.success(
+      selectedReached.length > 0
+        ? `已删除 ${deletable.length} 条目标，自动过滤 ${selectedReached.length} 条已触达目标`
+        : `已删除 ${deletable.length} 条目标`,
+    );
+    setSelected(new Set());
+    setConfirmDelete(false);
+  }
+
 
   function exportList(id: string) {
     const l = lists.find((x) => x.id === id);

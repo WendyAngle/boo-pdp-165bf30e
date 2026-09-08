@@ -172,6 +172,20 @@ export function ManualTargetPanel({
           <Download className="h-3.5 w-3.5" />
           下载模板
         </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8 text-xs text-muted-foreground"
+          disabled={!text.trim()}
+          onClick={() => {
+            setText("");
+            toast.success("已清空输入框");
+          }}
+        >
+          <Eraser className="h-3.5 w-3.5" />
+          一键清空
+        </Button>
         {lists.length > 0 && (
           <Button
             type="button"

@@ -580,10 +580,10 @@ function AppendPanel({
   return (
     <div className="space-y-2 rounded-md border bg-muted/30 p-2.5">
       <Textarea
-        rows={2}
+        rows={4}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder={channel === "email" ? "一行一个邮箱，追加到本名单" : "一行一个含区号手机号，追加到本名单"}
+        placeholder={importPlaceholder(channel)}
         className="text-xs bg-background"
       />
       <div className="flex flex-wrap items-center gap-2">

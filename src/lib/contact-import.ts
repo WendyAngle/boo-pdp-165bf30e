@@ -89,12 +89,7 @@ export function parseContactRows(text: string): ContactRow[] {
         });
         if (row.value) out.push(row);
       } else {
-        out.push({
-          value: first,
-          name: cols[1] || undefined,
-          company: cols[2] || undefined,
-          country: cols[3] || undefined,
-        });
+        out.push(rowFromCols(cols));
       }
       continue;
     }

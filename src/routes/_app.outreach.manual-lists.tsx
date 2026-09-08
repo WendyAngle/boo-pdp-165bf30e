@@ -711,3 +711,46 @@ function NewListDialog({
     </Dialog>
   );
 }
+
+function RenameListDialog({
+  list,
+  onOpenChange,
+}: {
+  list: { id: string; name: string } | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const [name, setName] = useState(list?.name ?? "");
+  return (
+    <Dialog open={!!list} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>编辑名单</DialogTitle>
+          <DialogDescription>
+            修改名单名称，名单内的目标不受影响。
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="名单名称"
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button
+            disabled={!name.trim() || !list || name.trim() === list.name}
+            onClick={() => {
+              if (!list) return;
+              renameManualList(list.id, name.trim());
+              toast.success("名单名称已更新");
+              onOpenChange(false);
+            }}
+          >
+            保存
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

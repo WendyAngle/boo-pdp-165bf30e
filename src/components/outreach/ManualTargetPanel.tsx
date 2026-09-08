@@ -130,13 +130,13 @@ export function ManualTargetPanel({
       <Textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        rows={3}
+        rows={4}
         placeholder={
           isEmail
-            ? "一行一个邮箱，也可按「邮箱,联系人姓名,所属企业」填写"
+            ? importPlaceholder("email")
             : dial
-              ? `一行一个手机号（无区号时自动拼接 +${dial}），也可按「手机号,联系人姓名,所属企业,国家/地区」填写`
-              : "一行一个含区号的完整手机号（如 +628…），或先选择国家/地区"
+              ? `${importPlaceholder("phone")}\n未填区号时自动拼接 +${dial}`
+              : importPlaceholder("phone")
         }
         className="text-xs bg-background"
       />

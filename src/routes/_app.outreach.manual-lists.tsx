@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, ListChecks, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Download, ListChecks, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -29,7 +30,7 @@ import {
   useManualLists,
   saveManualList,
   appendToManualList,
-  removeManualList,
+  renameManualList,
   removeManualTarget,
   isTargetReached,
   channelLabel,
@@ -44,6 +45,7 @@ import {
 } from "@/lib/contact-import";
 import { CURRENT_USER } from "@/lib/current-user";
 import { formatDateTime } from "@/lib/format-date";
+
 
 export const Route = createFileRoute("/_app/outreach/manual-lists")({
   head: () => ({

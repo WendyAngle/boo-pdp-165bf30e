@@ -215,6 +215,32 @@ export const TEMPLATE_HEADERS: Record<ImportChannel, string[]> = {
   ],
 };
 
+/** 模板示例行（与下载模板中的示例保持一致） */
+export const TEMPLATE_EXAMPLES: Record<ImportChannel, string> = {
+  email: "sales@example-trading.com,John Smith,Example Trading Co.",
+  phone: "中国,+8613800138000,张伟,示例进出口有限公司",
+};
+
+/**
+ * 输入框常显提示文案：字段名、顺序与导入模板完全一致。
+ * simpleHint 为 true 时补充「仅填邮箱/手机号也可」的说明（手动粘贴场景）。
+ */
+export function importPlaceholder(channel: ImportChannel, simpleHint = true) {
+  const lines = [
+    "每行一条，字段顺序与导入模板一致：",
+    TEMPLATE_HEADERS[channel].join("，"),
+    `示例：${TEMPLATE_EXAMPLES[channel]}`,
+  ];
+  if (simpleHint) {
+    lines.push(
+      channel === "email"
+        ? "也可只填邮箱地址，一行一个"
+        : "也可只填含区号的完整手机号（如 +8613800138000），一行一个",
+    );
+  }
+  return lines.join("\n");
+}
+
 /** 下载导入模板（UTF-8 BOM，内置一条示例数据） */
 export function downloadContactTemplate(channel: ImportChannel) {
   const rows =

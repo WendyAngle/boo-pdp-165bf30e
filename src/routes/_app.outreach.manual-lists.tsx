@@ -1,11 +1,12 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, ListChecks, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Download, ListChecks, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -29,7 +30,7 @@ import {
   useManualLists,
   saveManualList,
   appendToManualList,
-  removeManualList,
+  renameManualList,
   removeManualTarget,
   isTargetReached,
   channelLabel,
@@ -44,6 +45,7 @@ import {
 } from "@/lib/contact-import";
 import { CURRENT_USER } from "@/lib/current-user";
 import { formatDateTime } from "@/lib/format-date";
+
 
 export const Route = createFileRoute("/_app/outreach/manual-lists")({
   head: () => ({
@@ -71,13 +73,19 @@ function ManualListsPage() {
   const [q, setQ] = useState("");
   const [openNew, setOpenNew] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [renameId, setRenameId] = useState<string | null>(null);
   const [listPage, setListPage] = useState(1);
   const [targetPage, setTargetPage] = useState(1);
+  const [typeFilter, setTypeFilter] = useState<"all" | ManualChannel>("all");
+  const [reachedFilter, setReachedFilter] = useState<"all" | "reached" | "unreached">("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const listPageSize = 9;
   const targetPageSize = 10;
 
   const totalTargets = lists.reduce((s, l) => s + l.targets.length, 0);
   const active = lists.find((l) => l.id === activeId) ?? null;
+  const renaming = lists.find((l) => l.id === renameId) ?? null;
 
   const filtered = useMemo(() => {
     const k = q.trim().toLowerCase();
@@ -97,6 +105,17 @@ function ManualListsPage() {
     [lists],
   );
 
+  const visibleTargets = useMemo(
+    () =>
+      allTargets.filter(
+        (t) =>
+          (typeFilter === "all" || t.channel === typeFilter) &&
+          (reachedFilter === "all" ||
+            (reachedFilter === "reached" ? isTargetReached(t) : !isTargetReached(t))),
+      ),
+    [allTargets, typeFilter, reachedFilter],
+  );
+
   const pagedLists = useMemo(
     () => filtered.slice((listPage - 1) * listPageSize, listPage * listPageSize),
     [filtered, listPage],
@@ -104,12 +123,47 @@ function ManualListsPage() {
 
   const pagedTargets = useMemo(
     () =>
-      allTargets.slice(
+      visibleTargets.slice(
         (targetPage - 1) * targetPageSize,
         targetPage * targetPageSize,
       ),
-    [allTargets, targetPage],
+    [visibleTargets, targetPage],
   );
+
+  const selectedTargets = visibleTargets.filter((t) => selected.has(t.id));
+  const selectedReached = selectedTargets.filter(isTargetReached);
+  const deletable = selectedTargets.filter((t) => !isTargetReached(t));
+  const pageAllChecked =
+    pagedTargets.length > 0 && pagedTargets.every((t) => selected.has(t.id));
+
+  function toggleTarget(id: string, v: boolean) {
+    setSelected((p) => {
+      const n = new Set(p);
+      if (v) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+  }
+
+  function togglePage(v: boolean) {
+    setSelected((p) => {
+      const n = new Set(p);
+      pagedTargets.forEach((t) => (v ? n.add(t.id) : n.delete(t.id)));
+      return n;
+    });
+  }
+
+  function doBatchDelete() {
+    deletable.forEach((t) => removeManualTarget(t.listId, t.id));
+    toast.success(
+      selectedReached.length > 0
+        ? `已删除 ${deletable.length} 条目标，自动过滤 ${selectedReached.length} 条已触达目标`
+        : `已删除 ${deletable.length} 条目标`,
+    );
+    setSelected(new Set());
+    setConfirmDelete(false);
+  }
+
 
   function exportList(id: string) {
     const l = lists.find((x) => x.id === id);
@@ -212,15 +266,12 @@ function ManualListsPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => {
-                          removeManualList(l.id);
-                          toast.success("名单已删除");
-                        }}
+                        onClick={() => setRenameId(l.id)}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        删除
+                        <Pencil className="h-3.5 w-3.5" />
+                        编辑
                       </Button>
+
                     </div>
                   </CardContent>
                 </Card>
@@ -236,17 +287,76 @@ function ManualListsPage() {
           )}
         </TabsContent>
 
-        <TabsContent value="targets" className="pt-3">
-          {allTargets.length === 0 ? (
+        <TabsContent value="targets" className="space-y-3 pt-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => {
+                setTypeFilter(v as typeof typeFilter);
+                setTargetPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部类型</SelectItem>
+                <SelectItem value="email">邮件</SelectItem>
+                <SelectItem value="phone">手机号</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={reachedFilter}
+              onValueChange={(v) => {
+                setReachedFilter(v as typeof reachedFilter);
+                setTargetPage(1);
+              }}
+            >
+              <SelectTrigger className="h-9 w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部触达状态</SelectItem>
+                <SelectItem value="reached">已触达</SelectItem>
+                <SelectItem value="unreached">未触达</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-9 text-destructive hover:text-destructive"
+              disabled={selectedTargets.length === 0}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              批量删除{selectedTargets.length > 0 ? `（${selectedTargets.length}）` : ""}
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              共 {visibleTargets.length} 条
+            </span>
+          </div>
+
+          {visibleTargets.length === 0 ? (
             <EmptyState />
           ) : (
             <>
             <div className="rounded-lg border divide-y">
+              <div className="flex items-center gap-2 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                <Checkbox
+                  checked={pageAllChecked}
+                  onCheckedChange={(v) => togglePage(v === true)}
+                />
+                本页全选（{pagedTargets.length} 条）· 已触达的目标不会被删除
+              </div>
               {pagedTargets.map((t) => (
                 <div
                   key={t.id}
                   className="flex flex-wrap items-center gap-2 px-3 py-2 text-sm"
                 >
+                  <Checkbox
+                    checked={selected.has(t.id)}
+                    onCheckedChange={(v) => toggleTarget(t.id, v === true)}
+                  />
                   <span className="font-medium">{t.value}</span>
                   <Badge variant="outline">{channelLabel(t.channel)}</Badge>
                   {t.name && <span className="text-xs">{t.name}</span>}
@@ -272,15 +382,50 @@ function ManualListsPage() {
             <ListPagination
               page={targetPage}
               pageSize={targetPageSize}
-              total={allTargets.length}
+              total={visibleTargets.length}
               onPageChange={setTargetPage}
             />
             </>
           )}
         </TabsContent>
+
       </Tabs>
 
       <NewListDialog open={openNew} onOpenChange={setOpenNew} />
+
+      <RenameListDialog
+        key={renaming?.id ?? "none"}
+        list={renaming}
+        onOpenChange={(v) => !v && setRenameId(null)}
+      />
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>确认批量删除目标？</DialogTitle>
+            <DialogDescription>
+              已选中 {selectedTargets.length} 条目标
+              {selectedReached.length > 0
+                ? `，其中 ${selectedReached.length} 条为「已触达」目标，将自动过滤不予删除`
+                : ""}
+              ，本次将删除 {deletable.length} 条未触达目标。删除后不可恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deletable.length === 0}
+              onClick={doBatchDelete}
+            >
+              确认删除（{deletable.length}）
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={!!active} onOpenChange={(v) => !v && setActiveId(null)}>
         <DialogContent className="max-w-lg">
@@ -560,6 +705,49 @@ function NewListDialog({
             }}
           >
             创建名单
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RenameListDialog({
+  list,
+  onOpenChange,
+}: {
+  list: { id: string; name: string } | null;
+  onOpenChange: (v: boolean) => void;
+}) {
+  const [name, setName] = useState(list?.name ?? "");
+  return (
+    <Dialog open={!!list} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>编辑名单</DialogTitle>
+          <DialogDescription>
+            修改名单名称，名单内的目标不受影响。
+          </DialogDescription>
+        </DialogHeader>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="名单名称"
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            取消
+          </Button>
+          <Button
+            disabled={!name.trim() || !list || name.trim() === list.name}
+            onClick={() => {
+              if (!list) return;
+              renameManualList(list.id, name.trim());
+              toast.success("名单名称已更新");
+              onOpenChange(false);
+            }}
+          >
+            保存
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { Download, Upload, ListPlus, CheckCircle2 } from "lucide-react";
+import { Download, Upload, ListPlus, CheckCircle2, Eraser } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

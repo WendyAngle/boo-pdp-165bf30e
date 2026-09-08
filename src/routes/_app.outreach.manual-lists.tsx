@@ -568,6 +568,26 @@ function UploadTemplateButton({
 }
 
 
+/** 一键清空输入框 */
+function ClearBoxButton({ text, onClear }: { text: string; onClear: () => void }) {
+  return (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      className="h-8 text-xs text-muted-foreground"
+      disabled={!text.trim()}
+      onClick={() => {
+        onClear();
+        toast.success("已清空输入框");
+      }}
+    >
+      <Eraser className="h-3.5 w-3.5" />
+      一键清空
+    </Button>
+  );
+}
+
 function AppendPanel({
   listId,
   channel,

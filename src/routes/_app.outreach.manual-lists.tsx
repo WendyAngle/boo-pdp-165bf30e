@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Download, Eraser, ListChecks, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
+import { Download, Eraser, ListChecks, Mail, Pencil, Phone, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,7 @@ import {
   isTargetReached,
   channelLabel,
   type ManualChannel,
+  type ManualTargetInput,
 } from "@/lib/manual-lists";
 import {
   TEMPLATE_HEADERS,
@@ -43,7 +44,9 @@ import {
   importPlaceholder,
   importSummary,
   parseContactRows,
+  type ContactRow,
 } from "@/lib/contact-import";
+import { PHONE_COUNTRIES } from "@/lib/phone-country";
 import { CURRENT_USER } from "@/lib/current-user";
 import { formatDateTime } from "@/lib/format-date";
 

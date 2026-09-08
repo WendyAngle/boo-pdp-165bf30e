@@ -393,6 +393,40 @@ function ManualListsPage() {
 
       <NewListDialog open={openNew} onOpenChange={setOpenNew} />
 
+      <RenameListDialog
+        key={renaming?.id ?? "none"}
+        list={renaming}
+        onOpenChange={(v) => !v && setRenameId(null)}
+      />
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>确认批量删除目标？</DialogTitle>
+            <DialogDescription>
+              已选中 {selectedTargets.length} 条目标
+              {selectedReached.length > 0
+                ? `，其中 ${selectedReached.length} 条为「已触达」目标，将自动过滤不予删除`
+                : ""}
+              ，本次将删除 {deletable.length} 条未触达目标。删除后不可恢复。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDelete(false)}>
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deletable.length === 0}
+              onClick={doBatchDelete}
+            >
+              确认删除（{deletable.length}）
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       <Dialog open={!!active} onOpenChange={(v) => !v && setActiveId(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>

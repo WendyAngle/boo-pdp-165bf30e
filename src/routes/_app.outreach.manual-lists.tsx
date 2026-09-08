@@ -659,11 +659,7 @@ function NewListDialog({
             rows={5}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={
-              channel === "email"
-                ? "一行一个邮箱，或粘贴导入模板内容"
-                : "一行一个含区号的完整手机号（如 +8613800138000）"
-            }
+            placeholder={importPlaceholder(channel)}
           />
           <div className="flex flex-wrap items-center gap-2">
             <UploadTemplateButton

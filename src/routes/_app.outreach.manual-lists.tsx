@@ -266,15 +266,12 @@ function ManualListsPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => {
-                          removeManualList(l.id);
-                          toast.success("名单已删除");
-                        }}
+                        onClick={() => setRenameId(l.id)}
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        删除
+                        <Pencil className="h-3.5 w-3.5" />
+                        编辑
                       </Button>
+
                     </div>
                   </CardContent>
                 </Card>

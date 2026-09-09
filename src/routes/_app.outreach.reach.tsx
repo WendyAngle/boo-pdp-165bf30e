@@ -16,7 +16,12 @@ import {
   Info,
   Sparkles,
   Loader2,
+  Pause,
+  Play,
+  PauseCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import { usePausedTaskKeys, toggleTaskPaused } from "@/lib/reach-task-pause";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

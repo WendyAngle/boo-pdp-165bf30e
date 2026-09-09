@@ -100,6 +100,7 @@ type TaskGroup = {
 function ReachPage() {
   useEffect(() => {
     seedDemoLedgerIfEmpty();
+    seedDemoPausedTasksIfNeeded();
     backfillAiGenerationEntries();
     syncFailedRefunds();
   }, []);

@@ -16,7 +16,12 @@ import {
   Info,
   Sparkles,
   Loader2,
+  Pause,
+  Play,
+  PauseCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import { usePausedTaskKeys, toggleTaskPaused } from "@/lib/reach-task-pause";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,7 +89,7 @@ type TaskGroup = {
   aiGenerated: boolean;
   createdAt: string;
   lastAt: string;
-  status: "completed" | "running";
+  status: "completed" | "running" | "paused";
 };
 
 
@@ -107,6 +112,7 @@ function ReachPage() {
   const [managedEmailOpen, setManagedEmailOpen] = useState(false);
   const [tab, setTab] = useState<"self" | "managed">("self");
   const managedOrders = useManagedOrders();
+  const pausedKeys = usePausedTaskKeys();
 
 
   useEffect(() => {
@@ -205,9 +211,7 @@ function ReachPage() {
         g = {
           key,
           name:
-            batchName ??
-            (r.platform ? `${r.platform}${action}` : action) +
-              ` · ${fmtTime(r.createdAt)}`,
+            batchName ?? (r.platform ? `${r.platform}${action}` : action),
           channel: r.channel!,
           platform: r.platform,
           action,
@@ -216,7 +220,11 @@ function ReachPage() {
           aiGenerated: false,
           createdAt: r.createdAt,
           lastAt: r.createdAt,
-          status: runningKeys.has(key) ? "running" : "completed",
+          status: pausedKeys.has(key)
+            ? "paused"
+            : runningKeys.has(key)
+              ? "running"
+              : "completed",
         };
         map.set(key, g);
       }
@@ -228,7 +236,7 @@ function ReachPage() {
       if (r.createdAt > g.lastAt) g.lastAt = r.createdAt;
     }
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
-  }, [filtered, threadByKey, runningKeys]);
+  }, [filtered, threadByKey, runningKeys, pausedKeys]);
 
 
   const taskPageData = useMemo(
@@ -488,7 +496,7 @@ function ReachPage() {
                 <TableHead className="w-[90px]">动作</TableHead>
                 <TableHead className="w-[110px]">目标数</TableHead>
                 <TableHead className="w-[100px]">任务状态</TableHead>
-                <TableHead className="w-[170px]">创建时间</TableHead>
+                <TableHead className="w-[120px] text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
 
@@ -496,7 +504,7 @@ function ReachPage() {
               {taskPageData.map((g) => (
                 <TableRow key={g.key} className="hover:bg-muted/30">
 
-                  <TableCell className="max-w-[280px]">
+                  <TableCell className="max-w-[320px]">
                     <div className="flex items-center gap-1.5">
                       <Link
                         to="/outreach/reach-task/$taskKey"
@@ -512,6 +520,9 @@ function ReachPage() {
                           AI
                         </Badge>
                       )}
+                    </div>
+                    <div className="mt-0.5 font-mono tabular-nums text-xs text-muted-foreground whitespace-nowrap">
+                      创建时间 {fmtTime(g.createdAt)}
                     </div>
                   </TableCell>
 
@@ -545,8 +556,37 @@ function ReachPage() {
                     <TaskStatusBadge status={g.status} />
                   </TableCell>
 
-                  <TableCell className="font-mono tabular-nums text-xs text-muted-foreground whitespace-nowrap">
-                    {fmtTime(g.createdAt)}
+                  <TableCell className="text-right">
+                    {g.channel === "social" &&
+                    (g.status === "running" || g.status === "paused") ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5"
+                        onClick={() => {
+                          toggleTaskPaused(g.key);
+                          toast.success(
+                            g.status === "paused"
+                              ? `已继续执行：${g.name}`
+                              : `已暂停：${g.name}`,
+                          );
+                        }}
+                      >
+                        {g.status === "paused" ? (
+                          <>
+                            <Play className="h-3.5 w-3.5" />
+                            继续执行
+                          </>
+                        ) : (
+                          <>
+                            <Pause className="h-3.5 w-3.5" />
+                            暂停
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -640,7 +680,19 @@ function ChannelBadge({ channel, platform }: { channel: ReachChannel; platform?:
   );
 }
 
-function TaskStatusBadge({ status }: { status: "completed" | "running" }) {
+function TaskStatusBadge({
+  status,
+}: {
+  status: "completed" | "running" | "paused";
+}) {
+  if (status === "paused") {
+    return (
+      <Badge variant="outline" className="gap-1 font-normal bg-slate-100 text-slate-600 border-slate-200">
+        <PauseCircle className="h-3 w-3" />
+        已暂停
+      </Badge>
+    );
+  }
   if (status === "running") {
     return (
       <Badge variant="outline" className="gap-1 font-normal bg-amber-50 text-amber-700 border-amber-200">

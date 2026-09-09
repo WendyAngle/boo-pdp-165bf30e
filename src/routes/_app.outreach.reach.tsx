@@ -211,9 +211,7 @@ function ReachPage() {
         g = {
           key,
           name:
-            batchName ??
-            (r.platform ? `${r.platform}${action}` : action) +
-              ` · ${fmtTime(r.createdAt)}`,
+            batchName ?? (r.platform ? `${r.platform}${action}` : action),
           channel: r.channel!,
           platform: r.platform,
           action,

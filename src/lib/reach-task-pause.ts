@@ -68,3 +68,20 @@ export function toggleTaskPaused(key: string) {
   if (store.includes(key)) resumeTask(key);
   else pauseTask(key);
 }
+
+/** demo：默认处于「已暂停」的示例任务（可点击继续执行） */
+export const DEMO_PAUSED_TASK_KEYS = ["s:北欧 · 户外运动达人私信拓客:TikTok"];
+const DEMO_SEED_FLAG = "boo:reach-task:paused:seed:v1";
+
+export function seedDemoPausedTasksIfNeeded() {
+  if (typeof window === "undefined") return;
+  try {
+    if (localStorage.getItem(DEMO_SEED_FLAG)) return;
+    const next = [...store];
+    for (const k of DEMO_PAUSED_TASK_KEYS) if (!next.includes(k)) next.push(k);
+    write(next);
+    localStorage.setItem(DEMO_SEED_FLAG, "1");
+  } catch {
+    /* ignore */
+  }
+}

@@ -220,7 +220,11 @@ function ReachPage() {
           aiGenerated: false,
           createdAt: r.createdAt,
           lastAt: r.createdAt,
-          status: runningKeys.has(key) ? "running" : "completed",
+          status: pausedKeys.has(key)
+            ? "paused"
+            : runningKeys.has(key)
+              ? "running"
+              : "completed",
         };
         map.set(key, g);
       }

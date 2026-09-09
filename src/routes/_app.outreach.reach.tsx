@@ -21,7 +21,11 @@ import {
   PauseCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { usePausedTaskKeys, toggleTaskPaused } from "@/lib/reach-task-pause";
+import {
+  usePausedTaskKeys,
+  toggleTaskPaused,
+  seedDemoPausedTasksIfNeeded,
+} from "@/lib/reach-task-pause";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +100,7 @@ type TaskGroup = {
 function ReachPage() {
   useEffect(() => {
     seedDemoLedgerIfEmpty();
+    seedDemoPausedTasksIfNeeded();
     backfillAiGenerationEntries();
     syncFailedRefunds();
   }, []);

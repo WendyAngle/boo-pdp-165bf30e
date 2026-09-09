@@ -236,7 +236,7 @@ function ReachPage() {
       if (r.createdAt > g.lastAt) g.lastAt = r.createdAt;
     }
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
-  }, [filtered, threadByKey, runningKeys]);
+  }, [filtered, threadByKey, runningKeys, pausedKeys]);
 
 
   const taskPageData = useMemo(
@@ -496,7 +496,7 @@ function ReachPage() {
                 <TableHead className="w-[90px]">动作</TableHead>
                 <TableHead className="w-[110px]">目标数</TableHead>
                 <TableHead className="w-[100px]">任务状态</TableHead>
-                <TableHead className="w-[170px]">创建时间</TableHead>
+                <TableHead className="w-[120px] text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
 

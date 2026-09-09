@@ -556,8 +556,37 @@ function ReachPage() {
                     <TaskStatusBadge status={g.status} />
                   </TableCell>
 
-                  <TableCell className="font-mono tabular-nums text-xs text-muted-foreground whitespace-nowrap">
-                    {fmtTime(g.createdAt)}
+                  <TableCell className="text-right">
+                    {g.channel === "social" &&
+                    (g.status === "running" || g.status === "paused") ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5"
+                        onClick={() => {
+                          toggleTaskPaused(g.key);
+                          toast.success(
+                            g.status === "paused"
+                              ? `已继续执行：${g.name}`
+                              : `已暂停：${g.name}`,
+                          );
+                        }}
+                      >
+                        {g.status === "paused" ? (
+                          <>
+                            <Play className="h-3.5 w-3.5" />
+                            继续执行
+                          </>
+                        ) : (
+                          <>
+                            <Pause className="h-3.5 w-3.5" />
+                            暂停
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -651,7 +680,19 @@ function ChannelBadge({ channel, platform }: { channel: ReachChannel; platform?:
   );
 }
 
-function TaskStatusBadge({ status }: { status: "completed" | "running" }) {
+function TaskStatusBadge({
+  status,
+}: {
+  status: "completed" | "running" | "paused";
+}) {
+  if (status === "paused") {
+    return (
+      <Badge variant="outline" className="gap-1 font-normal bg-slate-100 text-slate-600 border-slate-200">
+        <PauseCircle className="h-3 w-3" />
+        已暂停
+      </Badge>
+    );
+  }
   if (status === "running") {
     return (
       <Badge variant="outline" className="gap-1 font-normal bg-amber-50 text-amber-700 border-amber-200">

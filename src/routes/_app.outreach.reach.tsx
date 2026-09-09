@@ -504,7 +504,7 @@ function ReachPage() {
               {taskPageData.map((g) => (
                 <TableRow key={g.key} className="hover:bg-muted/30">
 
-                  <TableCell className="max-w-[280px]">
+                  <TableCell className="max-w-[320px]">
                     <div className="flex items-center gap-1.5">
                       <Link
                         to="/outreach/reach-task/$taskKey"
@@ -520,6 +520,9 @@ function ReachPage() {
                           AI
                         </Badge>
                       )}
+                    </div>
+                    <div className="mt-0.5 font-mono tabular-nums text-xs text-muted-foreground whitespace-nowrap">
+                      创建时间 {fmtTime(g.createdAt)}
                     </div>
                   </TableCell>
 

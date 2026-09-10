@@ -133,17 +133,11 @@ export function ScreenShareDialog({
         <div className="flex h-[78vh]">
           {/* 左侧：同屏画面 */}
           <div className="flex-1 flex flex-col min-w-0">
-            <DialogHeader className="px-5 pt-4 pb-3 border-b space-y-1.5">
+            <DialogHeader className="px-5 pt-4 pb-3 border-b space-y-0">
               <DialogTitle className="text-base flex items-center gap-2">
                 <MonitorPlay className="h-4.5 w-4.5 text-primary" />
-                账号同屏 - {account.id.replace(/^sa_/, "").toUpperCase()}
+                账号同屏 - {account.displayName}
               </DialogTitle>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-                <span>节点：{node.node}</span>
-                <span>设备：{node.deviceId}</span>
-                <span>IP：{node.ip}</span>
-                <span>模式：observe-act mode</span>
-              </div>
             </DialogHeader>
 
             {/* 工具栏 */}

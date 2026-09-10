@@ -286,6 +286,15 @@ export function getSocialAccounts(): SocialAccount[] {
   return cache;
 }
 
+/** 资料回填：更新账号昵称 / 显示名 / 人设归属地 */
+export function updateAccountProfile(
+  id: string,
+  patch: Partial<Pick<SocialAccount, "handle" | "displayName" | "ownerRegion">>,
+) {
+  const next = cache.map((a) => (a.id === id ? { ...a, ...patch } : a));
+  commit(next);
+}
+
 /** 更新账号状态（用于一键恢复 / 转入养号） */
 export function updateAccountStatus(id: string, status: SocialAccount["status"]) {
   const next = cache.map((a) => (a.id === id ? { ...a, status } : a));

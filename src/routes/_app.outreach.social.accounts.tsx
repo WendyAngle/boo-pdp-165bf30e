@@ -10,7 +10,9 @@ import {
   RotateCcw,
   X,
   ChevronDown,
+  MonitorPlay,
 } from "lucide-react";
+import { ScreenShareDialog } from "@/components/social/ScreenShareDialog";
 import { useSocialFriends, type SocialFriend } from "@/lib/social-friends";
 
 import { Card } from "@/components/ui/card";
@@ -134,6 +136,7 @@ function SocialAccountsPage() {
   }, [friends]);
 
   const [friendsAccount, setFriendsAccount] = useState<SocialAccount | null>(null);
+  const [screenAccount, setScreenAccount] = useState<SocialAccount | null>(null);
   const [allFriendsOpen, setAllFriendsOpen] = useState(false);
 
   const [keyword, setKeyword] = useState("");
@@ -305,6 +308,7 @@ function SocialAccountsPage() {
                 <TableHead className="w-[100px]">好友数量</TableHead>
                 <TableHead className="w-[130px]">交付时间</TableHead>
                 <TableHead className="w-[130px]">到期时间</TableHead>
+                <TableHead className="w-[90px]">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -314,6 +318,7 @@ function SocialAccountsPage() {
                   account={a}
                   friendCount={friendCountByAccount.get(a.id) ?? 0}
                   onFriendsClick={() => setFriendsAccount(a)}
+                  onScreenClick={() => setScreenAccount(a)}
                 />
               ))}
             </TableBody>
@@ -339,6 +344,13 @@ function SocialAccountsPage() {
         />
       )}
 
+      {screenAccount && (
+        <ScreenShareDialog
+          account={screenAccount}
+          onClose={() => setScreenAccount(null)}
+        />
+      )}
+
       {allFriendsOpen && (
         <AllFriendsDialog
           friends={friends}
@@ -349,7 +361,7 @@ function SocialAccountsPage() {
   );
 }
 
-function AccountRow({ account, friendCount, onFriendsClick }: { account: SocialAccount; friendCount: number; onFriendsClick?: () => void }) {
+function AccountRow({ account, friendCount, onFriendsClick, onScreenClick }: { account: SocialAccount; friendCount: number; onFriendsClick?: () => void; onScreenClick?: () => void }) {
   const bucket = getExpiryBucket(account.expiresAt);
   return (
     <TableRow className={cn(EXPIRY_ROW_TONE[bucket])}>
@@ -399,6 +411,21 @@ function AccountRow({ account, friendCount, onFriendsClick }: { account: SocialA
           </span>
         ) : (
           <span className="text-muted-foreground">—</span>
+        )}
+      </TableCell>
+      <TableCell>
+        {account.status === "备货中" ? (
+          <span className="text-xs text-muted-foreground" title="账号交付后可用">—</span>
+        ) : (
+          <button
+            type="button"
+            onClick={onScreenClick}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            title="打开该账号的远程同屏画面"
+          >
+            <MonitorPlay className="h-3.5 w-3.5" />
+            同屏
+          </button>
         )}
       </TableCell>
     </TableRow>

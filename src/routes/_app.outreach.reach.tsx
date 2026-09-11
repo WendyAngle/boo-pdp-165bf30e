@@ -644,7 +644,7 @@ function ReachPage() {
                   <span className="font-medium text-foreground">
                     {pauseConfirm?.name}
                   </span>{" "}
-                  ？恢复后系统将按原任务配置继续处理剩余目标，并可能继续产生点数消耗。
+                  ？恢复后系统将按原任务配置继续处理剩余目标。
                 </>
               ) : (
                 <>

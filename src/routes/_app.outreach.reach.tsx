@@ -28,6 +28,16 @@ import {
 } from "@/lib/reach-task-pause";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -118,6 +128,12 @@ function ReachPage() {
   const [tab, setTab] = useState<"self" | "managed">("self");
   const managedOrders = useManagedOrders();
   const pausedKeys = usePausedTaskKeys();
+  // 暂停 / 继续执行 二次确认
+  const [pauseConfirm, setPauseConfirm] = useState<{
+    key: string;
+    name: string;
+    paused: boolean;
+  } | null>(null);
 
 
   useEffect(() => {

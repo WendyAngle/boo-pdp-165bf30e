@@ -652,7 +652,7 @@ function ReachPage() {
                   <span className="font-medium text-foreground">
                     {pauseConfirm?.name}
                   </span>{" "}
-                  ？暂停后该任务将停止新的加友 / 私信执行，排队中的目标不再继续处理；已完成记录与已消耗点数不受影响，之后可随时继续执行。
+                  ？暂停后该任务将停止规划新的任务处理剩余目标，排队中的目标不受影响。
                 </>
               )}
             </AlertDialogDescription>

@@ -628,8 +628,59 @@ function ReachPage() {
         </TabsContent>
       </Tabs>
 
-
-
+      <AlertDialog
+        open={!!pauseConfirm}
+        onOpenChange={(o) => !o && setPauseConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pauseConfirm?.paused ? "继续执行任务" : "暂停触达任务"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pauseConfirm?.paused ? (
+                <>
+                  确认继续执行{" "}
+                  <span className="font-medium text-foreground">
+                    {pauseConfirm?.name}
+                  </span>{" "}
+                  ？恢复后系统将按原任务配置继续处理剩余目标，并可能继续产生点数消耗。
+                </>
+              ) : (
+                <>
+                  确认暂停{" "}
+                  <span className="font-medium text-foreground">
+                    {pauseConfirm?.name}
+                  </span>{" "}
+                  ？暂停后该任务将停止新的加友 / 私信执行，排队中的目标不再继续处理；已完成记录与已消耗点数不受影响，之后可随时继续执行。
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              className={
+                pauseConfirm?.paused
+                  ? undefined
+                  : "bg-amber-600 hover:bg-amber-700 text-primary-foreground"
+              }
+              onClick={() => {
+                if (!pauseConfirm) return;
+                toggleTaskPaused(pauseConfirm.key);
+                toast.success(
+                  pauseConfirm.paused
+                    ? `已继续执行：${pauseConfirm.name}`
+                    : `已暂停：${pauseConfirm.name}`,
+                );
+                setPauseConfirm(null);
+              }}
+            >
+              {pauseConfirm?.paused ? "确认继续执行" : "确认暂停"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </TooltipProvider>
   );

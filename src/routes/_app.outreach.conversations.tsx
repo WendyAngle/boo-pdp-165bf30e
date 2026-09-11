@@ -502,7 +502,7 @@ function InboxPage() {
               </button>
             )}
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-2 space-y-2">
             {displayList.length === 0 ? (
               <div className="p-10 text-center text-sm text-muted-foreground">
                 该视图下暂无会话
@@ -603,23 +603,13 @@ function ThreadRow({
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-4 py-3 border-b hover:bg-muted/40 transition-colors block",
-        active && "bg-primary/5 border-l-2 border-l-primary",
-        !active && isUnread && "border-l-2 border-l-rose-500 bg-rose-50/40",
+        "w-full text-left px-3 py-3 rounded-lg border bg-card hover:border-primary/40 hover:bg-muted/40 transition-colors block",
+        active && "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-sm",
+        !active && isUnread && "bg-rose-50/40",
         woken && "bg-amber-50/60",
       )}
     >
       <div className="flex items-start gap-2">
-        {isUnread ? (
-          <div className="mt-1.5 flex items-center gap-1 shrink-0 min-w-[24px]">
-            <span className="h-2 w-2 rounded-full bg-rose-500" />
-            <span className="text-[10px] font-semibold text-rose-600 tabular-nums">
-              {thread.meta.unread}
-            </span>
-          </div>
-        ) : (
-          <div className="mt-1.5 h-2 w-2 shrink-0" />
-        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             {(() => {

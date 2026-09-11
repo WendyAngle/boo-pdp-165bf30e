@@ -645,8 +645,36 @@ function ThreadRow({
                 <Hand className="h-2.5 w-2.5" /> 接管中
               </Badge>
             )}
-            <span className="ml-auto text-[11px] text-muted-foreground shrink-0">
-              {relTime(thread.lastAt)}
+            <span className="ml-auto flex items-center gap-1.5 shrink-0">
+              <span
+                role="button"
+                tabIndex={-1}
+                title={thread.meta.starred ? "取消加星" : "加星"}
+                aria-label={thread.meta.starred ? "取消加星" : "加星"}
+                className="p-0.5 -m-0.5 rounded hover:bg-muted/60 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleStar(thread.id);
+                  toast.success(thread.meta.starred ? "已取消加星" : "已加星");
+                }}
+              >
+                <Star
+                  className={cn(
+                    "h-3.5 w-3.5 transition-colors",
+                    thread.meta.starred
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-muted-foreground/50 hover:text-amber-400",
+                  )}
+                />
+              </span>
+              {isUnread && (
+                <span className="h-4 min-w-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-semibold inline-flex items-center justify-center tabular-nums">
+                  {thread.meta.unread}
+                </span>
+              )}
+              <span className="text-[11px] text-muted-foreground">
+                {relTime(thread.lastAt)}
+              </span>
             </span>
           </div>
           {last?.subject && (

@@ -654,8 +654,9 @@ function ThreadRow({
                 className="p-0.5 -m-0.5 rounded hover:bg-muted/60 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
+                  const willStar = !thread.meta.starred;
                   toggleStar(thread.id);
-                  toast.success(thread.meta.starred ? "已取消加星" : "已加星");
+                  toast.success(willStar ? "已加星" : "已取消加星");
                 }}
               >
                 <Star
@@ -2057,8 +2058,9 @@ function __ActionBarImpl({ thread }: { thread: Thread }) {
         size="icon"
         className="h-8 w-8"
         onClick={() => {
+          const willStar = !thread.meta.starred;
           toggleStar(thread.id);
-          toast.success(thread.meta.starred ? "已取消加星" : "已加星");
+          toast.success(willStar ? "已加星" : "已取消加星");
         }}
       >
         <Star

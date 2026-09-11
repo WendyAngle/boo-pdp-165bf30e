@@ -584,14 +584,13 @@ function ReachPage() {
                         variant="outline"
                         size="sm"
                         className="h-8 gap-1.5"
-                        onClick={() => {
-                          toggleTaskPaused(g.key);
-                          toast.success(
-                            g.status === "paused"
-                              ? `已继续执行：${g.name}`
-                              : `已暂停：${g.name}`,
-                          );
-                        }}
+                        onClick={() =>
+                          setPauseConfirm({
+                            key: g.key,
+                            name: g.name,
+                            paused: g.status === "paused",
+                          })
+                        }
                       >
                         {g.status === "paused" ? (
                           <>

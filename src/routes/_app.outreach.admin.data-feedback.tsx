@@ -820,9 +820,8 @@ function ReviewDialog({
           ) : (
             <>
               <span className="mr-auto self-center text-xs text-muted-foreground inline-flex items-center gap-1.5">
-                <Coins className="h-3.5 w-3.5" />
-                预计发放 {rewardInfo.reward} 积分
-                {rewardInfo.capped ? "（已触发上限）" : ""}
+                <Info className="h-3.5 w-3.5" />
+                采纳 {acceptCount} 项将即时写入主数据
                 {disabledReason ? ` · ${disabledReason}` : ""}
               </span>
               <Button variant="outline" onClick={() => doSubmit(true)}>

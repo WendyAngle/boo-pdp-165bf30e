@@ -9,7 +9,6 @@ import {
   Clock,
   Ban,
   ExternalLink,
-  Coins,
   Undo2,
   Info,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -46,19 +46,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ListPagination } from "@/components/ListPagination";
-import {
-  formatDateTime,
-  startOfBeijingDay,
-  startOfBeijingMonth,
-} from "@/lib/format-date";
+import { formatDateTime, startOfBeijingDay } from "@/lib/format-date";
 import { ENTERPRISES } from "@/data/enterprises";
 import { CURRENT_USER } from "@/lib/current-user";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { addCredits } from "@/lib/credits-balance";
-import { hasFeedbackReward, recordFeedbackReward } from "@/lib/credits-ledger";
 import {
+  batchMarkInvalid,
   claimTicket,
-  computeReward,
   finalizeReview,
   isFinalStatus,
   ISSUE_TYPE_LABEL,
@@ -68,7 +62,9 @@ import {
   SOURCE_TYPE_LABEL,
   STATUS_LABEL,
   useAllFeedbacks,
+  type FeedbackIssueType,
   type FeedbackItem,
+  type FeedbackSourceType,
   type FeedbackStatus,
   type FeedbackTicket,
   type FeedbackVerdict,
@@ -97,17 +93,18 @@ export const Route = createFileRoute("/_app/outreach/admin/data-feedback")({
       { title: "数据反馈审核 | 出海大数据平台" },
       {
         name: "description",
-        content: "集中受理用户提交的企业数据纠错工单，逐条裁定、生效数据并发放积分奖励",
+        content: "集中受理用户提交的企业数据纠错工单，逐条裁定并让采纳内容即时生效",
       },
       { property: "og:title", content: "数据反馈审核 | 出海大数据平台" },
       {
         property: "og:description",
-        content: "逐条裁定用户数据纠错工单，采纳后数据生效并即时发放积分奖励",
+        content: "逐条裁定用户数据纠错工单，采纳后企业数据即时生效",
       },
     ],
   }),
   component: DataFeedbackAdminPage,
 });
+
 
 const STATUS_META: Record<
   FeedbackStatus,

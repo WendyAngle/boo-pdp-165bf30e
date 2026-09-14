@@ -6,6 +6,7 @@
  */
 import { useSyncExternalStore } from "react";
 import type { Enterprise, EnterpriseContact } from "@/data/enterprises";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export interface OverrideChange {
   /** 字段 key */
@@ -67,6 +68,7 @@ export function getOverride(enterpriseId: string): EnterpriseOverride {
 }
 
 export function useEnterpriseOverride(enterpriseId: string): EnterpriseOverride {
+  const hydrated = useHydrated();
   useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
@@ -75,7 +77,7 @@ export function useEnterpriseOverride(enterpriseId: string): EnterpriseOverride 
     () => version,
     () => version,
   );
-  return getOverride(enterpriseId);
+  return hydrated ? getOverride(enterpriseId) : emptyOverride();
 }
 
 export function applyEnterpriseFieldOverride(input: {

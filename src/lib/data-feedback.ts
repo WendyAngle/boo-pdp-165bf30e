@@ -306,7 +306,6 @@ export interface ReviewInput {
   reviewNote?: string;
   /** 整单标记无效 */
   markInvalid?: boolean;
-  reward: number;
 }
 
 export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
@@ -325,7 +324,7 @@ export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
         : acceptedCount === total
           ? "accepted"
           : "partial";
-    out = {
+    const next: FeedbackTicket = {
       ...t,
       items: input.items,
       newContactVerdict: input.newContactVerdict,
@@ -333,24 +332,44 @@ export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
       reviewNote: input.reviewNote,
       reviewer: input.reviewer,
       reviewedAt: Date.now(),
-      reward: input.markInvalid ? 0 : input.reward,
       status,
       readByUser: false,
       revoked: false,
     };
-    return out;
+    out = next;
+    return next;
   });
   persist();
   return out;
 }
 
-/** 撤销误采纳：回滚数据并恢复审核中；保留历史裁定且不回收已发积分 */
+/** 批量标记无效：仅对未完结工单生效，不变更任何企业数据 */
+export function batchMarkInvalid(ids: string[], reviewer: string): number {
+  const set = new Set(ids);
+  let count = 0;
+  store = store.map((t) => {
+    if (!set.has(t.id) || isFinalStatus(t.status)) return t;
+    count++;
+    return {
+      ...t,
+      status: "invalid" as FeedbackStatus,
+      reviewer,
+      reviewedAt: Date.now(),
+      readByUser: false,
+      revoked: false,
+    };
+  });
+  if (count) persist();
+  return count;
+}
+
+/** 撤销误采纳：回滚数据并恢复审核中，保留历史裁定快照 */
 export function revokeTicket(id: string) {
   store = store.map((t) =>
     t.id === id
       ? {
           ...t,
-          status: "reviewing",
+          status: "reviewing" as FeedbackStatus,
           revoked: true,
           reviewHistory: [
             ...(t.reviewHistory ?? []),
@@ -359,7 +378,6 @@ export function revokeTicket(id: string) {
               reviewedAt: t.reviewedAt,
               reviewer: t.reviewer,
               reviewNote: t.reviewNote,
-              reward: t.reward,
             },
           ],
           reviewedAt: undefined,
@@ -368,12 +386,12 @@ export function revokeTicket(id: string) {
           newContactVerdict: undefined,
           newContactRejectReason: undefined,
           readByUser: true,
-          reward: undefined,
         }
       : t,
   );
   persist();
 }
+
 
 export function markTicketsRead(enterpriseId: string) {
   let changed = false;

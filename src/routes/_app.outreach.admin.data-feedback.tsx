@@ -600,7 +600,6 @@ function ReviewDialog({
                   <Field label="邮箱">{ticket.newContact?.email || "—"}</Field>
                   <Field label="电话">{ticket.newContact?.phone || "—"}</Field>
                   <Field label="WhatsApp">{ticket.newContact?.whatsapp || "—"}</Field>
-                  <Field label="在职状态">{ticket.newContact?.status || "—"}</Field>
                 </div>
                 <Separator />
                 <VerdictRow

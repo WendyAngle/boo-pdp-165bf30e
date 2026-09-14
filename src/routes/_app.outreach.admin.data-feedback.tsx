@@ -542,14 +542,6 @@ function ReviewDialog({
 
   const newAccepted = ticket?.subjectKind === "new_contact" && newVerdict === "accept";
 
-  const rewardInfo = useMemo(
-    () =>
-      ticket
-        ? computeReward(ticket, resolvedItems, Boolean(newAccepted))
-        : { reward: 0, capped: false },
-    [ticket, resolvedItems, newAccepted],
-  );
-
   if (!ticket) return null;
 
   const acceptCount =

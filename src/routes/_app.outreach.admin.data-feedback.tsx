@@ -562,7 +562,6 @@ function ReviewDialog({
       : "";
 
   const doSubmit = (markInvalid = false) => {
-    const reward = markInvalid || hasFeedbackReward(ticket.id) ? 0 : rewardInfo.reward;
     // 数据生效
     if (!markInvalid) {
       for (const it of resolvedItems) {

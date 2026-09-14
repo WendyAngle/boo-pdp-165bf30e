@@ -105,7 +105,6 @@ export interface NewContactDraft {
   email?: string;
   phone?: string;
   whatsapp?: string;
-  status?: string;
 }
 
 export interface FeedbackTicket {
@@ -142,10 +141,42 @@ export interface FeedbackTicket {
 
 const KEY = "boo:data-feedback:v2";
 
+const SUPPORTED_ENTERPRISE_FIELDS = new Set([
+  "name",
+  "alias",
+  "industry",
+  "country",
+  "address",
+  "est",
+  "employees",
+  "website",
+  "email",
+  "phone",
+  "whatsapp",
+]);
+const SUPPORTED_CONTACT_FIELDS = new Set(["name", "title", "email", "phone", "whatsapp"]);
+
+function withoutRemovedFields(tickets: FeedbackTicket[]): FeedbackTicket[] {
+  return tickets.map((ticket) => {
+    const allowed =
+      ticket.subjectKind === "enterprise"
+        ? SUPPORTED_ENTERPRISE_FIELDS
+        : SUPPORTED_CONTACT_FIELDS;
+    if (ticket.subjectKind === "new_contact") {
+      const { status: _removedStatus, ...newContact } = (ticket.newContact ?? {}) as NewContactDraft & {
+        status?: string;
+      };
+      return { ...ticket, newContact: newContact as NewContactDraft };
+    }
+    return { ...ticket, items: ticket.items.filter((item) => allowed.has(item.field)) };
+  });
+}
+
 function read(): FeedbackTicket[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(window.localStorage.getItem(KEY) || "[]") as FeedbackTicket[];
+    const tickets = JSON.parse(window.localStorage.getItem(KEY) || "[]") as FeedbackTicket[];
+    return withoutRemovedFields(tickets);
   } catch {
     return [];
   }
@@ -380,10 +411,6 @@ export const ENTERPRISE_FEEDBACK_FIELDS: { key: string; label: string }[] = [
   { key: "email", label: "联系邮箱" },
   { key: "phone", label: "联系电话" },
   { key: "whatsapp", label: "WhatsApp" },
-  { key: "tradeRole", label: "贸易角色" },
-  { key: "products", label: "主营产品" },
-  { key: "hsCodes", label: "HS 编码" },
-  { key: "desc", label: "企业简介" },
 ];
 
 /** 可反馈的联系人字段 */
@@ -393,7 +420,6 @@ export const CONTACT_FEEDBACK_FIELDS: { key: string; label: string }[] = [
   { key: "email", label: "联系邮箱" },
   { key: "phone", label: "联系电话" },
   { key: "whatsapp", label: "WhatsApp" },
-  { key: "status", label: "在职状态（已离职等）" },
 ];
 
 /** 新增关联人物时可填写的字段 */
@@ -407,12 +433,11 @@ export const NEW_CONTACT_FIELDS: {
   { key: "email", label: "联系邮箱" },
   { key: "phone", label: "联系电话" },
   { key: "whatsapp", label: "WhatsApp" },
-  { key: "status", label: "在职状态" },
 ];
 
 /* -------------------- 演示数据 -------------------- */
 
-const SEED_FLAG = "boo:data-feedback:seeded:v4";
+const SEED_FLAG = "boo:data-feedback:seeded:v5";
 
 /** 首次进入管理后台时灌入演示工单 */
 export function seedFeedbackDemoIfEmpty(
@@ -499,15 +524,15 @@ export function seedFeedbackDemoIfEmpty(
       contactName: c.contactName ?? "联系人",
       items: [
         {
-          field: "status",
-          label: "在职状态（已离职等）",
-          current: "在职",
-          suggested: "已离职",
+          field: "phone",
+          label: "联系电话",
+          current: c.phone,
+          suggested: "+1 (212) 555-0186",
           issue: "outdated",
         },
       ],
       sourceType: "contact_confirmed",
-      sourceNote: "邮件退回并由前台电话确认已离职",
+      sourceNote: "与企业前台电话确认联系人号码已更新",
       allowContact: false,
       status: "submitted",
       submitter: "莫文蔚",

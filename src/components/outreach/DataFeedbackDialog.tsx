@@ -56,6 +56,7 @@ import {
   type NewContactDraft,
 } from "@/lib/data-feedback";
 import { CURRENT_USER } from "@/lib/current-user";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 interface Props {
   enterprise: Enterprise;
@@ -80,7 +81,6 @@ const EMPTY_NEW_CONTACT: NewContactDraft = {
   email: "",
   phone: "",
   whatsapp: "",
-  status: "",
 };
 
 function enterpriseValue(e: Enterprise, key: string): string {
@@ -90,6 +90,7 @@ function enterpriseValue(e: Enterprise, key: string): string {
 }
 
 export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }: Props) {
+  const hydrated = useHydrated();
   const [open, setOpen] = useState(false);
   const [subject, setSubject] = useState<FeedbackSubjectKind>(
     defaultContactIndex === undefined ? "enterprise" : "contact",
@@ -238,7 +239,7 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
           <Button variant="outline" size="sm" className="gap-1.5 relative">
             <MessageSquareWarning className="h-4 w-4" />
             问题反馈
-            {unread > 0 && (
+            {hydrated && unread > 0 && (
               <span className="absolute -right-1 -top-1 min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] leading-4 text-center">
                 {unread}
               </span>

@@ -226,30 +226,56 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
     (i) => i.issue !== "invalid" && !i.suggested,
   );
 
+  /** 近 30 天内已提交且未出结论（或已采纳）的字段，禁止重复提交 */
+  const dupFields = useMemo(
+    () =>
+      recentlySubmittedFields(
+        myTickets,
+        subject,
+        subject === "contact" ? contactIdx : undefined,
+      ),
+    [myTickets, subject, contactIdx],
+  );
+  const duplicateField = validItems.find((i) => dupFields.has(i.field));
+  const equivalentItem = validItems.find(
+    (i) => i.issue !== "invalid" && isEquivalentValue(i.current, i.suggested ?? ""),
+  );
+  const duplicateNewContact =
+    subject === "new_contact" &&
+    Boolean(newContact.name.trim()) &&
+    hasRecentNewContact(myTickets, newContact.name);
+
   const disabledReason =
     subject === "new_contact"
       ? !newContact.name.trim()
         ? "请填写新增联系人姓名"
         : !newContactFilled
           ? "请至少填写联系邮箱、电话或 WhatsApp 中的一项"
-          : !sourceType
-            ? "请选择数据来源"
-            : needsUrl && !sourceUrl.trim()
-              ? "请填写来源链接"
-              : sourceType === "other" && !sourceNote.trim()
-                ? "请补充说明数据来源"
-                : ""
+          : duplicateNewContact
+            ? `近 ${DUPLICATE_WINDOW_DAYS} 天内已提交过同名关联人物，请勿重复提交`
+            : !sourceType
+              ? "请选择数据来源"
+              : needsUrl && !sourceUrl.trim()
+                ? "请填写来源链接"
+                : sourceType === "other" && !sourceNote.trim()
+                  ? "请补充说明数据来源"
+                  : ""
         : !validItems.length
           ? "请至少选择一个存在问题的字段"
           : missingSuggested
             ? "请填写正确值"
-            : !sourceType
+            : duplicateField
+              ? `「${duplicateField.label}」近 ${DUPLICATE_WINDOW_DAYS} 天内已有反馈在处理或已采纳，请勿重复提交`
+              : equivalentItem
+                ? `「${equivalentItem.label}」的正确值与系统当前值一致，无需反馈`
+                : !sourceType
             ? "请选择数据来源"
             : needsUrl && !sourceUrl.trim()
               ? "请填写来源链接"
               : sourceType === "other" && !sourceNote.trim()
                 ? "请补充说明数据来源"
                 : "";
+
 
   const onSubmit = () => {
     if (disabledReason) return;

@@ -365,6 +365,20 @@ function DataFeedbackAdminPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allPageSelected}
+                    disabled={selectable.length === 0}
+                    aria-label="全选本页可处理工单"
+                    onCheckedChange={(v) =>
+                      setSelected((prev) =>
+                        v
+                          ? Array.from(new Set([...prev, ...selectable.map((t) => t.id)]))
+                          : prev.filter((id) => !selectable.some((t) => t.id === id)),
+                      )
+                    }
+                  />
+                </TableHead>
                 <TableHead>工单号</TableHead>
                 <TableHead>企业</TableHead>
                 <TableHead>主体</TableHead>
@@ -378,10 +392,19 @@ function DataFeedbackAdminPage() {
             <TableBody>
               {pageData.map((t) => (
                 <TableRow key={t.id} className="hover:bg-muted/30">
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.includes(t.id)}
+                      disabled={isFinalStatus(t.status)}
+                      aria-label={`选择工单 ${t.id}`}
+                      onCheckedChange={() => toggleTicket(t.id)}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{t.id}</TableCell>
                   <TableCell className="max-w-[220px] truncate capitalize">
                     {t.enterpriseName}
                   </TableCell>
+
                   <TableCell>
                     <Badge variant="secondary" className="font-normal">
                       {SUBJECT_LABEL[t.subjectKind]}

@@ -141,10 +141,42 @@ export interface FeedbackTicket {
 
 const KEY = "boo:data-feedback:v2";
 
+const SUPPORTED_ENTERPRISE_FIELDS = new Set([
+  "name",
+  "alias",
+  "industry",
+  "country",
+  "address",
+  "est",
+  "employees",
+  "website",
+  "email",
+  "phone",
+  "whatsapp",
+]);
+const SUPPORTED_CONTACT_FIELDS = new Set(["name", "title", "email", "phone", "whatsapp"]);
+
+function withoutRemovedFields(tickets: FeedbackTicket[]): FeedbackTicket[] {
+  return tickets.map((ticket) => {
+    const allowed =
+      ticket.subjectKind === "enterprise"
+        ? SUPPORTED_ENTERPRISE_FIELDS
+        : SUPPORTED_CONTACT_FIELDS;
+    if (ticket.subjectKind === "new_contact") {
+      const { status: _removedStatus, ...newContact } = (ticket.newContact ?? {}) as NewContactDraft & {
+        status?: string;
+      };
+      return { ...ticket, newContact: newContact as NewContactDraft };
+    }
+    return { ...ticket, items: ticket.items.filter((item) => allowed.has(item.field)) };
+  });
+}
+
 function read(): FeedbackTicket[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(window.localStorage.getItem(KEY) || "[]") as FeedbackTicket[];
+    const tickets = JSON.parse(window.localStorage.getItem(KEY) || "[]") as FeedbackTicket[];
+    return withoutRemovedFields(tickets);
   } catch {
     return [];
   }

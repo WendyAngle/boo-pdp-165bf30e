@@ -57,6 +57,17 @@ import {
 } from "@/lib/data-feedback";
 import { CURRENT_USER } from "@/lib/current-user";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { formatDateTime } from "@/lib/format-date";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Props {
   enterprise: Enterprise;
@@ -105,6 +116,10 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
   const [sourceNote, setSourceNote] = useState("");
   const [allowContact, setAllowContact] = useState(true);
   const [tab, setTabRaw] = useState<"submit" | "mine">("submit");
+  const [pendingSwitch, setPendingSwitch] = useState<{
+    subject: FeedbackSubjectKind;
+    contactIdx?: number;
+  } | null>(null);
 
   const myTickets = useFeedbacks(enterprise.id);
   const unread = useUnreadFeedbackCount(enterprise.id);
@@ -139,6 +154,33 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
     setSourceUrl("");
     setSourceNote("");
     setAllowContact(true);
+    setTabRaw("submit");
+  };
+
+  const hasDraftContent =
+    drafts.some((draft) => Boolean(draft.field || draft.suggested.trim())) ||
+    Object.values(newContact).some((value) => Boolean(value?.trim())) ||
+    Boolean(sourceType || sourceUrl.trim() || sourceNote.trim()) ||
+    !allowContact;
+
+  const applySubjectSwitch = (next: FeedbackSubjectKind, nextContactIdx = contactIdx) => {
+    setSubject(next);
+    setContactIdx(nextContactIdx);
+    setDrafts([{ field: "", issue: "wrong", suggested: "" }]);
+    setNewContact(EMPTY_NEW_CONTACT);
+    setSourceType("");
+    setSourceUrl("");
+    setSourceNote("");
+    setAllowContact(true);
+  };
+
+  const requestSubjectSwitch = (next: FeedbackSubjectKind, nextContactIdx = contactIdx) => {
+    if (next === subject && (next !== "contact" || nextContactIdx === contactIdx)) return;
+    if (hasDraftContent) {
+      setPendingSwitch({ subject: next, contactIdx: nextContactIdx });
+      return;
+    }
+    applySubjectSwitch(next, nextContactIdx);
   };
 
   const usedFields = drafts.map((d) => d.field).filter(Boolean);
@@ -153,7 +195,7 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
               field: d.field,
               label: fieldDefs.find((f) => f.key === d.field)?.label ?? d.field,
               current: currentOf(d.field),
-              suggested: d.suggested.trim(),
+              suggested: d.suggested.trim() || undefined,
               issue: d.issue,
             })),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -231,7 +273,8 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
       open={open}
       onOpenChange={(v) => {
         setOpen(v);
-        if (!v) reset();
+        if (v) setTabRaw("submit");
+        else reset();
       }}
     >
       <DialogTrigger asChild>
@@ -278,10 +321,7 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
                 type="button"
                 size="sm"
                 variant={subject === "enterprise" ? "default" : "outline"}
-                onClick={() => {
-                  setSubject("enterprise");
-                  setDrafts([{ field: "", issue: "wrong", suggested: "" }]);
-                }}
+                onClick={() => requestSubjectSwitch("enterprise")}
               >
                 企业数据
               </Button>
@@ -290,10 +330,7 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
                 size="sm"
                 variant={subject === "contact" ? "default" : "outline"}
                 disabled={!enterprise.contacts.length}
-                onClick={() => {
-                  setSubject("contact");
-                  setDrafts([{ field: "", issue: "wrong", suggested: "" }]);
-                }}
+                onClick={() => requestSubjectSwitch("contact")}
               >
                 关联人物
               </Button>
@@ -301,20 +338,14 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
                 type="button"
                 size="sm"
                 variant={subject === "new_contact" ? "default" : "outline"}
-                onClick={() => {
-                  setSubject("new_contact");
-                  setNewContact(EMPTY_NEW_CONTACT);
-                }}
+                onClick={() => requestSubjectSwitch("new_contact")}
               >
                 新增关联人物
               </Button>
               {subject === "contact" && (
                 <Select
                   value={String(contactIdx)}
-                  onValueChange={(v) => {
-                    setContactIdx(Number(v));
-                    setDrafts([{ field: "", issue: "wrong", suggested: "" }]);
-                  }}
+                  onValueChange={(v) => requestSubjectSwitch("contact", Number(v))}
                 >
                   <SelectTrigger className="h-8 w-[220px]">
                     <SelectValue placeholder="选择联系人" />
@@ -624,6 +655,32 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
           </DialogFooter>
         )}
       </DialogContent>
+      <AlertDialog
+        open={Boolean(pendingSwitch)}
+        onOpenChange={(value) => !value && setPendingSwitch(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认切换反馈对象？</AlertDialogTitle>
+            <AlertDialogDescription>
+              切换后当前填写的字段、联系人信息及来源内容将被清空，且无法恢复。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>继续填写</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingSwitch) {
+                  applySubjectSwitch(pendingSwitch.subject, pendingSwitch.contactIdx);
+                }
+                setPendingSwitch(null);
+              }}
+            >
+              确认切换
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
@@ -669,7 +726,7 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
                 </span>
               )}
               <span className="ml-auto text-xs text-muted-foreground tabular-nums">
-                {new Date(t.createdAt).toLocaleString("zh-CN", { hour12: false })}
+                {formatDateTime(t.createdAt)}
               </span>
             </div>
 
@@ -691,7 +748,7 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
                   <div key={i} className="flex flex-wrap items-center gap-1.5">
                     <span className="font-medium">{it.label}</span>
                     <span className="text-muted-foreground break-all">
-                      {it.current || "未提供"} → {it.finalValue ?? it.suggested}
+                      {it.current || "未提供"} → {it.finalValue || it.suggested || "未填写"}
                     </span>
                     {it.verdict === "accept" && (
                       <span className="text-emerald-600">已采纳</span>

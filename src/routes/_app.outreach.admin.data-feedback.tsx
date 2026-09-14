@@ -46,16 +46,21 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ListPagination } from "@/components/ListPagination";
-import { formatDateTime } from "@/lib/format-date";
+import {
+  formatDateTime,
+  startOfBeijingDay,
+  startOfBeijingMonth,
+} from "@/lib/format-date";
 import { ENTERPRISES } from "@/data/enterprises";
 import { CURRENT_USER } from "@/lib/current-user";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { addCredits } from "@/lib/credits-balance";
-import { recordFeedbackReward } from "@/lib/credits-ledger";
+import { hasFeedbackReward, recordFeedbackReward } from "@/lib/credits-ledger";
 import {
   claimTicket,
   computeReward,
   finalizeReview,
+  isFinalStatus,
   ISSUE_TYPE_LABEL,
   REJECT_REASON_LABEL,
   revokeTicket,
@@ -75,6 +80,16 @@ import {
   applyEnterpriseFieldOverride,
   revokeTicketChanges,
 } from "@/lib/enterprise-overrides";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export const Route = createFileRoute("/_app/outreach/admin/data-feedback")({
   head: () => ({
@@ -152,21 +167,19 @@ function DataFeedbackAdminPage() {
   const pageSize = 10;
 
   const stats = useMemo(() => {
-    const todayStart = new Date().setHours(0, 0, 0, 0);
-    const judged = tickets.filter((t) => t.reviewedAt);
+    const todayStart = startOfBeijingDay();
+    const judged = tickets.filter((t) => t.reviewedAt && !t.revoked);
     const accepted = judged.filter(
       (t) => t.status === "accepted" || t.status === "partial",
     );
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
+    const monthStart = startOfBeijingMonth();
     return {
       pending: tickets.filter((t) => t.status === "submitted").length,
       reviewing: tickets.filter((t) => t.status === "reviewing").length,
       today: judged.filter((t) => (t.reviewedAt ?? 0) >= todayStart).length,
       rate: judged.length ? Math.round((accepted.length / judged.length) * 100) : 0,
       reward: tickets
-        .filter((t) => (t.reviewedAt ?? 0) >= monthStart.getTime())
+        .filter((t) => !t.revoked && (t.reviewedAt ?? 0) >= monthStart)
         .reduce((s, t) => s + (t.reward ?? 0), 0),
     };
   }, [tickets]);
@@ -316,7 +329,7 @@ function DataFeedbackAdminPage() {
                   <TableCell className="text-xs text-muted-foreground">
                     <div>{t.submitter ?? "—"}</div>
                     <div className="tabular-nums">
-                      {formatDateTime(new Date(t.createdAt).toISOString())}
+                      {formatDateTime(t.createdAt)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -388,8 +401,9 @@ function ReviewDialog({
   const [newReason, setNewReason] = useState<RejectReason | undefined>(undefined);
   const [note, setNote] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
 
-  const readonly = Boolean(ticket?.reviewedAt);
+  const readonly = Boolean(ticket && isFinalStatus(ticket.status));
 
   useEffect(() => {
     if (!ticket) return;
@@ -397,7 +411,7 @@ function ReviewDialog({
     ticket.items.forEach((it, i) => {
       v[i] = {
         verdict: it.verdict ?? "accept",
-        finalValue: it.finalValue ?? it.suggested,
+        finalValue: it.finalValue ?? it.suggested ?? "",
         rejectReason: it.rejectReason,
       };
     });
@@ -413,7 +427,7 @@ function ReviewDialog({
       (ticket?.items ?? []).map((it, i) => ({
         ...it,
         verdict: verdicts[i]?.verdict ?? "accept",
-        finalValue: verdicts[i]?.finalValue ?? it.suggested,
+        finalValue: verdicts[i]?.finalValue ?? it.suggested ?? "",
         rejectReason: verdicts[i]?.rejectReason,
       })),
     [ticket, verdicts],
@@ -449,7 +463,7 @@ function ReviewDialog({
       : "";
 
   const doSubmit = (markInvalid = false) => {
-    const reward = markInvalid ? 0 : rewardInfo.reward;
+    const reward = markInvalid || hasFeedbackReward(ticket.id) ? 0 : rewardInfo.reward;
     // 数据生效
     if (!markInvalid) {
       for (const it of resolvedItems) {
@@ -460,7 +474,7 @@ function ReviewDialog({
             field: it.field,
             label: it.label,
             oldValue: it.current,
-            newValue: it.finalValue ?? it.suggested,
+            newValue: it.finalValue ?? it.suggested ?? "",
             ticketId: ticket.id,
             reviewer: CURRENT_USER.name,
           });
@@ -471,7 +485,7 @@ function ReviewDialog({
             field: it.field,
             label: it.label,
             oldValue: it.current,
-            newValue: it.finalValue ?? it.suggested,
+            newValue: it.finalValue ?? it.suggested ?? "",
             ticketId: ticket.id,
             reviewer: CURRENT_USER.name,
           });
@@ -530,9 +544,10 @@ function ReviewDialog({
   const doRevoke = () => {
     revokeTicketChanges(ticket.enterpriseId, ticket.id);
     revokeTicket(ticket.id);
-    toast.success("已撤销该工单的数据变更", {
-      description: "按平台规则，已发放的积分奖励不予回收",
+    toast.success("已撤销并恢复审核", {
+      description: "数据变更已回滚，工单已进入审核中；已发放积分不回收",
     });
+    setRevokeConfirmOpen(false);
     onClose();
   };
 
@@ -568,14 +583,14 @@ function ReviewDialog({
             </Field>
             <Field label="提交人">{ticket.submitter ?? "—"}</Field>
             <Field label="提交时间">
-              {formatDateTime(new Date(ticket.createdAt).toISOString())}
+              {formatDateTime(ticket.createdAt)}
             </Field>
             <Field label="允许联系">{ticket.allowContact ? "是" : "否"}</Field>
             {ticket.reviewedAt && (
               <>
                 <Field label="审核人">{ticket.reviewer ?? "—"}</Field>
                 <Field label="裁定时间">
-                  {formatDateTime(new Date(ticket.reviewedAt).toISOString())}
+                  {formatDateTime(ticket.reviewedAt)}
                 </Field>
                 <Field label="发放积分">
                   <span className="text-emerald-600 font-medium">
@@ -627,7 +642,7 @@ function ReviewDialog({
                         </span>
                       </Field>
                       <Field label="用户建议值">
-                        <span className="break-all">{it.suggested || "—"}</span>
+                        <span className="break-all">{it.suggested || "未填写"}</span>
                       </Field>
                       <Field label="最终生效值">
                         <Input
@@ -705,13 +720,17 @@ function ReviewDialog({
           {readonly ? (
             <>
               <span className="mr-auto self-center text-xs text-muted-foreground">
-                该工单已裁定，如需翻案请撤销数据变更（积分不回收）。
+                该工单已裁定；撤销后将回滚数据，并重新进入审核（积分不回收）。
               </span>
               {!ticket.revoked &&
                 (ticket.status === "accepted" || ticket.status === "partial") && (
-                  <Button variant="outline" className="gap-1.5" onClick={doRevoke}>
+                  <Button
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => setRevokeConfirmOpen(true)}
+                  >
                     <Undo2 className="h-4 w-4" />
-                    撤销数据变更
+                    撤销并重新审核
                   </Button>
                 )}
               <Button onClick={onClose}>关闭</Button>
@@ -761,6 +780,20 @@ function ReviewDialog({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <AlertDialog open={revokeConfirmOpen} onOpenChange={setRevokeConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确认撤销并重新审核？</AlertDialogTitle>
+              <AlertDialogDescription>
+                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定。原裁定记录保留，已发放积分不回收，也不会重复发放。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction onClick={doRevoke}>确认撤销</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DialogContent>
     </Dialog>
   );

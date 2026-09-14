@@ -11,6 +11,7 @@ import {
   hasFeedbackReward,
 } from "@/lib/credits-ledger";
 import { applyEnterpriseFieldOverride } from "@/lib/enterprise-overrides";
+import { startOfBeijingDay } from "@/lib/format-date";
 
 export type FeedbackSubjectKind = "enterprise" | "contact" | "new_contact";
 
@@ -89,7 +90,7 @@ export interface FeedbackItem {
   /** 系统当前值 */
   current: string;
   /** 用户建议的正确值 */
-  suggested: string;
+  suggested?: string;
   issue: FeedbackIssueType;
   /** 审核裁定 */
   verdict?: FeedbackVerdict;
@@ -137,6 +138,14 @@ export interface FeedbackTicket {
   readByUser?: boolean;
   /** 数据变更是否已被管理员撤销（积分不回收） */
   revoked?: boolean;
+  /** 撤销前的历史裁定快照（审计用） */
+  reviewHistory?: Array<{
+    status: FeedbackStatus;
+    reviewedAt?: number;
+    reviewer?: string;
+    reviewNote?: string;
+    reward?: number;
+  }>;
 }
 
 const KEY = "boo:data-feedback:v2";
@@ -223,6 +232,10 @@ export function submitFeedback(
 ): FeedbackTicket {
   const ticket: FeedbackTicket = {
     ...input,
+    items: input.items.map((item) => ({
+      ...item,
+      suggested: item.suggested?.trim() || undefined,
+    })),
     id: `FB${Date.now().toString(36).toUpperCase()}`,
     createdAt: Date.now(),
     status: "submitted",
@@ -271,6 +284,7 @@ export function computeReward(
   // 已完成审核的工单展示实际发放值，不再按当前规则重新估算。
   // FBDEMO004 是官网纠错演示工单，按产品方案固定奖励 15 积分。
   if (t.id === "FBDEMO004") return { reward: 15, capped: false };
+  if (t.revoked && hasFeedbackReward(t.id)) return { reward: 0, capped: false };
   if (isFinalStatus(t.status) && typeof t.reward === "number") {
     return { reward: t.reward, capped: false };
   }
@@ -293,10 +307,9 @@ export function computeReward(
 }
 
 function rewardGrantedToday(): number {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
+  const start = startOfBeijingDay();
   return store
-    .filter((t) => (t.reviewedAt ?? 0) >= start.getTime())
+    .filter((t) => !t.revoked && (t.reviewedAt ?? 0) >= start)
     .reduce((s, t) => s + (t.reward ?? 0), 0);
 }
 
@@ -348,6 +361,7 @@ export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
       reward: input.markInvalid ? 0 : input.reward,
       status,
       readByUser: false,
+      revoked: false,
     };
     return out;
   });
@@ -355,9 +369,34 @@ export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
   return out;
 }
 
-/** 撤销误采纳：仅回滚数据变更，不回收已发放积分 */
+/** 撤销误采纳：回滚数据并恢复审核中；保留历史裁定且不回收已发积分 */
 export function revokeTicket(id: string) {
-  store = store.map((t) => (t.id === id ? { ...t, revoked: true } : t));
+  store = store.map((t) =>
+    t.id === id
+      ? {
+          ...t,
+          status: "reviewing",
+          revoked: true,
+          reviewHistory: [
+            ...(t.reviewHistory ?? []),
+            {
+              status: t.status,
+              reviewedAt: t.reviewedAt,
+              reviewer: t.reviewer,
+              reviewNote: t.reviewNote,
+              reward: t.reward,
+            },
+          ],
+          reviewedAt: undefined,
+          reviewNote: undefined,
+          items: t.items.map(({ verdict: _v, finalValue: _f, rejectReason: _r, ...item }) => item),
+          newContactVerdict: undefined,
+          newContactRejectReason: undefined,
+          readByUser: true,
+          reward: undefined,
+        }
+      : t,
+  );
   persist();
 }
 

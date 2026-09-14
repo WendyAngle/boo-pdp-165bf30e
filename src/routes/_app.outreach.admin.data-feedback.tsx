@@ -466,6 +466,22 @@ function DataFeedbackAdminPage() {
         ticket={current}
         onClose={() => setReviewId(null)}
       />
+
+      <AlertDialog open={batchOpen} onOpenChange={setBatchOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量标记为无效？</AlertDialogTitle>
+            <AlertDialogDescription>
+              将把已选中的 {selected.length} 条未完结工单标记为「无效 / 重复」。企业数据不会发生任何变更，用户可在「我的反馈」中看到结果；已完结工单会自动跳过。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={doBatchInvalid}>确认标记</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

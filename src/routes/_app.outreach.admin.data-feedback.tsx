@@ -844,13 +844,16 @@ function ReviewDialog({
               <DialogDescription>提交后状态不可再修改，请确认以下结果。</DialogDescription>
             </DialogHeader>
             <ul className="text-sm space-y-1.5">
-              <li>将变更 {acceptCount} 项企业数据</li>
               <li>
-                将发放 {rewardInfo.reward} 积分
-                {rewardInfo.capped && (
-                  <span className="text-amber-600">（触发上限，超出部分不发放）</span>
-                )}
+                {ticket.subjectKind === "enterprise"
+                  ? `将变更 ${acceptCount} 项企业数据`
+                  : ticket.subjectKind === "contact"
+                    ? `将变更关联人物「${ticket.contactName ?? ""}」的 ${acceptCount} 项资料`
+                    : newAccepted
+                      ? `将新增关联人物「${ticket.newContact?.name ?? ""}」`
+                      : "不新增关联人物"}
               </li>
+              <li>未采纳条目将按所选原因反馈给提交人</li>
               <li>用户可在企业详情页「我的反馈」中查看结果</li>
             </ul>
             <DialogFooter>

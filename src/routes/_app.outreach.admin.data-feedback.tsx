@@ -678,11 +678,7 @@ function ReviewDialog({
                 <Field label="裁定时间">
                   {formatDateTime(ticket.reviewedAt)}
                 </Field>
-                <Field label="发放积分">
-                  <span className="text-emerald-600 font-medium">
-                    +{ticket.reward ?? 0}
-                  </span>
-                </Field>
+                <Field label="裁定结果">{STATUS_LABEL[ticket.status]}</Field>
               </>
             )}
           </section>

@@ -37,8 +37,14 @@ import {
 } from "@/components/ui/tabs";
 import {
   CONTACT_FEEDBACK_FIELDS,
+  DUPLICATE_WINDOW_DAYS,
   ENTERPRISE_FEEDBACK_FIELDS,
+  hasRecentNewContact,
+  isEquivalentValue,
+  isFinalStatus,
+  recentlySubmittedFields,
   ISSUE_TYPE_LABEL,
+
   markTicketsRead,
   NEW_CONTACT_FIELDS,
   REJECT_REASON_LABEL,

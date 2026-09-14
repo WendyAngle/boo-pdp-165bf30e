@@ -720,15 +720,16 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
               >
                 {STATUS_LABEL[t.status]}
               </span>
-              {Boolean(t.reward) && (
-                <span className="text-xs font-medium text-emerald-600">
-                  +{t.reward} 积分
-                </span>
-              )}
               <span className="ml-auto text-xs text-muted-foreground tabular-nums">
                 {formatDateTime(t.createdAt)}
               </span>
             </div>
+            {!isFinalStatus(t.status) && (
+              <p className="text-xs text-muted-foreground">
+                审核中，平台通常在 1–3 个工作日内给出结果。
+              </p>
+            )}
+
 
             <div className="space-y-1 text-xs">
               {t.subjectKind === "new_contact" ? (

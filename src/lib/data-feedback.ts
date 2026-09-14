@@ -469,7 +469,7 @@ export const NEW_CONTACT_FIELDS: {
 
 /* -------------------- 演示数据 -------------------- */
 
-const SEED_FLAG = "boo:data-feedback:seeded:v5";
+const SEED_FLAG = "boo:data-feedback:seeded:v6";
 
 /** 首次进入管理后台时灌入演示工单 */
 export function seedFeedbackDemoIfEmpty(

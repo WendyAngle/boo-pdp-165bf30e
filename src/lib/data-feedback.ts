@@ -5,13 +5,8 @@
  * 并说明数据来源以便平台核实。演示实现：工单保存在 localStorage。
  */
 import { useSyncExternalStore } from "react";
-import {
-  recordFeedbackReward,
-  fixFeedbackRewardAmount,
-  hasFeedbackReward,
-} from "@/lib/credits-ledger";
 import { applyEnterpriseFieldOverride } from "@/lib/enterprise-overrides";
-import { startOfBeijingDay } from "@/lib/format-date";
+
 
 export type FeedbackSubjectKind = "enterprise" | "contact" | "new_contact";
 
@@ -130,13 +125,12 @@ export interface FeedbackTicket {
   newContactVerdict?: FeedbackVerdict;
   newContactRejectReason?: RejectReason;
   /** 裁定信息 */
-  reward?: number;
   reviewedAt?: number;
   reviewer?: string;
   reviewNote?: string;
   /** 用户是否已查看裁定结果 */
   readByUser?: boolean;
-  /** 数据变更是否已被管理员撤销（积分不回收） */
+  /** 数据变更是否已被管理员撤销 */
   revoked?: boolean;
   /** 撤销前的历史裁定快照（审计用） */
   reviewHistory?: Array<{
@@ -144,8 +138,8 @@ export interface FeedbackTicket {
     reviewedAt?: number;
     reviewer?: string;
     reviewNote?: string;
-    reward?: number;
   }>;
+
 }
 
 const KEY = "boo:data-feedback:v2";
@@ -195,19 +189,7 @@ let store: FeedbackTicket[] = read();
 let version = 0;
 const listeners = new Set<() => void>();
 
-/** 修正历史演示数据：官网纠错奖励统一为 15 积分 */
-if (typeof window !== "undefined") {
-  const needFix = store.some((t) => t.id === "FBDEMO004" && t.reward !== 15);
-  if (needFix) {
-    store = store.map((t) => (t.id === "FBDEMO004" ? { ...t, reward: 15 } : t));
-    try {
-      window.localStorage.setItem(KEY, JSON.stringify(store));
-    } catch {
-      /* noop */
-    }
-    fixFeedbackRewardAmount("FBDEMO004", 15);
-  }
-}
+
 
 
 function persist() {
@@ -245,73 +227,66 @@ export function submitFeedback(
   return ticket;
 }
 
-/* -------------------- 积分奖励规则 -------------------- */
+/* -------------------- 数据质量规则 -------------------- */
 
-/** 关键联系字段（更高奖励） */
-export const KEY_REWARD_FIELDS = ["email", "phone", "whatsapp", "website"];
-export const REWARD_NORMAL_FIELD = 5;
-export const REWARD_KEY_FIELD = 15;
-export const REWARD_NEW_CONTACT = 20;
-export const REWARD_TRUSTED_MULTIPLIER = 1.5;
-export const REWARD_TICKET_CAP = 100;
-export const REWARD_DAILY_CAP = 300;
+/** 重复提交判定窗口（天） */
+export const DUPLICATE_WINDOW_DAYS = 30;
 
-/** 高可信来源 */
-const TRUSTED_SOURCES: FeedbackSourceType[] = [
-  "official_site",
-  "registry",
-  "contact_confirmed",
-];
-
-function baseRewardOf(t: FeedbackTicket, verdicts: FeedbackItem[], newAccepted: boolean) {
-  let base = 0;
-  for (const it of verdicts) {
-    if (it.verdict !== "accept") continue;
-    base += KEY_REWARD_FIELDS.includes(it.field)
-      ? REWARD_KEY_FIELD
-      : REWARD_NORMAL_FIELD;
-  }
-  if (t.subjectKind === "new_contact" && newAccepted) base += REWARD_NEW_CONTACT;
-  return base;
+/** 值等价归一：忽略大小写、首尾空格、连续空格与末尾斜杠 */
+export function normalizeValue(v: string): string {
+  return v.trim().toLowerCase().replace(/\s+/g, " ").replace(/\/+$/, "");
 }
 
-/** 计算工单奖励：基础分 → 来源加成 → 向下取整 → 单工单/单日上限 */
-export function computeReward(
-  t: FeedbackTicket,
-  items: FeedbackItem[],
-  newAccepted: boolean,
-): { reward: number; capped: boolean } {
-  // 已完成审核的工单展示实际发放值，不再按当前规则重新估算。
-  // FBDEMO004 是官网纠错演示工单，按产品方案固定奖励 15 积分。
-  if (t.id === "FBDEMO004") return { reward: 15, capped: false };
-  if (t.revoked && hasFeedbackReward(t.id)) return { reward: 0, capped: false };
-  if (isFinalStatus(t.status) && typeof t.reward === "number") {
-    return { reward: t.reward, capped: false };
-  }
-  const base = baseRewardOf(t, items, newAccepted);
-  const trusted =
-    TRUSTED_SOURCES.includes(t.sourceType) &&
-    (t.sourceType === "contact_confirmed" || Boolean(t.sourceUrl));
-  let value = Math.floor(base * (trusted ? REWARD_TRUSTED_MULTIPLIER : 1));
-  let capped = false;
-  if (value > REWARD_TICKET_CAP) {
-    value = REWARD_TICKET_CAP;
-    capped = true;
-  }
-  const todayGranted = rewardGrantedToday();
-  if (todayGranted + value > REWARD_DAILY_CAP) {
-    value = Math.max(0, REWARD_DAILY_CAP - todayGranted);
-    capped = true;
-  }
-  return { reward: value, capped };
+/** 两个值是否等价（用于「与当前值一致」的无效提交拦截） */
+export function isEquivalentValue(a: string, b: string): boolean {
+  return normalizeValue(a) === normalizeValue(b) && normalizeValue(a) !== "";
 }
 
-function rewardGrantedToday(): number {
-  const start = startOfBeijingDay();
-  return store
-    .filter((t) => !t.revoked && (t.reviewedAt ?? 0) >= start)
-    .reduce((s, t) => s + (t.reward ?? 0), 0);
+/**
+ * 近 DUPLICATE_WINDOW_DAYS 天内、同企业同主体已提交过且尚未出结论（或已采纳）的字段集合。
+ * 用于阻止同一问题被反复提交。
+ */
+export function recentlySubmittedFields(
+  tickets: FeedbackTicket[],
+  subjectKind: FeedbackSubjectKind,
+  contactIndex?: number,
+): Set<string> {
+  const since = Date.now() - DUPLICATE_WINDOW_DAYS * 86400_000;
+  const out = new Set<string>();
+  for (const t of tickets) {
+    if (t.subjectKind !== subjectKind) continue;
+    if (subjectKind === "contact" && t.contactIndex !== contactIndex) continue;
+    if (t.createdAt < since) continue;
+    const openOrAccepted =
+      t.status === "submitted" ||
+      t.status === "reviewing" ||
+      t.status === "accepted" ||
+      t.status === "partial";
+    if (!openOrAccepted) continue;
+    for (const item of t.items) {
+      if (t.status === "partial" && item.verdict === "reject") continue;
+      out.add(item.field);
+    }
+  }
+  return out;
 }
+
+/** 近 DUPLICATE_WINDOW_DAYS 天内是否已提交过同名新增关联人物 */
+export function hasRecentNewContact(
+  tickets: FeedbackTicket[],
+  name: string,
+): boolean {
+  const since = Date.now() - DUPLICATE_WINDOW_DAYS * 86400_000;
+  return tickets.some(
+    (t) =>
+      t.subjectKind === "new_contact" &&
+      t.createdAt >= since &&
+      t.status !== "rejected" &&
+      t.status !== "invalid" &&
+      isEquivalentValue(t.newContact?.name ?? "", name),
+  );
+}
+
 
 /* -------------------- 审核操作 -------------------- */
 

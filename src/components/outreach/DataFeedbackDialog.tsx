@@ -803,7 +803,28 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
                 ))
               )}
             </div>
+
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+              onClick={() => setExpanded(expanded === t.id ? null : t.id)}
+            >
+              {expanded === t.id ? "收起详情" : "展开详情"}
+            </button>
+            {expanded === t.id && (
+              <div className="space-y-1 rounded-md border border-dashed bg-muted/20 p-2.5 text-xs text-muted-foreground">
+                <div>提交人：{t.submitter ?? "—"}</div>
+                <div>来源类型：{SOURCE_TYPE_LABEL[t.sourceType]}</div>
+                <div className="break-all">来源链接：{t.sourceUrl || "未填写"}</div>
+                <div className="break-all">补充说明：{t.sourceNote || "未填写"}</div>
+                <div>
+                  处理时间：
+                  {t.reviewedAt ? formatDateTime(t.reviewedAt) : "待平台处理"}
+                </div>
+              </div>
+            )}
           </div>
+
         ))}
     </div>
   );

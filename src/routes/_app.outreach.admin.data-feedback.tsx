@@ -542,14 +542,6 @@ function ReviewDialog({
 
   const newAccepted = ticket?.subjectKind === "new_contact" && newVerdict === "accept";
 
-  const rewardInfo = useMemo(
-    () =>
-      ticket
-        ? computeReward(ticket, resolvedItems, Boolean(newAccepted))
-        : { reward: 0, capped: false },
-    [ticket, resolvedItems, newAccepted],
-  );
-
   if (!ticket) return null;
 
   const acceptCount =
@@ -570,7 +562,6 @@ function ReviewDialog({
       : "";
 
   const doSubmit = (markInvalid = false) => {
-    const reward = markInvalid || hasFeedbackReward(ticket.id) ? 0 : rewardInfo.reward;
     // 数据生效
     if (!markInvalid) {
       for (const it of resolvedItems) {
@@ -626,23 +617,11 @@ function ReviewDialog({
           : undefined,
       reviewNote: note.trim() || undefined,
       markInvalid,
-      reward,
     });
-    // 积分与数据生效同事务发放
-    if (reward > 0) {
-      addCredits(reward, 0);
-      recordFeedbackReward({
-        ticketId: ticket.id,
-        enterpriseId: ticket.enterpriseId,
-        enterpriseName: ticket.enterpriseName,
-        credits: reward,
-        note: `采纳 ${acceptCount} 项`,
-      });
-    }
     toast.success(markInvalid ? "已标记为无效工单" : "裁定已提交", {
       description: markInvalid
-        ? "数据不变更，不发放积分"
-        : `生效 ${acceptCount} 项变更 · 发放 ${reward} 积分`,
+        ? "数据不变更，用户可在「我的反馈」中查看结果"
+        : `生效 ${acceptCount} 项变更`,
     });
     setConfirmOpen(false);
     onClose();
@@ -699,11 +678,7 @@ function ReviewDialog({
                 <Field label="裁定时间">
                   {formatDateTime(ticket.reviewedAt)}
                 </Field>
-                <Field label="发放积分">
-                  <span className="text-emerald-600 font-medium">
-                    +{ticket.reward ?? 0}
-                  </span>
-                </Field>
+                <Field label="裁定结果">{STATUS_LABEL[ticket.status]}</Field>
               </>
             )}
           </section>
@@ -845,9 +820,8 @@ function ReviewDialog({
           ) : (
             <>
               <span className="mr-auto self-center text-xs text-muted-foreground inline-flex items-center gap-1.5">
-                <Coins className="h-3.5 w-3.5" />
-                预计发放 {rewardInfo.reward} 积分
-                {rewardInfo.capped ? "（已触发上限）" : ""}
+                <Info className="h-3.5 w-3.5" />
+                采纳 {acceptCount} 项将即时写入主数据
                 {disabledReason ? ` · ${disabledReason}` : ""}
               </span>
               <Button variant="outline" onClick={() => doSubmit(true)}>
@@ -870,13 +844,16 @@ function ReviewDialog({
               <DialogDescription>提交后状态不可再修改，请确认以下结果。</DialogDescription>
             </DialogHeader>
             <ul className="text-sm space-y-1.5">
-              <li>将变更 {acceptCount} 项企业数据</li>
               <li>
-                将发放 {rewardInfo.reward} 积分
-                {rewardInfo.capped && (
-                  <span className="text-amber-600">（触发上限，超出部分不发放）</span>
-                )}
+                {ticket.subjectKind === "enterprise"
+                  ? `将变更 ${acceptCount} 项企业数据`
+                  : ticket.subjectKind === "contact"
+                    ? `将变更关联人物「${ticket.contactName ?? ""}」的 ${acceptCount} 项资料`
+                    : newAccepted
+                      ? `将新增关联人物「${ticket.newContact?.name ?? ""}」`
+                      : "不新增关联人物"}
               </li>
+              <li>未采纳条目将按所选原因反馈给提交人</li>
               <li>用户可在企业详情页「我的反馈」中查看结果</li>
             </ul>
             <DialogFooter>

@@ -158,9 +158,14 @@ function DataFeedbackAdminPage() {
   const tickets = useAllFeedbacks();
   const [status, setStatus] = useState<"all" | FeedbackStatus>("all");
   const [subject, setSubject] = useState<string>("all");
+  const [issue, setIssue] = useState<"all" | FeedbackIssueType>("all");
+  const [source, setSource] = useState<"all" | FeedbackSourceType>("all");
+  const [range, setRange] = useState<"all" | "7" | "30">("all");
   const [kw, setKw] = useState("");
   const [page, setPage] = useState(1);
   const [reviewId, setReviewId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [batchOpen, setBatchOpen] = useState(false);
   const pageSize = 10;
 
   const stats = useMemo(() => {
@@ -169,20 +174,18 @@ function DataFeedbackAdminPage() {
     const accepted = judged.filter(
       (t) => t.status === "accepted" || t.status === "partial",
     );
-    const monthStart = startOfBeijingMonth();
     return {
       pending: tickets.filter((t) => t.status === "submitted").length,
       reviewing: tickets.filter((t) => t.status === "reviewing").length,
       today: judged.filter((t) => (t.reviewedAt ?? 0) >= todayStart).length,
       rate: judged.length ? Math.round((accepted.length / judged.length) * 100) : 0,
-      reward: tickets
-        .filter((t) => !t.revoked && (t.reviewedAt ?? 0) >= monthStart)
-        .reduce((s, t) => s + (t.reward ?? 0), 0),
     };
   }, [tickets]);
 
   const filtered = useMemo(() => {
     const k = kw.trim().toLowerCase();
+    const since =
+      range === "all" ? 0 : Date.now() - Number(range) * 86400_000;
     return [...tickets]
       .sort((a, b) => {
         const pa = a.status === "submitted" ? 0 : 1;
@@ -192,6 +195,9 @@ function DataFeedbackAdminPage() {
       .filter((t) => {
         if (status !== "all" && t.status !== status) return false;
         if (subject !== "all" && t.subjectKind !== subject) return false;
+        if (source !== "all" && t.sourceType !== source) return false;
+        if (issue !== "all" && !t.items.some((i) => i.issue === issue)) return false;
+        if (t.createdAt < since) return false;
         if (!k) return true;
         return (
           t.enterpriseName.toLowerCase().includes(k) ||
@@ -199,12 +205,29 @@ function DataFeedbackAdminPage() {
           (t.submitter ?? "").toLowerCase().includes(k)
         );
       });
-  }, [tickets, status, subject, kw]);
+  }, [tickets, status, subject, issue, source, range, kw]);
 
-  useEffect(() => setPage(1), [status, subject, kw]);
+  useEffect(() => setPage(1), [status, subject, issue, source, range, kw]);
 
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
   const current = tickets.find((t) => t.id === reviewId) ?? null;
+  const selectable = pageData.filter((t) => !isFinalStatus(t.status));
+  const selectedOnPage = selectable.filter((t) => selected.includes(t.id));
+  const allPageSelected =
+    selectable.length > 0 && selectedOnPage.length === selectable.length;
+  const toggleTicket = (id: string) =>
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
+  const doBatchInvalid = () => {
+    const count = batchMarkInvalid(selected, CURRENT_USER.name);
+    setSelected([]);
+    setBatchOpen(false);
+    toast.success(`已批量标记 ${count} 条工单为无效`, {
+      description: "无效工单不变更任何企业数据，也不计入采纳率",
+    });
+  };
 
   return (
     <div className="p-8 space-y-6">
@@ -215,18 +238,17 @@ function DataFeedbackAdminPage() {
             数据反馈审核
           </h1>
           <p className="text-sm text-muted-foreground">
-            逐条裁定用户提交的企业数据纠错工单；采纳后数据即时生效并同步发放积分奖励。
+            逐条裁定用户提交的企业数据纠错工单；采纳内容即时写入企业主数据。
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "待审核", value: stats.pending, tone: "text-amber-600" },
           { label: "审核中", value: stats.reviewing, tone: "text-blue-600" },
           { label: "今日已处理", value: stats.today, tone: "text-foreground" },
           { label: "采纳率", value: `${stats.rate}%`, tone: "text-emerald-600" },
-          { label: "本月发放积分", value: stats.reward, tone: "text-primary" },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className="text-xs text-muted-foreground">{s.label}</div>
@@ -258,7 +280,7 @@ function DataFeedbackAdminPage() {
             )}
           </div>
           <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-            <SelectTrigger className="h-9 w-[150px]">
+            <SelectTrigger className="h-9 w-[140px]">
               <SelectValue placeholder="状态" />
             </SelectTrigger>
             <SelectContent>
@@ -271,7 +293,7 @@ function DataFeedbackAdminPage() {
             </SelectContent>
           </Select>
           <Select value={subject} onValueChange={setSubject}>
-            <SelectTrigger className="h-9 w-[150px]">
+            <SelectTrigger className="h-9 w-[130px]">
               <SelectValue placeholder="主体类型" />
             </SelectTrigger>
             <SelectContent>
@@ -281,10 +303,59 @@ function DataFeedbackAdminPage() {
               <SelectItem value="new_contact">新增人物</SelectItem>
             </SelectContent>
           </Select>
-          <div className="ml-auto text-xs text-muted-foreground">
-            共 {filtered.length} 条工单
+          <Select value={issue} onValueChange={(v) => setIssue(v as typeof issue)}>
+            <SelectTrigger className="h-9 w-[140px]">
+              <SelectValue placeholder="问题类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部问题类型</SelectItem>
+              {(Object.keys(ISSUE_TYPE_LABEL) as FeedbackIssueType[]).map((s) => (
+                <SelectItem key={s} value={s}>
+                  {ISSUE_TYPE_LABEL[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={source} onValueChange={(v) => setSource(v as typeof source)}>
+            <SelectTrigger className="h-9 w-[190px]">
+              <SelectValue placeholder="来源类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部来源</SelectItem>
+              {(Object.keys(SOURCE_TYPE_LABEL) as FeedbackSourceType[]).map((s) => (
+                <SelectItem key={s} value={s}>
+                  {SOURCE_TYPE_LABEL[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={range} onValueChange={(v) => setRange(v as typeof range)}>
+            <SelectTrigger className="h-9 w-[130px]">
+              <SelectValue placeholder="提交时间" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部时间</SelectItem>
+              <SelectItem value="7">近 7 天</SelectItem>
+              <SelectItem value="30">近 30 天</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="ml-auto flex items-center gap-2">
+            {selected.length > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground">
+                  已选 {selected.length} 条
+                </span>
+                <Button size="sm" variant="outline" onClick={() => setBatchOpen(true)}>
+                  批量标记无效
+                </Button>
+              </>
+            )}
+            <span className="text-xs text-muted-foreground">
+              共 {filtered.length} 条工单
+            </span>
           </div>
         </div>
+
 
         {filtered.length === 0 ? (
           <div className="p-16 text-center text-sm text-muted-foreground">

@@ -718,20 +718,25 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
 }
 
 function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
   if (tickets.length === 0) {
     return (
       <div className="py-14 text-center text-sm text-muted-foreground">
-        您还没有对该企业提交过数据反馈
+        本企业还没有提交过数据反馈
       </div>
     );
   }
   return (
     <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        以下为本企业成员针对该客户提交的全部反馈，同一企业成员可互相查看处理进度。
+      </p>
       {[...tickets]
         .sort((a, b) => b.createdAt - a.createdAt)
         .map((t) => (
           <div key={t.id} className="rounded-lg border p-3 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
+
               <span className="font-mono text-xs text-muted-foreground">{t.id}</span>
               <Badge variant="secondary" className="font-normal">
                 {t.subjectKind === "enterprise"

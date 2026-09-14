@@ -599,11 +599,10 @@ export function seedFeedbackDemoIfEmpty(
       submitter: "莫文蔚",
       reviewer: "运营-李珊",
       reviewedAt,
-      reward: 15,
       reviewNote: "已核验新官网主体一致，采纳。",
       readByUser: false,
     });
-    // 采纳后的数据生效 + 积分奖励入账（与线上审核同事务的演示还原）
+    // 采纳后的数据生效（与线上审核同事务的演示还原）
     applyEnterpriseFieldOverride({
       enterpriseId: a.id,
       field: "website",
@@ -613,14 +612,7 @@ export function seedFeedbackDemoIfEmpty(
       ticketId: "FBDEMO004",
       reviewer: "运营-李珊",
     });
-    if (!hasFeedbackReward("FBDEMO004"))
-      recordFeedbackReward({
-        ticketId: "FBDEMO004",
-        enterpriseId: a.id,
-        enterpriseName: a.name,
-        credits: 15,
-        note: "企业官网 · 采纳",
-      });
+
   }
   if (!seeds.length) return;
   store = [...seeds, ...store];

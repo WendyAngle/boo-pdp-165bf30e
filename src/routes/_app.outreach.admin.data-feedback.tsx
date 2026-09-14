@@ -9,7 +9,6 @@ import {
   Clock,
   Ban,
   ExternalLink,
-  Coins,
   Undo2,
   Info,
 } from "lucide-react";
@@ -20,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -46,19 +46,13 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ListPagination } from "@/components/ListPagination";
-import {
-  formatDateTime,
-  startOfBeijingDay,
-  startOfBeijingMonth,
-} from "@/lib/format-date";
+import { formatDateTime, startOfBeijingDay } from "@/lib/format-date";
 import { ENTERPRISES } from "@/data/enterprises";
 import { CURRENT_USER } from "@/lib/current-user";
 import { useHydrated } from "@/hooks/use-hydrated";
-import { addCredits } from "@/lib/credits-balance";
-import { hasFeedbackReward, recordFeedbackReward } from "@/lib/credits-ledger";
 import {
+  batchMarkInvalid,
   claimTicket,
-  computeReward,
   finalizeReview,
   isFinalStatus,
   ISSUE_TYPE_LABEL,
@@ -68,7 +62,9 @@ import {
   SOURCE_TYPE_LABEL,
   STATUS_LABEL,
   useAllFeedbacks,
+  type FeedbackIssueType,
   type FeedbackItem,
+  type FeedbackSourceType,
   type FeedbackStatus,
   type FeedbackTicket,
   type FeedbackVerdict,
@@ -97,17 +93,18 @@ export const Route = createFileRoute("/_app/outreach/admin/data-feedback")({
       { title: "数据反馈审核 | 出海大数据平台" },
       {
         name: "description",
-        content: "集中受理用户提交的企业数据纠错工单，逐条裁定、生效数据并发放积分奖励",
+        content: "集中受理用户提交的企业数据纠错工单，逐条裁定并让采纳内容即时生效",
       },
       { property: "og:title", content: "数据反馈审核 | 出海大数据平台" },
       {
         property: "og:description",
-        content: "逐条裁定用户数据纠错工单，采纳后数据生效并即时发放积分奖励",
+        content: "逐条裁定用户数据纠错工单，采纳后企业数据即时生效",
       },
     ],
   }),
   component: DataFeedbackAdminPage,
 });
+
 
 const STATUS_META: Record<
   FeedbackStatus,
@@ -161,9 +158,14 @@ function DataFeedbackAdminPage() {
   const tickets = useAllFeedbacks();
   const [status, setStatus] = useState<"all" | FeedbackStatus>("all");
   const [subject, setSubject] = useState<string>("all");
+  const [issue, setIssue] = useState<"all" | FeedbackIssueType>("all");
+  const [source, setSource] = useState<"all" | FeedbackSourceType>("all");
+  const [range, setRange] = useState<"all" | "7" | "30">("all");
   const [kw, setKw] = useState("");
   const [page, setPage] = useState(1);
   const [reviewId, setReviewId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [batchOpen, setBatchOpen] = useState(false);
   const pageSize = 10;
 
   const stats = useMemo(() => {
@@ -172,20 +174,18 @@ function DataFeedbackAdminPage() {
     const accepted = judged.filter(
       (t) => t.status === "accepted" || t.status === "partial",
     );
-    const monthStart = startOfBeijingMonth();
     return {
       pending: tickets.filter((t) => t.status === "submitted").length,
       reviewing: tickets.filter((t) => t.status === "reviewing").length,
       today: judged.filter((t) => (t.reviewedAt ?? 0) >= todayStart).length,
       rate: judged.length ? Math.round((accepted.length / judged.length) * 100) : 0,
-      reward: tickets
-        .filter((t) => !t.revoked && (t.reviewedAt ?? 0) >= monthStart)
-        .reduce((s, t) => s + (t.reward ?? 0), 0),
     };
   }, [tickets]);
 
   const filtered = useMemo(() => {
     const k = kw.trim().toLowerCase();
+    const since =
+      range === "all" ? 0 : Date.now() - Number(range) * 86400_000;
     return [...tickets]
       .sort((a, b) => {
         const pa = a.status === "submitted" ? 0 : 1;
@@ -195,6 +195,9 @@ function DataFeedbackAdminPage() {
       .filter((t) => {
         if (status !== "all" && t.status !== status) return false;
         if (subject !== "all" && t.subjectKind !== subject) return false;
+        if (source !== "all" && t.sourceType !== source) return false;
+        if (issue !== "all" && !t.items.some((i) => i.issue === issue)) return false;
+        if (t.createdAt < since) return false;
         if (!k) return true;
         return (
           t.enterpriseName.toLowerCase().includes(k) ||
@@ -202,12 +205,29 @@ function DataFeedbackAdminPage() {
           (t.submitter ?? "").toLowerCase().includes(k)
         );
       });
-  }, [tickets, status, subject, kw]);
+  }, [tickets, status, subject, issue, source, range, kw]);
 
-  useEffect(() => setPage(1), [status, subject, kw]);
+  useEffect(() => setPage(1), [status, subject, issue, source, range, kw]);
 
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
   const current = tickets.find((t) => t.id === reviewId) ?? null;
+  const selectable = pageData.filter((t) => !isFinalStatus(t.status));
+  const selectedOnPage = selectable.filter((t) => selected.includes(t.id));
+  const allPageSelected =
+    selectable.length > 0 && selectedOnPage.length === selectable.length;
+  const toggleTicket = (id: string) =>
+    setSelected((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
+  const doBatchInvalid = () => {
+    const count = batchMarkInvalid(selected, CURRENT_USER.name);
+    setSelected([]);
+    setBatchOpen(false);
+    toast.success(`已批量标记 ${count} 条工单为无效`, {
+      description: "无效工单不变更任何企业数据，也不计入采纳率",
+    });
+  };
 
   return (
     <div className="p-8 space-y-6">
@@ -218,18 +238,17 @@ function DataFeedbackAdminPage() {
             数据反馈审核
           </h1>
           <p className="text-sm text-muted-foreground">
-            逐条裁定用户提交的企业数据纠错工单；采纳后数据即时生效并同步发放积分奖励。
+            逐条裁定用户提交的企业数据纠错工单；采纳内容即时写入企业主数据。
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "待审核", value: stats.pending, tone: "text-amber-600" },
           { label: "审核中", value: stats.reviewing, tone: "text-blue-600" },
           { label: "今日已处理", value: stats.today, tone: "text-foreground" },
           { label: "采纳率", value: `${stats.rate}%`, tone: "text-emerald-600" },
-          { label: "本月发放积分", value: stats.reward, tone: "text-primary" },
         ].map((s) => (
           <Card key={s.label} className="p-4">
             <div className="text-xs text-muted-foreground">{s.label}</div>
@@ -261,7 +280,7 @@ function DataFeedbackAdminPage() {
             )}
           </div>
           <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-            <SelectTrigger className="h-9 w-[150px]">
+            <SelectTrigger className="h-9 w-[140px]">
               <SelectValue placeholder="状态" />
             </SelectTrigger>
             <SelectContent>
@@ -274,7 +293,7 @@ function DataFeedbackAdminPage() {
             </SelectContent>
           </Select>
           <Select value={subject} onValueChange={setSubject}>
-            <SelectTrigger className="h-9 w-[150px]">
+            <SelectTrigger className="h-9 w-[130px]">
               <SelectValue placeholder="主体类型" />
             </SelectTrigger>
             <SelectContent>
@@ -284,10 +303,59 @@ function DataFeedbackAdminPage() {
               <SelectItem value="new_contact">新增人物</SelectItem>
             </SelectContent>
           </Select>
-          <div className="ml-auto text-xs text-muted-foreground">
-            共 {filtered.length} 条工单
+          <Select value={issue} onValueChange={(v) => setIssue(v as typeof issue)}>
+            <SelectTrigger className="h-9 w-[140px]">
+              <SelectValue placeholder="问题类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部问题类型</SelectItem>
+              {(Object.keys(ISSUE_TYPE_LABEL) as FeedbackIssueType[]).map((s) => (
+                <SelectItem key={s} value={s}>
+                  {ISSUE_TYPE_LABEL[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={source} onValueChange={(v) => setSource(v as typeof source)}>
+            <SelectTrigger className="h-9 w-[190px]">
+              <SelectValue placeholder="来源类型" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部来源</SelectItem>
+              {(Object.keys(SOURCE_TYPE_LABEL) as FeedbackSourceType[]).map((s) => (
+                <SelectItem key={s} value={s}>
+                  {SOURCE_TYPE_LABEL[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={range} onValueChange={(v) => setRange(v as typeof range)}>
+            <SelectTrigger className="h-9 w-[130px]">
+              <SelectValue placeholder="提交时间" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部时间</SelectItem>
+              <SelectItem value="7">近 7 天</SelectItem>
+              <SelectItem value="30">近 30 天</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="ml-auto flex items-center gap-2">
+            {selected.length > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground">
+                  已选 {selected.length} 条
+                </span>
+                <Button size="sm" variant="outline" onClick={() => setBatchOpen(true)}>
+                  批量标记无效
+                </Button>
+              </>
+            )}
+            <span className="text-xs text-muted-foreground">
+              共 {filtered.length} 条工单
+            </span>
           </div>
         </div>
+
 
         {filtered.length === 0 ? (
           <div className="p-16 text-center text-sm text-muted-foreground">
@@ -297,6 +365,20 @@ function DataFeedbackAdminPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allPageSelected}
+                    disabled={selectable.length === 0}
+                    aria-label="全选本页可处理工单"
+                    onCheckedChange={(v) =>
+                      setSelected((prev) =>
+                        v
+                          ? Array.from(new Set([...prev, ...selectable.map((t) => t.id)]))
+                          : prev.filter((id) => !selectable.some((t) => t.id === id)),
+                      )
+                    }
+                  />
+                </TableHead>
                 <TableHead>工单号</TableHead>
                 <TableHead>企业</TableHead>
                 <TableHead>主体</TableHead>
@@ -310,10 +392,19 @@ function DataFeedbackAdminPage() {
             <TableBody>
               {pageData.map((t) => (
                 <TableRow key={t.id} className="hover:bg-muted/30">
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.includes(t.id)}
+                      disabled={isFinalStatus(t.status)}
+                      aria-label={`选择工单 ${t.id}`}
+                      onCheckedChange={() => toggleTicket(t.id)}
+                    />
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{t.id}</TableCell>
                   <TableCell className="max-w-[220px] truncate capitalize">
                     {t.enterpriseName}
                   </TableCell>
+
                   <TableCell>
                     <Badge variant="secondary" className="font-normal">
                       {SUBJECT_LABEL[t.subjectKind]}
@@ -375,6 +466,22 @@ function DataFeedbackAdminPage() {
         ticket={current}
         onClose={() => setReviewId(null)}
       />
+
+      <AlertDialog open={batchOpen} onOpenChange={setBatchOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认批量标记为无效？</AlertDialogTitle>
+            <AlertDialogDescription>
+              将把已选中的 {selected.length} 条未完结工单标记为「无效 / 重复」。企业数据不会发生任何变更，用户可在「我的反馈」中看到结果；已完结工单会自动跳过。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={doBatchInvalid}>确认标记</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

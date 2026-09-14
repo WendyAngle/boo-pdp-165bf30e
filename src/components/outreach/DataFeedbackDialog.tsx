@@ -37,8 +37,14 @@ import {
 } from "@/components/ui/tabs";
 import {
   CONTACT_FEEDBACK_FIELDS,
+  DUPLICATE_WINDOW_DAYS,
   ENTERPRISE_FEEDBACK_FIELDS,
+  hasRecentNewContact,
+  isEquivalentValue,
+  isFinalStatus,
+  recentlySubmittedFields,
   ISSUE_TYPE_LABEL,
+
   markTicketsRead,
   NEW_CONTACT_FIELDS,
   REJECT_REASON_LABEL,
@@ -220,30 +226,56 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
     (i) => i.issue !== "invalid" && !i.suggested,
   );
 
+  /** 近 30 天内已提交且未出结论（或已采纳）的字段，禁止重复提交 */
+  const dupFields = useMemo(
+    () =>
+      recentlySubmittedFields(
+        myTickets,
+        subject,
+        subject === "contact" ? contactIdx : undefined,
+      ),
+    [myTickets, subject, contactIdx],
+  );
+  const duplicateField = validItems.find((i) => dupFields.has(i.field));
+  const equivalentItem = validItems.find(
+    (i) => i.issue !== "invalid" && isEquivalentValue(i.current, i.suggested ?? ""),
+  );
+  const duplicateNewContact =
+    subject === "new_contact" &&
+    Boolean(newContact.name.trim()) &&
+    hasRecentNewContact(myTickets, newContact.name);
+
   const disabledReason =
     subject === "new_contact"
       ? !newContact.name.trim()
         ? "请填写新增联系人姓名"
         : !newContactFilled
           ? "请至少填写联系邮箱、电话或 WhatsApp 中的一项"
-          : !sourceType
-            ? "请选择数据来源"
-            : needsUrl && !sourceUrl.trim()
-              ? "请填写来源链接"
-              : sourceType === "other" && !sourceNote.trim()
-                ? "请补充说明数据来源"
-                : ""
+          : duplicateNewContact
+            ? `近 ${DUPLICATE_WINDOW_DAYS} 天内已提交过同名关联人物，请勿重复提交`
+            : !sourceType
+              ? "请选择数据来源"
+              : needsUrl && !sourceUrl.trim()
+                ? "请填写来源链接"
+                : sourceType === "other" && !sourceNote.trim()
+                  ? "请补充说明数据来源"
+                  : ""
         : !validItems.length
           ? "请至少选择一个存在问题的字段"
           : missingSuggested
             ? "请填写正确值"
-            : !sourceType
+            : duplicateField
+              ? `「${duplicateField.label}」近 ${DUPLICATE_WINDOW_DAYS} 天内已有反馈在处理或已采纳，请勿重复提交`
+              : equivalentItem
+                ? `「${equivalentItem.label}」的正确值与系统当前值一致，无需反馈`
+                : !sourceType
             ? "请选择数据来源"
             : needsUrl && !sourceUrl.trim()
               ? "请填写来源链接"
               : sourceType === "other" && !sourceNote.trim()
                 ? "请补充说明数据来源"
                 : "";
+
 
   const onSubmit = () => {
     if (disabledReason) return;
@@ -686,20 +718,25 @@ export function DataFeedbackDialog({ enterprise, defaultContactIndex, trigger }:
 }
 
 function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
   if (tickets.length === 0) {
     return (
       <div className="py-14 text-center text-sm text-muted-foreground">
-        您还没有对该企业提交过数据反馈
+        本企业还没有提交过数据反馈
       </div>
     );
   }
   return (
     <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        以下为本企业成员针对该客户提交的全部反馈，同一企业成员可互相查看处理进度。
+      </p>
       {[...tickets]
         .sort((a, b) => b.createdAt - a.createdAt)
         .map((t) => (
           <div key={t.id} className="rounded-lg border p-3 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
+
               <span className="font-mono text-xs text-muted-foreground">{t.id}</span>
               <Badge variant="secondary" className="font-normal">
                 {t.subjectKind === "enterprise"
@@ -720,15 +757,16 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
               >
                 {STATUS_LABEL[t.status]}
               </span>
-              {Boolean(t.reward) && (
-                <span className="text-xs font-medium text-emerald-600">
-                  +{t.reward} 积分
-                </span>
-              )}
               <span className="ml-auto text-xs text-muted-foreground tabular-nums">
                 {formatDateTime(t.createdAt)}
               </span>
             </div>
+            {!isFinalStatus(t.status) && (
+              <p className="text-xs text-muted-foreground">
+                审核中，平台通常在 1–3 个工作日内给出结果。
+              </p>
+            )}
+
 
             <div className="space-y-1 text-xs">
               {t.subjectKind === "new_contact" ? (
@@ -765,7 +803,28 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
                 ))
               )}
             </div>
+
+            <button
+              type="button"
+              className="text-xs text-primary hover:underline"
+              onClick={() => setExpanded(expanded === t.id ? null : t.id)}
+            >
+              {expanded === t.id ? "收起详情" : "展开详情"}
+            </button>
+            {expanded === t.id && (
+              <div className="space-y-1 rounded-md border border-dashed bg-muted/20 p-2.5 text-xs text-muted-foreground">
+                <div>提交人：{t.submitter ?? "—"}</div>
+                <div>来源类型：{SOURCE_TYPE_LABEL[t.sourceType]}</div>
+                <div className="break-all">来源链接：{t.sourceUrl || "未填写"}</div>
+                <div className="break-all">补充说明：{t.sourceNote || "未填写"}</div>
+                <div>
+                  处理时间：
+                  {t.reviewedAt ? formatDateTime(t.reviewedAt) : "待平台处理"}
+                </div>
+              </div>
+            )}
           </div>
+
         ))}
     </div>
   );

@@ -617,23 +617,11 @@ function ReviewDialog({
           : undefined,
       reviewNote: note.trim() || undefined,
       markInvalid,
-      reward,
     });
-    // 积分与数据生效同事务发放
-    if (reward > 0) {
-      addCredits(reward, 0);
-      recordFeedbackReward({
-        ticketId: ticket.id,
-        enterpriseId: ticket.enterpriseId,
-        enterpriseName: ticket.enterpriseName,
-        credits: reward,
-        note: `采纳 ${acceptCount} 项`,
-      });
-    }
     toast.success(markInvalid ? "已标记为无效工单" : "裁定已提交", {
       description: markInvalid
-        ? "数据不变更，不发放积分"
-        : `生效 ${acceptCount} 项变更 · 发放 ${reward} 积分`,
+        ? "数据不变更，用户可在「我的反馈」中查看结果"
+        : `生效 ${acceptCount} 项变更`,
     });
     setConfirmOpen(false);
     onClose();

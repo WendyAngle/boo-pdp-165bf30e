@@ -53,14 +53,19 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import {
   batchMarkInvalid,
   claimTicket,
+  CLAIM_TIMEOUT_MINUTES,
   finalizeReview,
   isFinalStatus,
   ISSUE_TYPE_LABEL,
   REJECT_REASON_LABEL,
+  releaseStaleClaims,
+  releaseTicket,
   revokeTicket,
+  REVOKE_REASON_LABEL,
   seedFeedbackDemoIfEmpty,
   SOURCE_TYPE_LABEL,
   STATUS_LABEL,
+  TicketConflictError,
   useAllFeedbacks,
   type FeedbackIssueType,
   type FeedbackItem,
@@ -69,6 +74,7 @@ import {
   type FeedbackTicket,
   type FeedbackVerdict,
   type RejectReason,
+  type RevokeReason,
 } from "@/lib/data-feedback";
 import {
   addOverrideContact,

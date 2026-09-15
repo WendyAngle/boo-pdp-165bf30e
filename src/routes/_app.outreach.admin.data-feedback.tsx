@@ -972,7 +972,7 @@ function VerdictRow({
         onClick={() => onVerdict("reject")}
       >
         <XCircle className="h-3.5 w-3.5" />
-        驳回
+        未采纳
       </Button>
       {verdict === "reject" && (
         <Select
@@ -981,7 +981,7 @@ function VerdictRow({
           onValueChange={(v) => onReason(v as RejectReason)}
         >
           <SelectTrigger className="h-8 w-[200px]">
-            <SelectValue placeholder="选择驳回原因" />
+            <SelectValue placeholder="选择未采纳原因" />
           </SelectTrigger>
           <SelectContent>
             {(Object.keys(REJECT_REASON_LABEL) as RejectReason[]).map((r) => (

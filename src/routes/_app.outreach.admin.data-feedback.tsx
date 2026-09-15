@@ -909,17 +909,51 @@ function ReviewDialog({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <AlertDialog open={invalidConfirmOpen} onOpenChange={setInvalidConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确认标记为无效工单？</AlertDialogTitle>
+              <AlertDialogDescription>
+                标记后不变更任何数据，工单直接完结且不可再修改，提交人可在「我的反馈」中看到结果。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction onClick={() => doSubmit(true)}>确认标记</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <AlertDialog open={revokeConfirmOpen} onOpenChange={setRevokeConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>确认撤销并重新审核？</AlertDialogTitle>
               <AlertDialogDescription>
-                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定。原裁定记录保留于审计历史。
+                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定；原裁定与撤销原因保留在审计记录中，提交人会看到「结果已收回，正在重新核实」。
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">撤销原因（必选）</Label>
+              <Select
+                value={revokeReason ?? ""}
+                onValueChange={(v) => setRevokeReason(v as RevokeReason)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择撤销原因" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(REVOKE_REASON_LABEL) as RevokeReason[]).map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {REVOKE_REASON_LABEL[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <AlertDialogFooter>
               <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction onClick={doRevoke}>确认撤销</AlertDialogAction>
+              <AlertDialogAction disabled={!revokeReason} onClick={doRevoke}>
+                确认撤销
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

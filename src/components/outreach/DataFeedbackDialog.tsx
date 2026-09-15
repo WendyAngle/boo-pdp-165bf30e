@@ -763,7 +763,9 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
             </div>
             {!isFinalStatus(t.status) && (
               <p className="text-xs text-muted-foreground">
-                审核中，平台通常在 1–3 个工作日内给出结果。
+                {t.revoked
+                  ? "上一次处理结果已由平台收回，正在重新核实，通常 1–3 个工作日内给出新结果。"
+                  : "审核中，平台通常在 1–3 个工作日内给出结果。"}
               </p>
             )}
 

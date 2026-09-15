@@ -278,9 +278,11 @@ export function CreateReachTaskDialog({
     setAiUsed(false);
   }, [open]);
 
-  // TikTok 仅支持系统智能搜索
+  // 平台切换：不支持的寻找目标方式回落到系统智能搜索，并清空平台专属链接
   useEffect(() => {
-    if (platform !== "Facebook") setFindMode("smart");
+    setFindMode((m) => (PLATFORM_FIND_MODES[platform].includes(m) ? m : "smart"));
+    setPostLinks([""]);
+    setGroupLinks([""]);
   }, [platform]);
 
   // 地区变化时同步推荐目标语言（仅在尚未翻译时）
@@ -504,9 +506,9 @@ export function CreateReachTaskDialog({
 
 
   /** 格式校验通过的链接（用于提交与计费口径） */
-  const validLinks = links.map((l) => l.trim()).filter(Boolean).filter(isValidFacebookLink);
+  const validLinks = links.map((l) => l.trim()).filter(Boolean).filter((l) => isValidSocialLink(platform, l));
   /** 非空但格式不正确的链接数量（用于提交前拦截提示） */
-  const invalidLinksCount = links.map((l) => l.trim()).filter((l) => l && !isValidFacebookLink(l)).length;
+  const invalidLinksCount = links.map((l) => l.trim()).filter((l) => l && !isValidSocialLink(platform, l)).length;
 
   /** 链接批量导入：解析文本（按行/逗号/空白分隔），分类为有效链接与格式不正确数量 */
   function parseImportedLinks(raw: string): { valid: string[]; invalid: number } {
@@ -519,7 +521,7 @@ export function CreateReachTaskDialog({
     const seen = new Set<string>();
     const valid: string[] = [];
     for (const t of tokens) {
-      if (!isValidFacebookLink(t)) {
+      if (!isValidSocialLink(platform, t)) {
         invalid += 1;
         continue;
       }
@@ -540,7 +542,7 @@ export function CreateReachTaskDialog({
       toast.error(`未识别到有效链接`, {
         description:
           invalid > 0
-            ? `${invalid} 条格式不正确已自动过滤；请使用 Facebook 的 http(s) 链接，或下载导入模版参考示例`
+            ? `${invalid} 条格式不正确已自动过滤；请使用 ${platform} 的 http(s) 链接，或下载导入模版参考示例`
             : `请粘贴 http(s) 开头的${findMode === "post" ? "贴文" : "群组"}链接，或使用导入模版`,
       });
       return;
@@ -581,9 +583,7 @@ export function CreateReachTaskDialog({
   function downloadTemplate() {
     const header = findMode === "post" ? "贴文链接" : "群组链接";
     const example =
-      findMode === "post"
-        ? "https://www.facebook.com/brandpage/posts/1234567890"
-        : "https://www.facebook.com/groups/1234567890";
+      findMode === "post" ? LINK_SAMPLES[platform].post : LINK_SAMPLES[platform].group;
     const csv = `\uFEFF${header}\n${example}\n`;
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -755,7 +755,7 @@ export function CreateReachTaskDialog({
           </div>
 
           {/* 寻找目标方式 */}
-          {platform === "Facebook" && (
+          {(
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">寻找目标方式 *</Label>
               <Select value={findMode} onValueChange={(v) => setFindMode(v as FindMode)}>
@@ -763,7 +763,7 @@ export function CreateReachTaskDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {FIND_MODES.map((m) => (
+                  {FIND_MODES.filter((m) => PLATFORM_FIND_MODES[platform].includes(m.value)).map((m) => (
                     <SelectItem key={m.value} value={m.value}>
                       {m.label}
                     </SelectItem>
@@ -912,7 +912,7 @@ export function CreateReachTaskDialog({
                 <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
                   {links.map((l, i) => {
                     const trimmed = l.trim();
-                    const invalid = trimmed.length > 0 && !isValidFacebookLink(trimmed);
+                    const invalid = trimmed.length > 0 && !isValidSocialLink(platform, trimmed);
                     return (
                       <div key={i} className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -925,8 +925,8 @@ export function CreateReachTaskDialog({
                             }
                             placeholder={
                               findMode === "post"
-                                ? "https://www.facebook.com/xxx/posts/123456"
-                                : "https://www.facebook.com/groups/123456"
+                                ? LINK_SAMPLES[platform].post
+                                : LINK_SAMPLES[platform].group
                             }
                           />
                           <Button
@@ -942,7 +942,7 @@ export function CreateReachTaskDialog({
                         </div>
                         {invalid && (
                           <p className="pl-1 text-[10px] text-destructive">
-                            格式不正确：须为 Facebook 的 http(s) {findMode === "post" ? "贴文" : "群组"}链接
+                            格式不正确：须为 {platform} 的 http(s) {findMode === "post" ? "贴文" : "群组"}链接
                           </p>
                         )}
                       </div>
@@ -1484,7 +1484,7 @@ export function CreateReachTaskDialog({
             </DialogTitle>
             <DialogDescription className="text-xs">
               支持上传 CSV/TXT 文件或直接粘贴链接（每行一个）；列标题须为「
-              {findMode === "post" ? "贴文链接" : "群组链接"}」，仅识别 Facebook 的 http(s) 有效链接，格式不正确与重复数据将自动过滤；与手动输入合计最多 {LINK_CAP} 条，超出部分将不导入。
+              {findMode === "post" ? "贴文链接" : "群组链接"}」，仅识别 {platform} 的 http(s) 有效链接，格式不正确与重复数据将自动过滤；与手动输入合计最多 {LINK_CAP} 条，超出部分将不导入。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -1526,8 +1526,8 @@ export function CreateReachTaskDialog({
                 rows={6}
                 placeholder={
                   findMode === "post"
-                    ? "https://www.facebook.com/brandpage/posts/1234567890\nhttps://www.facebook.com/brandpage/posts/0987654321"
-                    : "https://www.facebook.com/groups/1234567890\nhttps://www.facebook.com/groups/0987654321"
+                    ? `${LINK_SAMPLES[platform].post}\n${LINK_SAMPLES[platform].post.replace(/\d+$/, "0987654321")}`
+                    : `${LINK_SAMPLES[platform].group}\n${LINK_SAMPLES[platform].group.replace(/\d+$/, "0987654321")}`
                 }
                 className="font-mono text-xs"
               />

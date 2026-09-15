@@ -829,6 +829,40 @@ function ReviewDialog({
             </p>
           </section>
 
+          {/* D. 审计记录：历史裁定与撤销 */}
+          {Boolean(ticket.reviewHistory?.length) && (
+            <section className="space-y-2">
+              <Label className="text-xs text-muted-foreground">
+                审计记录（曾撤销 {ticket.revokeCount ?? ticket.reviewHistory!.length} 次）
+              </Label>
+              <div className="space-y-2">
+                {[...(ticket.reviewHistory ?? [])].reverse().map((h, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border bg-muted/20 p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"
+                  >
+                    <Field label="原裁定结果">{STATUS_LABEL[h.status]}</Field>
+                    <Field label="原审核人">{h.reviewer ?? "—"}</Field>
+                    <Field label="原裁定时间">
+                      {h.reviewedAt ? formatDateTime(h.reviewedAt) : "—"}
+                    </Field>
+                    <Field label="撤销原因">
+                      {h.revokeReason ? REVOKE_REASON_LABEL[h.revokeReason] : "—"}
+                    </Field>
+                    <Field label="撤销人">{h.revokedBy ?? "—"}</Field>
+                    <Field label="撤销时间">
+                      {h.revokedAt ? formatDateTime(h.revokedAt) : "—"}
+                    </Field>
+                    <div className="col-span-2">
+                      <Field label="原审核备注">{h.reviewNote || "—"}</Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+
           {!readonly && (
             <section className="space-y-1">
               <Label className="text-xs text-muted-foreground">审核备注</Label>

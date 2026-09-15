@@ -432,14 +432,16 @@ export function batchMarkInvalid(ids: string[], reviewer: string): number {
   return count;
 }
 
-/** 撤销误采纳：回滚数据并恢复审核中，保留历史裁定快照 */
-export function revokeTicket(id: string) {
+/** 撤销误采纳：回滚数据并恢复审核中，保留历史裁定快照（含撤销原因与操作人） */
+export function revokeTicket(id: string, reason: RevokeReason, operator: string) {
   store = store.map((t) =>
     t.id === id
       ? {
           ...t,
           status: "reviewing" as FeedbackStatus,
           revoked: true,
+          revokeCount: (t.revokeCount ?? 0) + 1,
+          claimedAt: Date.now(),
           reviewHistory: [
             ...(t.reviewHistory ?? []),
             {
@@ -447,14 +449,19 @@ export function revokeTicket(id: string) {
               reviewedAt: t.reviewedAt,
               reviewer: t.reviewer,
               reviewNote: t.reviewNote,
+              revokeReason: reason,
+              revokedAt: Date.now(),
+              revokedBy: operator,
             },
           ],
           reviewedAt: undefined,
           reviewNote: undefined,
+          reviewer: operator,
           items: t.items.map(({ verdict: _v, finalValue: _f, rejectReason: _r, ...item }) => item),
           newContactVerdict: undefined,
           newContactRejectReason: undefined,
-          readByUser: true,
+          // 让提交人可见「结果已收回、正在重新核实」
+          readByUser: false,
         }
       : t,
   );

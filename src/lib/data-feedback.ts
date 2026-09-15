@@ -16,7 +16,7 @@ export const ISSUE_TYPE_LABEL: Record<FeedbackIssueType, string> = {
   wrong: "数据错误",
   outdated: "数据过期",
   missing: "数据缺失",
-  invalid: "无效 / 重复",
+  invalid: "重复 / 冒充数据",
 };
 
 export type FeedbackSourceType =
@@ -59,7 +59,7 @@ export const STATUS_LABEL: Record<FeedbackStatus, string> = {
   accepted: "已采纳",
   partial: "部分采纳",
   rejected: "未采纳",
-  invalid: "无效 / 重复",
+  invalid: "无效工单",
 };
 
 export type RejectReason =
@@ -76,6 +76,18 @@ export const REJECT_REASON_LABEL: Record<RejectReason, string> = {
   duplicate: "重复提交",
   spam: "恶意或无意义内容",
 };
+
+/** 撤销裁定的业务原因（必填，用于留痕） */
+export type RevokeReason = "reviewer_mistake" | "evidence_overturned" | "bad_data";
+
+export const REVOKE_REASON_LABEL: Record<RevokeReason, string> = {
+  reviewer_mistake: "审核员误操作（看错佐证 / 最终值填错）",
+  evidence_overturned: "佐证事后被推翻（官网改回 / 企业本人否认）",
+  bad_data: "采纳内容为无效或恶意数据",
+};
+
+/** 认领后无人处理的自动释放时长（分钟） */
+export const CLAIM_TIMEOUT_MINUTES = 30;
 
 export interface FeedbackItem {
   /** 字段 key */

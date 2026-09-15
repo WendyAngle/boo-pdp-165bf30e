@@ -710,11 +710,13 @@ export function CreateReachTaskDialog({
             </Badge>
           </DialogTitle>
           <DialogDescription className="text-xs">
-            {action === "加好友"
-              ? "由系统按推广产品与关键词自动寻找目标账号并发出加好友请求。"
-              : action === "关注"
-                ? "由系统按推广产品与关键词自动寻找目标账号并执行关注。"
-                : "由系统按推广产品与关键词自动寻找目标账号并发送私信。"}
+            {`${
+              findMode === "smart"
+                ? "由系统按推广产品与关键词自动寻找目标账号"
+                : findMode === "post"
+                  ? "从指定贴文的互动用户中筛选目标账号"
+                  : "从指定群组的活跃成员中筛选目标账号"
+            }并${action === "加好友" ? "发出加好友请求" : action === "关注" ? "执行关注" : "发送私信"}。`}
           </DialogDescription>
         </DialogHeader>
 

@@ -472,7 +472,7 @@ export function revokeTicket(id: string, reason: RevokeReason, operator: string)
 export function markTicketsRead(enterpriseId: string) {
   let changed = false;
   store = store.map((t) => {
-    if (t.enterpriseId === enterpriseId && isFinalStatus(t.status) && !t.readByUser) {
+    if (t.enterpriseId === enterpriseId && hasUnreadUpdate(t)) {
       changed = true;
       return { ...t, readByUser: true };
     }
@@ -483,6 +483,11 @@ export function markTicketsRead(enterpriseId: string) {
 
 export function isFinalStatus(s: FeedbackStatus) {
   return s === "accepted" || s === "partial" || s === "rejected" || s === "invalid";
+}
+
+/** 是否有提交人尚未查看的进展（裁定结果或结果被收回） */
+export function hasUnreadUpdate(t: FeedbackTicket) {
+  return !t.readByUser && (isFinalStatus(t.status) || Boolean(t.revoked));
 }
 
 /* -------------------- 读取 -------------------- */

@@ -623,7 +623,7 @@ export function CreateReachTaskDialog({
       return toast.error(findMode === "post" ? "请填写贴文链接" : "请填写群组链接");
     if (findMode !== "smart" && invalidLinksCount > 0)
       return toast.error(`${invalidLinksCount} 条链接格式不正确`, {
-        description: "请修正为 ${platform} 的 http(s) 链接，或删除后再提交",
+        description: `请修正为 ${platform} 的 http(s) 链接，或删除后再提交`,
       });
     if (findMode !== "smart" && !deadline) return toast.error("请选择任务截止日期");
     if (findMode === "group" && groupScopes.length === 0)

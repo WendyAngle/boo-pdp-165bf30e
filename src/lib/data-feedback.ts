@@ -311,9 +311,43 @@ export function hasRecentNewContact(
 
 export function claimTicket(id: string, reviewer: string) {
   store = store.map((t) =>
-    t.id === id && t.status === "submitted" ? { ...t, status: "reviewing", reviewer } : t,
+    t.id === id && t.status === "submitted"
+      ? { ...t, status: "reviewing", reviewer, claimedAt: Date.now() }
+      : t,
   );
   persist();
+}
+
+/** 关闭审核弹窗但未裁定时释放认领，避免工单长期挂在「审核中」 */
+export function releaseTicket(id: string, reviewer: string) {
+  let changed = false;
+  store = store.map((t) => {
+    if (
+      t.id !== id ||
+      t.status !== "reviewing" ||
+      t.reviewedAt ||
+      t.revoked ||
+      t.reviewer !== reviewer
+    )
+      return t;
+    changed = true;
+    return { ...t, status: "submitted" as FeedbackStatus, reviewer: undefined, claimedAt: undefined };
+  });
+  if (changed) persist();
+}
+
+/** 超时自动释放：认领超过 CLAIM_TIMEOUT_MINUTES 仍未裁定的工单回到待审核 */
+export function releaseStaleClaims(): number {
+  const deadline = Date.now() - CLAIM_TIMEOUT_MINUTES * 60_000;
+  let count = 0;
+  store = store.map((t) => {
+    if (t.status !== "reviewing" || t.revoked || t.reviewedAt) return t;
+    if ((t.claimedAt ?? 0) === 0 || (t.claimedAt ?? 0) > deadline) return t;
+    count++;
+    return { ...t, status: "submitted" as FeedbackStatus, reviewer: undefined, claimedAt: undefined };
+  });
+  if (count) persist();
+  return count;
 }
 
 export interface ReviewInput {
@@ -325,10 +359,26 @@ export interface ReviewInput {
   reviewNote?: string;
   /** 整单标记无效 */
   markInvalid?: boolean;
+  /** 并发保护：打开工单时的裁定时间快照（未裁定为 0） */
+  expectedReviewedAt?: number;
 }
+
+export class TicketConflictError extends Error {}
 
 export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
   let out: FeedbackTicket | undefined;
+  const target = store.find((t) => t.id === input.id);
+  if (!target) return undefined;
+  // 并发保护：期间被他人裁定 / 标记无效则拒绝覆盖
+  if (
+    input.expectedReviewedAt !== undefined &&
+    (target.reviewedAt ?? 0) !== input.expectedReviewedAt
+  ) {
+    throw new TicketConflictError("该工单已被他人处理");
+  }
+  if (input.expectedReviewedAt !== undefined && isFinalStatus(target.status)) {
+    throw new TicketConflictError("该工单已被他人处理");
+  }
   store = store.map((t) => {
     if (t.id !== input.id) return t;
     const acceptedCount =

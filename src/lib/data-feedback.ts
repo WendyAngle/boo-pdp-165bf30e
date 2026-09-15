@@ -504,10 +504,10 @@ export function useAllFeedbacks(): FeedbackTicket[] {
   return store;
 }
 
-/** 本企业未读裁定结果数（用于企业详情页角标） */
+/** 本企业未读进展数（裁定结果或结果被收回；用于企业详情页角标） */
 export function useUnreadFeedbackCount(enterpriseId: string): number {
   const list = useFeedbacks(enterpriseId);
-  return list.filter((t) => isFinalStatus(t.status) && !t.readByUser).length;
+  return list.filter(hasUnreadUpdate).length;
 }
 
 

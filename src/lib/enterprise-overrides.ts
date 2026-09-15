@@ -178,7 +178,7 @@ export function addOverrideContact(input: {
   persist();
 }
 
-/** 撤销某工单产生的全部数据变更（不回收已发放积分） */
+/** 撤销某工单产生的全部数据变更 */
 export function revokeTicketChanges(enterpriseId: string, ticketId: string) {
   const cur = getOverride(enterpriseId);
   const remaining = cur.history.filter((h) => h.ticketId !== ticketId);

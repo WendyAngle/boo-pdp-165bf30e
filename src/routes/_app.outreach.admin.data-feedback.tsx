@@ -593,6 +593,32 @@ function ReviewDialog({
       : "";
 
   const doSubmit = (markInvalid = false) => {
+    // 并发保护：先落库裁定，被他人处理过则直接中止
+    try {
+      finalizeReview({
+        id: ticket.id,
+        reviewer: CURRENT_USER.name,
+        items: resolvedItems,
+        newContactVerdict:
+          ticket.subjectKind === "new_contact" ? newVerdict : undefined,
+        newContactRejectReason:
+          ticket.subjectKind === "new_contact" && newVerdict === "reject"
+            ? newReason
+            : undefined,
+        reviewNote: note.trim() || undefined,
+        markInvalid,
+        expectedReviewedAt: openedReviewedAt,
+      });
+    } catch (e) {
+      if (e instanceof TicketConflictError) {
+        toast.error("提交失败", { description: e.message });
+        setConfirmOpen(false);
+        setInvalidConfirmOpen(false);
+        onClose();
+        return;
+      }
+      throw e;
+    }
     // 数据生效
     if (!markInvalid) {
       for (const it of resolvedItems) {

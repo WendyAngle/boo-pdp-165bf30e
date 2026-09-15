@@ -16,7 +16,7 @@ export const ISSUE_TYPE_LABEL: Record<FeedbackIssueType, string> = {
   wrong: "数据错误",
   outdated: "数据过期",
   missing: "数据缺失",
-  invalid: "无效 / 重复",
+  invalid: "重复 / 冒充数据",
 };
 
 export type FeedbackSourceType =
@@ -59,7 +59,7 @@ export const STATUS_LABEL: Record<FeedbackStatus, string> = {
   accepted: "已采纳",
   partial: "部分采纳",
   rejected: "未采纳",
-  invalid: "无效 / 重复",
+  invalid: "无效工单",
 };
 
 export type RejectReason =
@@ -76,6 +76,18 @@ export const REJECT_REASON_LABEL: Record<RejectReason, string> = {
   duplicate: "重复提交",
   spam: "恶意或无意义内容",
 };
+
+/** 撤销裁定的业务原因（必填，用于留痕） */
+export type RevokeReason = "reviewer_mistake" | "evidence_overturned" | "bad_data";
+
+export const REVOKE_REASON_LABEL: Record<RevokeReason, string> = {
+  reviewer_mistake: "审核员误操作（看错佐证 / 最终值填错）",
+  evidence_overturned: "佐证事后被推翻（官网改回 / 企业本人否认）",
+  bad_data: "采纳内容为无效或恶意数据",
+};
+
+/** 认领后无人处理的自动释放时长（分钟） */
+export const CLAIM_TIMEOUT_MINUTES = 30;
 
 export interface FeedbackItem {
   /** 字段 key */
@@ -130,16 +142,23 @@ export interface FeedbackTicket {
   reviewNote?: string;
   /** 用户是否已查看裁定结果 */
   readByUser?: boolean;
-  /** 数据变更是否已被管理员撤销 */
+  /** 当前「审核中」状态是否由撤销产生（重新裁定后清除） */
   revoked?: boolean;
+  /** 撤销次数（永久保留，用于审计留痕） */
+  revokeCount?: number;
+  /** 认领时间，用于超时自动释放 */
+  claimedAt?: number;
   /** 撤销前的历史裁定快照（审计用） */
   reviewHistory?: Array<{
     status: FeedbackStatus;
     reviewedAt?: number;
     reviewer?: string;
     reviewNote?: string;
+    /** 撤销原因与操作人 */
+    revokeReason?: RevokeReason;
+    revokedAt?: number;
+    revokedBy?: string;
   }>;
-
 }
 
 const KEY = "boo:data-feedback:v2";
@@ -292,9 +311,43 @@ export function hasRecentNewContact(
 
 export function claimTicket(id: string, reviewer: string) {
   store = store.map((t) =>
-    t.id === id && t.status === "submitted" ? { ...t, status: "reviewing", reviewer } : t,
+    t.id === id && t.status === "submitted"
+      ? { ...t, status: "reviewing", reviewer, claimedAt: Date.now() }
+      : t,
   );
   persist();
+}
+
+/** 关闭审核弹窗但未裁定时释放认领，避免工单长期挂在「审核中」 */
+export function releaseTicket(id: string, reviewer: string) {
+  let changed = false;
+  store = store.map((t) => {
+    if (
+      t.id !== id ||
+      t.status !== "reviewing" ||
+      t.reviewedAt ||
+      t.revoked ||
+      t.reviewer !== reviewer
+    )
+      return t;
+    changed = true;
+    return { ...t, status: "submitted" as FeedbackStatus, reviewer: undefined, claimedAt: undefined };
+  });
+  if (changed) persist();
+}
+
+/** 超时自动释放：认领超过 CLAIM_TIMEOUT_MINUTES 仍未裁定的工单回到待审核 */
+export function releaseStaleClaims(): number {
+  const deadline = Date.now() - CLAIM_TIMEOUT_MINUTES * 60_000;
+  let count = 0;
+  store = store.map((t) => {
+    if (t.status !== "reviewing" || t.revoked || t.reviewedAt) return t;
+    if ((t.claimedAt ?? 0) === 0 || (t.claimedAt ?? 0) > deadline) return t;
+    count++;
+    return { ...t, status: "submitted" as FeedbackStatus, reviewer: undefined, claimedAt: undefined };
+  });
+  if (count) persist();
+  return count;
 }
 
 export interface ReviewInput {
@@ -306,10 +359,26 @@ export interface ReviewInput {
   reviewNote?: string;
   /** 整单标记无效 */
   markInvalid?: boolean;
+  /** 并发保护：打开工单时的裁定时间快照（未裁定为 0） */
+  expectedReviewedAt?: number;
 }
+
+export class TicketConflictError extends Error {}
 
 export function finalizeReview(input: ReviewInput): FeedbackTicket | undefined {
   let out: FeedbackTicket | undefined;
+  const target = store.find((t) => t.id === input.id);
+  if (!target) return undefined;
+  // 并发保护：期间被他人裁定 / 标记无效则拒绝覆盖
+  if (
+    input.expectedReviewedAt !== undefined &&
+    (target.reviewedAt ?? 0) !== input.expectedReviewedAt
+  ) {
+    throw new TicketConflictError("该工单已被他人处理");
+  }
+  if (input.expectedReviewedAt !== undefined && isFinalStatus(target.status)) {
+    throw new TicketConflictError("该工单已被他人处理");
+  }
   store = store.map((t) => {
     if (t.id !== input.id) return t;
     const acceptedCount =
@@ -363,14 +432,16 @@ export function batchMarkInvalid(ids: string[], reviewer: string): number {
   return count;
 }
 
-/** 撤销误采纳：回滚数据并恢复审核中，保留历史裁定快照 */
-export function revokeTicket(id: string) {
+/** 撤销误采纳：回滚数据并恢复审核中，保留历史裁定快照（含撤销原因与操作人） */
+export function revokeTicket(id: string, reason: RevokeReason, operator: string) {
   store = store.map((t) =>
     t.id === id
       ? {
           ...t,
           status: "reviewing" as FeedbackStatus,
           revoked: true,
+          revokeCount: (t.revokeCount ?? 0) + 1,
+          claimedAt: Date.now(),
           reviewHistory: [
             ...(t.reviewHistory ?? []),
             {
@@ -378,14 +449,19 @@ export function revokeTicket(id: string) {
               reviewedAt: t.reviewedAt,
               reviewer: t.reviewer,
               reviewNote: t.reviewNote,
+              revokeReason: reason,
+              revokedAt: Date.now(),
+              revokedBy: operator,
             },
           ],
           reviewedAt: undefined,
           reviewNote: undefined,
+          reviewer: operator,
           items: t.items.map(({ verdict: _v, finalValue: _f, rejectReason: _r, ...item }) => item),
           newContactVerdict: undefined,
           newContactRejectReason: undefined,
-          readByUser: true,
+          // 让提交人可见「结果已收回、正在重新核实」
+          readByUser: false,
         }
       : t,
   );
@@ -396,7 +472,7 @@ export function revokeTicket(id: string) {
 export function markTicketsRead(enterpriseId: string) {
   let changed = false;
   store = store.map((t) => {
-    if (t.enterpriseId === enterpriseId && isFinalStatus(t.status) && !t.readByUser) {
+    if (t.enterpriseId === enterpriseId && hasUnreadUpdate(t)) {
       changed = true;
       return { ...t, readByUser: true };
     }
@@ -407,6 +483,11 @@ export function markTicketsRead(enterpriseId: string) {
 
 export function isFinalStatus(s: FeedbackStatus) {
   return s === "accepted" || s === "partial" || s === "rejected" || s === "invalid";
+}
+
+/** 是否有提交人尚未查看的进展（裁定结果或结果被收回） */
+export function hasUnreadUpdate(t: FeedbackTicket) {
+  return !t.readByUser && (isFinalStatus(t.status) || Boolean(t.revoked));
 }
 
 /* -------------------- 读取 -------------------- */
@@ -423,10 +504,10 @@ export function useAllFeedbacks(): FeedbackTicket[] {
   return store;
 }
 
-/** 本企业未读裁定结果数（用于企业详情页角标） */
+/** 本企业未读进展数（裁定结果或结果被收回；用于企业详情页角标） */
 export function useUnreadFeedbackCount(enterpriseId: string): number {
   const list = useFeedbacks(enterpriseId);
-  return list.filter((t) => isFinalStatus(t.status) && !t.readByUser).length;
+  return list.filter(hasUnreadUpdate).length;
 }
 
 

@@ -53,14 +53,19 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import {
   batchMarkInvalid,
   claimTicket,
+  CLAIM_TIMEOUT_MINUTES,
   finalizeReview,
   isFinalStatus,
   ISSUE_TYPE_LABEL,
   REJECT_REASON_LABEL,
+  releaseStaleClaims,
+  releaseTicket,
   revokeTicket,
+  REVOKE_REASON_LABEL,
   seedFeedbackDemoIfEmpty,
   SOURCE_TYPE_LABEL,
   STATUS_LABEL,
+  TicketConflictError,
   useAllFeedbacks,
   type FeedbackIssueType,
   type FeedbackItem,
@@ -69,6 +74,7 @@ import {
   type FeedbackTicket,
   type FeedbackVerdict,
   type RejectReason,
+  type RevokeReason,
 } from "@/lib/data-feedback";
 import {
   addOverrideContact,
@@ -153,6 +159,8 @@ function DataFeedbackAdminPage() {
         contactName: e.contacts[0]?.name,
       })),
     );
+    // 认领超时自动释放，避免工单长期挂在「审核中」
+    releaseStaleClaims();
   }, []);
 
   const tickets = useAllFeedbacks();
@@ -196,7 +204,14 @@ function DataFeedbackAdminPage() {
         if (status !== "all" && t.status !== status) return false;
         if (subject !== "all" && t.subjectKind !== subject) return false;
         if (source !== "all" && t.sourceType !== source) return false;
-        if (issue !== "all" && !t.items.some((i) => i.issue === issue)) return false;
+        if (issue !== "all") {
+          // 新增关联人物工单无字段条目，语义等同「数据缺失」
+          const matched =
+            t.subjectKind === "new_contact"
+              ? issue === "missing"
+              : t.items.some((i) => i.issue === issue);
+          if (!matched) return false;
+        }
         if (t.createdAt < since) return false;
         if (!k) return true;
         return (
@@ -426,9 +441,11 @@ function DataFeedbackAdminPage() {
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <StatusBadge status={t.status} />
-                      {t.revoked && (
+                      {Boolean(t.revokeCount) && (
                         <Badge variant="outline" className="text-[10px] font-normal">
-                          已撤销
+                          {t.revoked
+                            ? `已撤销待重审${(t.revokeCount ?? 0) > 1 ? ` ×${t.revokeCount}` : ""}`
+                            : `曾撤销 ${t.revokeCount} 次`}
                         </Badge>
                       )}
                     </div>
@@ -508,7 +525,11 @@ function ReviewDialog({
   const [newReason, setNewReason] = useState<RejectReason | undefined>(undefined);
   const [note, setNote] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [invalidConfirmOpen, setInvalidConfirmOpen] = useState(false);
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
+  const [revokeReason, setRevokeReason] = useState<RevokeReason | undefined>(undefined);
+  /** 打开工单时的裁定时间快照，用于并发覆盖保护 */
+  const [openedReviewedAt, setOpenedReviewedAt] = useState(0);
 
   const readonly = Boolean(ticket && isFinalStatus(ticket.status));
 
@@ -527,7 +548,17 @@ function ReviewDialog({
     setNewReason(ticket.newContactRejectReason);
     setNote(ticket.reviewNote ?? "");
     setConfirmOpen(false);
+    setInvalidConfirmOpen(false);
+    setRevokeConfirmOpen(false);
+    setRevokeReason(undefined);
+    setOpenedReviewedAt(ticket.reviewedAt ?? 0);
   }, [ticket?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** 关闭且未裁定时释放认领 */
+  const handleClose = () => {
+    if (ticket) releaseTicket(ticket.id, CURRENT_USER.name);
+    onClose();
+  };
 
   const resolvedItems: FeedbackItem[] = useMemo(
     () =>
@@ -562,6 +593,32 @@ function ReviewDialog({
       : "";
 
   const doSubmit = (markInvalid = false) => {
+    // 并发保护：先落库裁定，被他人处理过则直接中止
+    try {
+      finalizeReview({
+        id: ticket.id,
+        reviewer: CURRENT_USER.name,
+        items: resolvedItems,
+        newContactVerdict:
+          ticket.subjectKind === "new_contact" ? newVerdict : undefined,
+        newContactRejectReason:
+          ticket.subjectKind === "new_contact" && newVerdict === "reject"
+            ? newReason
+            : undefined,
+        reviewNote: note.trim() || undefined,
+        markInvalid,
+        expectedReviewedAt: openedReviewedAt,
+      });
+    } catch (e) {
+      if (e instanceof TicketConflictError) {
+        toast.error("提交失败", { description: e.message });
+        setConfirmOpen(false);
+        setInvalidConfirmOpen(false);
+        onClose();
+        return;
+      }
+      throw e;
+    }
     // 数据生效
     if (!markInvalid) {
       for (const it of resolvedItems) {
@@ -604,41 +661,29 @@ function ReviewDialog({
         });
       }
     }
-    // 裁定落库
-    finalizeReview({
-      id: ticket.id,
-      reviewer: CURRENT_USER.name,
-      items: resolvedItems,
-      newContactVerdict:
-        ticket.subjectKind === "new_contact" ? newVerdict : undefined,
-      newContactRejectReason:
-        ticket.subjectKind === "new_contact" && newVerdict === "reject"
-          ? newReason
-          : undefined,
-      reviewNote: note.trim() || undefined,
-      markInvalid,
-    });
     toast.success(markInvalid ? "已标记为无效工单" : "裁定已提交", {
       description: markInvalid
         ? "数据不变更，用户可在「我的反馈」中查看结果"
         : `生效 ${acceptCount} 项变更`,
     });
     setConfirmOpen(false);
+    setInvalidConfirmOpen(false);
     onClose();
   };
 
   const doRevoke = () => {
+    if (!revokeReason) return;
     revokeTicketChanges(ticket.enterpriseId, ticket.id);
-    revokeTicket(ticket.id);
+    revokeTicket(ticket.id, revokeReason, CURRENT_USER.name);
     toast.success("已撤销并恢复审核", {
-      description: "数据变更已回滚，工单已进入审核中",
+      description: "数据变更已回滚，工单已进入审核中，提交人会看到结果被收回",
     });
     setRevokeConfirmOpen(false);
-    onClose();
+    setRevokeReason(undefined);
   };
 
   return (
-    <Dialog open={Boolean(ticket)} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={Boolean(ticket)} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
@@ -784,6 +829,40 @@ function ReviewDialog({
             </p>
           </section>
 
+          {/* D. 审计记录：历史裁定与撤销 */}
+          {Boolean(ticket.reviewHistory?.length) && (
+            <section className="space-y-2">
+              <Label className="text-xs text-muted-foreground">
+                审计记录（曾撤销 {ticket.revokeCount ?? ticket.reviewHistory!.length} 次）
+              </Label>
+              <div className="space-y-2">
+                {[...(ticket.reviewHistory ?? [])].reverse().map((h, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border bg-muted/20 p-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm"
+                  >
+                    <Field label="原裁定结果">{STATUS_LABEL[h.status]}</Field>
+                    <Field label="原审核人">{h.reviewer ?? "—"}</Field>
+                    <Field label="原裁定时间">
+                      {h.reviewedAt ? formatDateTime(h.reviewedAt) : "—"}
+                    </Field>
+                    <Field label="撤销原因">
+                      {h.revokeReason ? REVOKE_REASON_LABEL[h.revokeReason] : "—"}
+                    </Field>
+                    <Field label="撤销人">{h.revokedBy ?? "—"}</Field>
+                    <Field label="撤销时间">
+                      {h.revokedAt ? formatDateTime(h.revokedAt) : "—"}
+                    </Field>
+                    <div className="col-span-2">
+                      <Field label="原审核备注">{h.reviewNote || "—"}</Field>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+
           {!readonly && (
             <section className="space-y-1">
               <Label className="text-xs text-muted-foreground">审核备注</Label>
@@ -804,18 +883,17 @@ function ReviewDialog({
               <span className="mr-auto self-center text-xs text-muted-foreground">
                 该工单已裁定；撤销后将回滚数据，并重新进入审核。
               </span>
-              {!ticket.revoked &&
-                (ticket.status === "accepted" || ticket.status === "partial") && (
-                  <Button
-                    variant="outline"
-                    className="gap-1.5"
-                    onClick={() => setRevokeConfirmOpen(true)}
-                  >
-                    <Undo2 className="h-4 w-4" />
-                    撤销并重新审核
-                  </Button>
-                )}
-              <Button onClick={onClose}>关闭</Button>
+              {(ticket.status === "accepted" || ticket.status === "partial") && (
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => setRevokeConfirmOpen(true)}
+                >
+                  <Undo2 className="h-4 w-4" />
+                  撤销并重新审核
+                </Button>
+              )}
+              <Button onClick={handleClose}>关闭</Button>
             </>
           ) : (
             <>
@@ -824,7 +902,7 @@ function ReviewDialog({
                 采纳 {acceptCount} 项将即时写入主数据
                 {disabledReason ? ` · ${disabledReason}` : ""}
               </span>
-              <Button variant="outline" onClick={() => doSubmit(true)}>
+              <Button variant="outline" onClick={() => setInvalidConfirmOpen(true)}>
                 标记无效
               </Button>
               <Button
@@ -864,17 +942,51 @@ function ReviewDialog({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <AlertDialog open={invalidConfirmOpen} onOpenChange={setInvalidConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>确认标记为无效工单？</AlertDialogTitle>
+              <AlertDialogDescription>
+                标记后不变更任何数据，工单直接完结且不可再修改，提交人可在「我的反馈」中看到结果。
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction onClick={() => doSubmit(true)}>确认标记</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <AlertDialog open={revokeConfirmOpen} onOpenChange={setRevokeConfirmOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>确认撤销并重新审核？</AlertDialogTitle>
               <AlertDialogDescription>
-                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定。原裁定记录保留于审计历史。
+                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定；原裁定与撤销原因保留在审计记录中，提交人会看到「结果已收回，正在重新核实」。
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">撤销原因（必选）</Label>
+              <Select
+                value={revokeReason ?? ""}
+                onValueChange={(v) => setRevokeReason(v as RevokeReason)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="请选择撤销原因" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(REVOKE_REASON_LABEL) as RevokeReason[]).map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {REVOKE_REASON_LABEL[r]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <AlertDialogFooter>
               <AlertDialogCancel>取消</AlertDialogCancel>
-              <AlertDialogAction onClick={doRevoke}>确认撤销</AlertDialogAction>
+              <AlertDialogAction disabled={!revokeReason} onClick={doRevoke}>
+                确认撤销
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
@@ -927,7 +1039,7 @@ function VerdictRow({
         onClick={() => onVerdict("reject")}
       >
         <XCircle className="h-3.5 w-3.5" />
-        驳回
+        未采纳
       </Button>
       {verdict === "reject" && (
         <Select
@@ -936,7 +1048,7 @@ function VerdictRow({
           onValueChange={(v) => onReason(v as RejectReason)}
         >
           <SelectTrigger className="h-8 w-[200px]">
-            <SelectValue placeholder="选择驳回原因" />
+            <SelectValue placeholder="选择未采纳原因" />
           </SelectTrigger>
           <SelectContent>
             {(Object.keys(REJECT_REASON_LABEL) as RejectReason[]).map((r) => (

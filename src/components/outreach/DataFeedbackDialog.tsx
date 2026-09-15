@@ -729,7 +729,7 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        以下为本企业成员针对该客户提交的全部反馈，同一企业成员可互相查看处理进度。
+        以下为本企业成员针对该客户提交的全部反馈，同一企业成员可互相查看处理进度（演示版按客户聚合，不区分提交成员）。
       </p>
       {[...tickets]
         .sort((a, b) => b.createdAt - a.createdAt)
@@ -763,7 +763,9 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
             </div>
             {!isFinalStatus(t.status) && (
               <p className="text-xs text-muted-foreground">
-                审核中，平台通常在 1–3 个工作日内给出结果。
+                {t.revoked
+                  ? "上一次处理结果已由平台收回，正在重新核实，通常 1–3 个工作日内给出新结果。"
+                  : "审核中，平台通常在 1–3 个工作日内给出结果。"}
               </p>
             )}
 

@@ -849,18 +849,17 @@ function ReviewDialog({
               <span className="mr-auto self-center text-xs text-muted-foreground">
                 该工单已裁定；撤销后将回滚数据，并重新进入审核。
               </span>
-              {!ticket.revoked &&
-                (ticket.status === "accepted" || ticket.status === "partial") && (
-                  <Button
-                    variant="outline"
-                    className="gap-1.5"
-                    onClick={() => setRevokeConfirmOpen(true)}
-                  >
-                    <Undo2 className="h-4 w-4" />
-                    撤销并重新审核
-                  </Button>
-                )}
-              <Button onClick={onClose}>关闭</Button>
+              {(ticket.status === "accepted" || ticket.status === "partial") && (
+                <Button
+                  variant="outline"
+                  className="gap-1.5"
+                  onClick={() => setRevokeConfirmOpen(true)}
+                >
+                  <Undo2 className="h-4 w-4" />
+                  撤销并重新审核
+                </Button>
+              )}
+              <Button onClick={handleClose}>关闭</Button>
             </>
           ) : (
             <>
@@ -869,7 +868,7 @@ function ReviewDialog({
                 采纳 {acceptCount} 项将即时写入主数据
                 {disabledReason ? ` · ${disabledReason}` : ""}
               </span>
-              <Button variant="outline" onClick={() => doSubmit(true)}>
+              <Button variant="outline" onClick={() => setInvalidConfirmOpen(true)}>
                 标记无效
               </Button>
               <Button

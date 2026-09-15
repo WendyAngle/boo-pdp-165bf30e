@@ -441,9 +441,11 @@ function DataFeedbackAdminPage() {
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <StatusBadge status={t.status} />
-                      {t.revoked && (
+                      {Boolean(t.revokeCount) && (
                         <Badge variant="outline" className="text-[10px] font-normal">
-                          已撤销
+                          {t.revoked
+                            ? `已撤销待重审${(t.revokeCount ?? 0) > 1 ? ` ×${t.revokeCount}` : ""}`
+                            : `曾撤销 ${t.revokeCount} 次`}
                         </Badge>
                       )}
                     </div>

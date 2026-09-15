@@ -589,7 +589,7 @@ export function CreateReachTaskDialog({
     !overLimit &&
     !!name.trim() &&
     (!needsContent || content.trim().length > 0) &&
-    keywords.trim().length > 0 &&
+    (findMode === "post" ? true : keywords.trim().length > 0) &&
     (findMode === "smart" ? true : validLinks.length > 0 && invalidLinksCount === 0 && !!deadline) &&
     (findMode !== "group" || groupScopes.length > 0) &&
     targetCap > 0 &&
@@ -599,7 +599,7 @@ export function CreateReachTaskDialog({
 
   function handleConfirm() {
     if (!name.trim()) return toast.error("请填写任务名");
-    if (!keywords.trim())
+    if (findMode !== "post" && !keywords.trim())
       return toast.error(findMode === "smart" ? "请填写目标关键词" : "请填写搜索关键词");
     if (findMode !== "smart" && validLinks.length === 0)
       return toast.error(findMode === "post" ? "请填写贴文链接" : "请填写群组链接");

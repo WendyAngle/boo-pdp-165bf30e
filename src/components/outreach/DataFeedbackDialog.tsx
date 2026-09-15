@@ -729,7 +729,7 @@ function MyFeedbackList({ tickets }: { tickets: FeedbackTicket[] }) {
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        以下为本企业成员针对该客户提交的全部反馈，同一企业成员可互相查看处理进度。
+        以下为本企业成员针对该客户提交的全部反馈，同一企业成员可互相查看处理进度（演示版按客户聚合，不区分提交成员）。
       </p>
       {[...tickets]
         .sort((a, b) => b.createdAt - a.createdAt)

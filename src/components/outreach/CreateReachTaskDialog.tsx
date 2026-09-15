@@ -150,18 +150,31 @@ const KEYWORD_LANGS = LANGUAGES;
 
 
 
-/** 链接格式校验：必须为 Facebook 域名的 http(s) 链接且包含有效路径 */
-function isValidFacebookLink(s: string): boolean {
+/** 链接格式校验：必须为对应平台域名的 http(s) 链接且包含有效路径 */
+function isValidSocialLink(platform: SocialTaskPlatform, s: string): boolean {
   const v = s.trim();
   if (!/^https?:\/\//i.test(v)) return false;
   try {
     const u = new URL(v);
-    if (!/(^|\.)facebook\.com$/i.test(u.hostname)) return false;
+    const host = platform === "TikTok" ? /(^|\.)tiktok\.com$/i : /(^|\.)facebook\.com$/i;
+    if (!host.test(u.hostname)) return false;
     return u.pathname.length > 1;
   } catch {
     return false;
   }
 }
+
+/** 各平台链接示例（占位符 / 模版 / 导入提示统一取此处） */
+const LINK_SAMPLES: Record<SocialTaskPlatform, { post: string; group: string }> = {
+  Facebook: {
+    post: "https://www.facebook.com/brandpage/posts/1234567890",
+    group: "https://www.facebook.com/groups/1234567890",
+  },
+  TikTok: {
+    post: "https://www.tiktok.com/@brandaccount/video/1234567890",
+    group: "",
+  },
+};
 
 /** 链接总数上限（手动添加与批量导入共用，超出自动截断） */
 const LINK_CAP = 20;

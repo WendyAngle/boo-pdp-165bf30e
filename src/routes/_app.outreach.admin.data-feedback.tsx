@@ -525,7 +525,11 @@ function ReviewDialog({
   const [newReason, setNewReason] = useState<RejectReason | undefined>(undefined);
   const [note, setNote] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [invalidConfirmOpen, setInvalidConfirmOpen] = useState(false);
   const [revokeConfirmOpen, setRevokeConfirmOpen] = useState(false);
+  const [revokeReason, setRevokeReason] = useState<RevokeReason | undefined>(undefined);
+  /** 打开工单时的裁定时间快照，用于并发覆盖保护 */
+  const [openedReviewedAt, setOpenedReviewedAt] = useState(0);
 
   const readonly = Boolean(ticket && isFinalStatus(ticket.status));
 
@@ -544,7 +548,17 @@ function ReviewDialog({
     setNewReason(ticket.newContactRejectReason);
     setNote(ticket.reviewNote ?? "");
     setConfirmOpen(false);
+    setInvalidConfirmOpen(false);
+    setRevokeConfirmOpen(false);
+    setRevokeReason(undefined);
+    setOpenedReviewedAt(ticket.reviewedAt ?? 0);
   }, [ticket?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** 关闭且未裁定时释放认领 */
+  const handleClose = () => {
+    if (ticket) releaseTicket(ticket.id, CURRENT_USER.name);
+    onClose();
+  };
 
   const resolvedItems: FeedbackItem[] = useMemo(
     () =>

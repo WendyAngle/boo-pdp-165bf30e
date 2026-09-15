@@ -109,13 +109,18 @@ const PLATFORM_ACTION: Record<SocialTaskPlatform, "加好友" | "关注" | "私�
   TikTok: "关注",
 };
 
-/** 寻找目标方式（Facebook） */
+/** 寻找目标方式（Facebook 三种；TikTok 无群组场景，仅智能搜索与指定贴文搜索） */
 type FindMode = "smart" | "post" | "group";
 const FIND_MODES: { value: FindMode; label: string; desc: string }[] = [
   { value: "smart", label: "系统智能搜索", desc: "由系统按推广产品与目标关键词自动寻找目标账号。" },
   { value: "post", label: "指定贴文搜索", desc: "从指定贴文的互动用户（评论、点赞）中筛选目标账号。" },
   { value: "group", label: "指定群组搜索", desc: "从指定群组的活跃成员中筛选目标账号。" },
 ];
+/** 各平台可用的寻找目标方式 */
+const PLATFORM_FIND_MODES: Record<SocialTaskPlatform, FindMode[]> = {
+  Facebook: ["smart", "post", "group"],
+  TikTok: ["smart", "post"],
+};
 const ACTIVE_WINDOWS = ["近一周", "近两周", "近一个月", "近三个月", "近半年"] as const;
 
 /** 指定群组搜索 · 搜索目标范围 */

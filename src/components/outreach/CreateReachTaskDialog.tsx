@@ -1014,10 +1014,11 @@ export function CreateReachTaskDialog({
                 </div>
               </div>
 
+              {findMode === "group" && (
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Label className="text-xs text-muted-foreground">
-                    {findMode === "post" ? "搜索关键词" : "群内搜索关键词"} *
+                    群内搜索关键词 *
                     <span className="text-[10px]">（英文逗号分隔）</span>
                   </Label>
                   <div className="flex items-center gap-2">

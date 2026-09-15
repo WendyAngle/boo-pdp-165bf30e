@@ -589,7 +589,7 @@ export function CreateReachTaskDialog({
     !overLimit &&
     !!name.trim() &&
     (!needsContent || content.trim().length > 0) &&
-    keywords.trim().length > 0 &&
+    (findMode === "post" ? true : keywords.trim().length > 0) &&
     (findMode === "smart" ? true : validLinks.length > 0 && invalidLinksCount === 0 && !!deadline) &&
     (findMode !== "group" || groupScopes.length > 0) &&
     targetCap > 0 &&
@@ -599,7 +599,7 @@ export function CreateReachTaskDialog({
 
   function handleConfirm() {
     if (!name.trim()) return toast.error("请填写任务名");
-    if (!keywords.trim())
+    if (findMode !== "post" && !keywords.trim())
       return toast.error(findMode === "smart" ? "请填写目标关键词" : "请填写搜索关键词");
     if (findMode !== "smart" && validLinks.length === 0)
       return toast.error(findMode === "post" ? "请填写贴文链接" : "请填写群组链接");
@@ -652,9 +652,13 @@ export function CreateReachTaskDialog({
             }`
           : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）${
               findMode === "group" ? ` · 搜索目标 ${groupScopeLabels(groupScopes)}` : ""
-            } · 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
-              langByCode(keywordLang)?.zh ?? keywordLang
-            }）`,
+            } · 活跃时间 ${activeWindow}${
+              findMode === "group"
+                ? ` · 关键词 ${keywords.trim()}（${
+                    langByCode(keywordLang)?.zh ?? keywordLang
+                  }）`
+                : ""
+            }`,
 
 
       sendMode: "创建后立即执行",
@@ -1010,10 +1014,11 @@ export function CreateReachTaskDialog({
                 </div>
               </div>
 
+              {findMode === "group" && (
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <Label className="text-xs text-muted-foreground">
-                    {findMode === "post" ? "搜索关键词" : "群内搜索关键词"} *
+                    群内搜索关键词 *
                     <span className="text-[10px]">（英文逗号分隔）</span>
                   </Label>
                   <div className="flex items-center gap-2">
@@ -1059,12 +1064,11 @@ export function CreateReachTaskDialog({
                   placeholder="例如：price, MOQ, 采购"
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  {findMode === "post"
-                    ? "系统将在贴文互动用户的评论内容中匹配这些关键词。"
-                    : "系统将在所选搜索目标的内容中匹配这些关键词。"}
+                  系统将在所选搜索目标的内容中匹配这些关键词。
                   搜索按「{langByCode(keywordLang)?.zh ?? keywordLang}」语言执行，可一键翻译。
                 </p>
               </div>
+              )}
 
               {findMode === "group" && (
                 <div className="space-y-1.5">

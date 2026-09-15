@@ -652,9 +652,13 @@ export function CreateReachTaskDialog({
             }`
           : `${findMode === "post" ? "指定贴文" : "指定群组"}（${validLinks.length} 个）${
               findMode === "group" ? ` · 搜索目标 ${groupScopeLabels(groupScopes)}` : ""
-            } · 活跃时间 ${activeWindow} · 关键词 ${keywords.trim()}（${
-              langByCode(keywordLang)?.zh ?? keywordLang
-            }）`,
+            } · 活跃时间 ${activeWindow}${
+              findMode === "group"
+                ? ` · 关键词 ${keywords.trim()}（${
+                    langByCode(keywordLang)?.zh ?? keywordLang
+                  }）`
+                : ""
+            }`,
 
 
       sendMode: "创建后立即执行",

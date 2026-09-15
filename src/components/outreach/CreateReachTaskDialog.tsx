@@ -1064,12 +1064,11 @@ export function CreateReachTaskDialog({
                   placeholder="例如：price, MOQ, 采购"
                 />
                 <p className="text-[10px] text-muted-foreground">
-                  {findMode === "post"
-                    ? "系统将在贴文互动用户的评论内容中匹配这些关键词。"
-                    : "系统将在所选搜索目标的内容中匹配这些关键词。"}
+                  系统将在所选搜索目标的内容中匹配这些关键词。
                   搜索按「{langByCode(keywordLang)?.zh ?? keywordLang}」语言执行，可一键翻译。
                 </p>
               </div>
+              )}
 
               {findMode === "group" && (
                 <div className="space-y-1.5">

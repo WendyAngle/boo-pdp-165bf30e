@@ -754,9 +754,8 @@ export function CreateReachTaskDialog({
             </div>
           </div>
 
-          {/* 寻找目标方式 */}
-          {(
-            <div className="space-y-1.5">
+          {/* 寻找目标方式（Facebook 三选，TikTok 两选） */}
+          <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">寻找目标方式 *</Label>
               <Select value={findMode} onValueChange={(v) => setFindMode(v as FindMode)}>
                 <SelectTrigger>
@@ -770,11 +769,10 @@ export function CreateReachTaskDialog({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[10px] text-muted-foreground">
-                {FIND_MODES.find((m) => m.value === findMode)?.desc}
-              </p>
-            </div>
-          )}
+            <p className="text-[10px] text-muted-foreground">
+              {FIND_MODES.find((m) => m.value === findMode)?.desc}
+            </p>
+          </div>
 
           {/* 推广产品 */}
           {findMode === "smart" && (

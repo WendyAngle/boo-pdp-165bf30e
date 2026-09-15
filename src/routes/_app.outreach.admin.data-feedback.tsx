@@ -631,7 +631,7 @@ function ReviewDialog({
     revokeTicketChanges(ticket.enterpriseId, ticket.id);
     revokeTicket(ticket.id);
     toast.success("已撤销并恢复审核", {
-      description: "数据变更已回滚，工单已进入审核中；已发放积分不回收",
+      description: "数据变更已回滚，工单已进入审核中",
     });
     setRevokeConfirmOpen(false);
     onClose();
@@ -646,7 +646,7 @@ function ReviewDialog({
             <StatusBadge status={ticket.status} />
           </DialogTitle>
           <DialogDescription>
-            核对来源佐证后逐条裁定；采纳内容将写入企业主数据，并按采纳条目发放积分奖励。
+            核对来源佐证后逐条裁定；采纳内容将即时写入企业主数据。
           </DialogDescription>
         </DialogHeader>
 
@@ -802,7 +802,7 @@ function ReviewDialog({
           {readonly ? (
             <>
               <span className="mr-auto self-center text-xs text-muted-foreground">
-                该工单已裁定；撤销后将回滚数据，并重新进入审核（积分不回收）。
+                该工单已裁定；撤销后将回滚数据，并重新进入审核。
               </span>
               {!ticket.revoked &&
                 (ticket.status === "accepted" || ticket.status === "partial") && (
@@ -869,7 +869,7 @@ function ReviewDialog({
             <AlertDialogHeader>
               <AlertDialogTitle>确认撤销并重新审核？</AlertDialogTitle>
               <AlertDialogDescription>
-                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定。原裁定记录保留，已发放积分不回收，也不会重复发放。
+                撤销后将回滚本次数据变更，工单恢复为「审核中」并可重新裁定。原裁定记录保留于审计历史。
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

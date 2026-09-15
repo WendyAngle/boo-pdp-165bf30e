@@ -661,41 +661,29 @@ function ReviewDialog({
         });
       }
     }
-    // 裁定落库
-    finalizeReview({
-      id: ticket.id,
-      reviewer: CURRENT_USER.name,
-      items: resolvedItems,
-      newContactVerdict:
-        ticket.subjectKind === "new_contact" ? newVerdict : undefined,
-      newContactRejectReason:
-        ticket.subjectKind === "new_contact" && newVerdict === "reject"
-          ? newReason
-          : undefined,
-      reviewNote: note.trim() || undefined,
-      markInvalid,
-    });
     toast.success(markInvalid ? "已标记为无效工单" : "裁定已提交", {
       description: markInvalid
         ? "数据不变更，用户可在「我的反馈」中查看结果"
         : `生效 ${acceptCount} 项变更`,
     });
     setConfirmOpen(false);
+    setInvalidConfirmOpen(false);
     onClose();
   };
 
   const doRevoke = () => {
+    if (!revokeReason) return;
     revokeTicketChanges(ticket.enterpriseId, ticket.id);
-    revokeTicket(ticket.id);
+    revokeTicket(ticket.id, revokeReason, CURRENT_USER.name);
     toast.success("已撤销并恢复审核", {
-      description: "数据变更已回滚，工单已进入审核中",
+      description: "数据变更已回滚，工单已进入审核中，提交人会看到结果被收回",
     });
     setRevokeConfirmOpen(false);
-    onClose();
+    setRevokeReason(undefined);
   };
 
   return (
-    <Dialog open={Boolean(ticket)} onOpenChange={(v) => !v && onClose()}>
+    <Dialog open={Boolean(ticket)} onOpenChange={(v) => !v && handleClose()}>
       <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col gap-0 p-0">
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="flex items-center gap-2">

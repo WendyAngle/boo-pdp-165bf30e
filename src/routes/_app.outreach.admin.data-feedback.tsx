@@ -159,6 +159,8 @@ function DataFeedbackAdminPage() {
         contactName: e.contacts[0]?.name,
       })),
     );
+    // 认领超时自动释放，避免工单长期挂在「审核中」
+    releaseStaleClaims();
   }, []);
 
   const tickets = useAllFeedbacks();

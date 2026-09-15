@@ -204,7 +204,14 @@ function DataFeedbackAdminPage() {
         if (status !== "all" && t.status !== status) return false;
         if (subject !== "all" && t.subjectKind !== subject) return false;
         if (source !== "all" && t.sourceType !== source) return false;
-        if (issue !== "all" && !t.items.some((i) => i.issue === issue)) return false;
+        if (issue !== "all") {
+          // 新增关联人物工单无字段条目，语义等同「数据缺失」
+          const matched =
+            t.subjectKind === "new_contact"
+              ? issue === "missing"
+              : t.items.some((i) => i.issue === issue);
+          if (!matched) return false;
+        }
         if (t.createdAt < since) return false;
         if (!k) return true;
         return (

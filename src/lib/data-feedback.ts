@@ -142,16 +142,23 @@ export interface FeedbackTicket {
   reviewNote?: string;
   /** 用户是否已查看裁定结果 */
   readByUser?: boolean;
-  /** 数据变更是否已被管理员撤销 */
+  /** 当前「审核中」状态是否由撤销产生（重新裁定后清除） */
   revoked?: boolean;
+  /** 撤销次数（永久保留，用于审计留痕） */
+  revokeCount?: number;
+  /** 认领时间，用于超时自动释放 */
+  claimedAt?: number;
   /** 撤销前的历史裁定快照（审计用） */
   reviewHistory?: Array<{
     status: FeedbackStatus;
     reviewedAt?: number;
     reviewer?: string;
     reviewNote?: string;
+    /** 撤销原因与操作人 */
+    revokeReason?: RevokeReason;
+    revokedAt?: number;
+    revokedBy?: string;
   }>;
-
 }
 
 const KEY = "boo:data-feedback:v2";

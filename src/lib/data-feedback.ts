@@ -519,7 +519,7 @@ export const ENTERPRISE_FEEDBACK_FIELDS: { key: string; label: string }[] = [
   { key: "country", label: "所属国家/地区" },
   { key: "address", label: "企业地址" },
   { key: "est", label: "成立年份" },
-  { key: "employees", label: "企业规模" },
+  { key: "employees", label: "人员规模" },
   { key: "website", label: "企业官网" },
   { key: "email", label: "联系邮箱" },
   { key: "phone", label: "联系电话" },

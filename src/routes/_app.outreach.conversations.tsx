@@ -842,6 +842,8 @@ function ThreadDetail({
   onToggleScorePanel?: () => void;
 }) {
   const [reply, setReply] = useState("");
+  const tagMapDetail = useTargetTagsMap();
+
 
   const detailSender = useThreadSenderResolver()(thread);
   const [detailTab, setDetailTab] = useState("thread");

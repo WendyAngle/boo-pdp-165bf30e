@@ -104,6 +104,8 @@ import { getTargetReason } from "@/lib/target-reason";
 import {
   targetTagKey,
   useTargetTagsMap,
+  TARGET_CATEGORIES,
+  usedTargetTags,
   type TargetTagRecord,
 } from "@/lib/target-tags-store";
 import { resolveThreadProfile } from "@/lib/thread-profile";
@@ -240,6 +242,9 @@ function InboxPage() {
     const m = new Map<string, number>();
     for (const t of threads)
       for (const tg of mergedTagsOf(t, tagMap)) m.set(tg, (m.get(tg) ?? 0) + 1);
+    // 已使用但当前没有匹配会话的分类/标签也保留为可选项（计数 0），避免「设了标签却选不到」
+    for (const c of TARGET_CATEGORIES) if (!m.has(c)) m.set(c, 0);
+    for (const c of usedTargetTags()) if (!m.has(c)) m.set(c, 0);
     return [...m.entries()]
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));

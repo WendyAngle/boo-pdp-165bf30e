@@ -469,7 +469,7 @@ function InboxPage() {
         {/* 中栏：会话列表 */}
         <div className="w-[320px] xl:w-[380px] shrink-0 border-r flex flex-col min-h-0">
           {/* 意向档位过滤：合并为单个下拉框，默认「全部意向」—— 与右侧 AI 意向评分同源 */}
-          <div className="px-3 pt-2 pb-1.5 border-b shrink-0">
+          <div className="px-3 pt-2 pb-1.5 border-b shrink-0 flex items-center gap-2">
             <Select
               value={intent}
               onValueChange={(v) =>
@@ -495,6 +495,33 @@ function InboxPage() {
                     <span className="inline-flex items-center gap-1.5">
                       <span className={cn("h-1.5 w-1.5 rounded-full", opt.dot)} />
                       <span>{opt.label}</span>
+                      <span className="tabular-nums text-muted-foreground">{opt.count}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {/* 标签过滤：选项 = 会话实际展示标签（目标分类 + 目标标签 + 会话自身标签） */}
+            <Select
+              value={tag}
+              onValueChange={(v) =>
+                goto({ tag: v === "all" ? undefined : v, tid: undefined })
+              }
+            >
+              <SelectTrigger className="h-8 w-full text-xs">
+                <SelectValue placeholder="全部标签" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span>全部标签</span>
+                    <span className="tabular-nums text-muted-foreground">{counts.all}</span>
+                  </span>
+                </SelectItem>
+                {tagOptions.map((opt) => (
+                  <SelectItem key={opt.name} value={opt.name}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span>{opt.name}</span>
                       <span className="tabular-nums text-muted-foreground">{opt.count}</span>
                     </span>
                   </SelectItem>

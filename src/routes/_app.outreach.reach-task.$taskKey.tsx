@@ -12,10 +12,12 @@ import {
   MessageCircleReply,
   Coins,
   Settings2,
+  Tags,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -37,6 +39,8 @@ import { groupKeyOf, reachAction, taskNameOf } from "@/lib/reach-tasks";
 import { useThreads, threadKeyFor, type Thread } from "@/lib/inbox-store";
 import { resolveTaskConfig, TASK_TYPE_LABEL } from "@/lib/reach-task-config";
 import { languageLabel } from "@/lib/languages";
+import { TargetTagBadges, TargetTagDialog } from "@/components/outreach/TargetTagDialog";
+import { targetTagKey, useTargetTagsMap } from "@/lib/target-tags-store";
 
 export const Route = createFileRoute("/_app/outreach/reach-task/$taskKey")({
   head: () => ({

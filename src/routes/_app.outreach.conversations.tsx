@@ -101,6 +101,11 @@ import {
   LANGUAGES,
 } from "@/lib/lang-detect";
 import { getTargetReason } from "@/lib/target-reason";
+import {
+  targetTagKey,
+  useTargetTagsMap,
+  type TargetTagRecord,
+} from "@/lib/target-tags-store";
 import { resolveThreadProfile } from "@/lib/thread-profile";
 
 

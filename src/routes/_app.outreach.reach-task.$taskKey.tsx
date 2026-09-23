@@ -12,10 +12,12 @@ import {
   MessageCircleReply,
   Coins,
   Settings2,
+  Tags,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -37,6 +39,8 @@ import { groupKeyOf, reachAction, taskNameOf } from "@/lib/reach-tasks";
 import { useThreads, threadKeyFor, type Thread } from "@/lib/inbox-store";
 import { resolveTaskConfig, TASK_TYPE_LABEL } from "@/lib/reach-task-config";
 import { languageLabel } from "@/lib/languages";
+import { TargetTagBadges, TargetTagDialog } from "@/components/outreach/TargetTagDialog";
+import { targetTagKey, useTargetTagsMap } from "@/lib/target-tags-store";
 
 export const Route = createFileRoute("/_app/outreach/reach-task/$taskKey")({
   head: () => ({
@@ -95,6 +99,28 @@ function ReachTaskDetailPage() {
     [entries, threadByKey],
   );
   const cost = entries.reduce((n, r) => n + (r.cost ?? 0), 0);
+
+  /* 标签 / 分类：以目标为维度，多条触达记录指向同一目标时只算一个 */
+  const tagMap = useTargetTagsMap();
+  const visible = useMemo(() => entries.slice(0, 100), [entries]);
+  const visibleTargets = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of visible) if (!m.has(targetTagKey(r))) m.set(targetTagKey(r), r.targetName);
+    return [...m].map(([key, name]) => ({ key, name }));
+  }, [visible]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [tagOpen, setTagOpen] = useState(false);
+  useEffect(() => {
+    setSelectedKeys([]);
+  }, [taskKey]);
+  const selectedTargets = visibleTargets.filter((t) => selectedKeys.includes(t.key));
+  const allSelected =
+    visibleTargets.length > 0 && selectedTargets.length === visibleTargets.length;
+  const toggleKey = (key: string) =>
+    setSelectedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+
 
   if (entries.length === 0) {
     return (
@@ -251,18 +277,40 @@ function ReachTaskDetailPage() {
             目标明细
             <span className="ml-2 text-xs text-muted-foreground font-normal">
               共 {entries.length} 个
+              {selectedTargets.length > 0 ? ` · 已选 ${selectedTargets.length} 个目标` : ""}
             </span>
           </div>
-          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
-            <Link to="/outreach/reach-targets" search={{ task: taskKey }}>
-              <Users className="h-3.5 w-3.5" />
-              查看目标资料
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
+              <Link to="/outreach/reach-targets" search={{ task: taskKey }}>
+                <Users className="h-3.5 w-3.5" />
+                查看目标资料
+              </Link>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5"
+              disabled={selectedTargets.length === 0}
+              onClick={() => setTagOpen(true)}
+            >
+              <Tags className="h-3.5 w-3.5" />
+              设置标签 / 分类
+            </Button>
+          </div>
         </div>
         <Table>
           <TableHeader>
             <TableRow className="bg-primary/5 hover:bg-primary/5">
+              <TableHead className="w-[44px]">
+                <Checkbox
+                  checked={allSelected}
+                  aria-label="全选当前目标"
+                  onCheckedChange={(v) =>
+                    setSelectedKeys(v ? visibleTargets.map((t) => t.key) : [])
+                  }
+                />
+              </TableHead>
               <TableHead className="min-w-[200px]">目标</TableHead>
               <TableHead className="w-[220px]">联系方式 / 明细</TableHead>
               <TableHead className="w-[100px]">类型</TableHead>
@@ -271,8 +319,15 @@ function ReachTaskDetailPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entries.slice(0, 100).map((r) => (
+            {visible.map((r) => (
               <TableRow key={r.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedKeys.includes(targetTagKey(r))}
+                    aria-label={`选择 ${r.targetName}`}
+                    onCheckedChange={() => toggleKey(targetTagKey(r))}
+                  />
+                </TableCell>
                 <TableCell>
                   <div className="font-medium">{r.targetName}</div>
                   {r.parentRef?.name && (
@@ -280,6 +335,7 @@ function ReachTaskDetailPage() {
                       {r.parentRef.name}
                     </div>
                   )}
+                  <TargetTagBadges record={tagMap[targetTagKey(r)]} className="mt-1" />
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground break-all">
                   {r.detail ?? "—"}
@@ -296,6 +352,13 @@ function ReachTaskDetailPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <TargetTagDialog
+        open={tagOpen}
+        onOpenChange={setTagOpen}
+        targets={selectedTargets}
+        onDone={() => setSelectedKeys([])}
+      />
     </div>
   );
 }

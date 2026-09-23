@@ -15,6 +15,7 @@ import {
   Target as TargetIcon,
   UserCheck,
   UserRound,
+  Tags,
   Users,
   X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -42,6 +44,12 @@ import {
 import { groupKeyOf, reachAction, taskNameOf } from "@/lib/reach-tasks";
 import { useThreads, threadKeyFor, type Thread, type Channel } from "@/lib/inbox-store";
 import { getTargetReason } from "@/lib/target-reason";
+import { TargetTagBadges, TargetTagDialog } from "@/components/outreach/TargetTagDialog";
+import {
+  targetTagKey,
+  useTargetTagsMap,
+  type TargetTagRecord,
+} from "@/lib/target-tags-store";
 
 export const Route = createFileRoute("/_app/outreach/reach-targets")({
   validateSearch: (search: Record<string, unknown>): { task?: string } => ({
@@ -101,6 +109,9 @@ function ReachTargetsPage() {
   const [kind, setKind] = useState<"all" | "enterprise" | "contact">("all");
   const [page, setPage] = useState(1);
   const pageSize = 12;
+  const tagMap = useTargetTagsMap();
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [tagOpen, setTagOpen] = useState(false);
 
   const rows = useMemo(() => {
     const now = Date.now();
@@ -186,6 +197,30 @@ function ReachTargetsPage() {
   }, [kw, kind, task]);
 
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  /* 标签 / 分类以目标为维度，同一目标的多渠道卡片共享同一份标签 */
+  const pageTargets = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of pageData) {
+      const k = targetTagKey(t);
+      if (!m.has(k)) m.set(k, t.name);
+    }
+    return [...m].map(([key, name]) => ({ key, name }));
+  }, [pageData]);
+  const selectedTargets = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const t of filtered) {
+      const k = targetTagKey(t);
+      if (selectedKeys.includes(k) && !m.has(k)) m.set(k, t.name);
+    }
+    return [...m].map(([key, name]) => ({ key, name }));
+  }, [filtered, selectedKeys]);
+  const allPageSelected =
+    pageTargets.length > 0 && pageTargets.every((t) => selectedKeys.includes(t.key));
+  const toggleKey = (key: string) =>
+    setSelectedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
   const entCount = targets.filter((t) => t.targetKind === "enterprise").length;
   const conCount = targets.length - entCount;
 
@@ -247,6 +282,31 @@ function ReachTargetsPage() {
 
       <Card className="p-0 overflow-hidden">
         <div className="px-5 py-3 flex items-center gap-3 flex-wrap border-b border-border bg-muted/20">
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer whitespace-nowrap">
+            <Checkbox
+              checked={allPageSelected}
+              aria-label="全选本页目标"
+              onCheckedChange={(v) =>
+                setSelectedKeys((prev) =>
+                  v
+                    ? [...new Set([...prev, ...pageTargets.map((t) => t.key)])]
+                    : prev.filter((k) => !pageTargets.some((t) => t.key === k)),
+                )
+              }
+            />
+            全选本页
+          </label>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-9 gap-1.5"
+            disabled={selectedTargets.length === 0}
+            onClick={() => setTagOpen(true)}
+          >
+            <Tags className="h-3.5 w-3.5" />
+            设置标签 / 分类
+            {selectedTargets.length > 0 ? `（${selectedTargets.length}）` : ""}
+          </Button>
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground whitespace-nowrap">目标类型</span>
             <Select value={kind} onValueChange={(v) => setKind(v as typeof kind)}>
@@ -301,7 +361,13 @@ function ReachTargetsPage() {
         ) : (
           <div className="p-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {pageData.map((t) => (
-              <TargetCard key={t.key} t={t} />
+              <TargetCard
+                key={t.key}
+                t={t}
+                tagRecord={tagMap[targetTagKey(t)]}
+                selected={selectedKeys.includes(targetTagKey(t))}
+                onToggle={() => toggleKey(targetTagKey(t))}
+              />
             ))}
           </div>
         )}
@@ -317,13 +383,26 @@ function ReachTargetsPage() {
           </div>
         )}
       </Card>
+
+      <TargetTagDialog
+        open={tagOpen}
+        onOpenChange={setTagOpen}
+        targets={selectedTargets}
+        onDone={() => setSelectedKeys([])}
+      />
     </div>
   );
 }
 
 function TargetCard({
   t,
+  tagRecord,
+  selected,
+  onToggle,
 }: {
+  tagRecord?: TargetTagRecord;
+  selected: boolean;
+  onToggle: () => void;
   t: {
     name: string;
     targetKind: "enterprise" | "contact";
@@ -357,8 +436,19 @@ function TargetCard({
   const isSocial = t.channel === "social";
 
   return (
-    <div className="rounded-lg border bg-card p-4 space-y-3 hover:shadow-sm transition-shadow">
+    <div
+      className={cn(
+        "rounded-lg border bg-card p-4 space-y-3 hover:shadow-sm transition-shadow",
+        selected && "border-primary ring-1 ring-primary/30",
+      )}
+    >
       <div className="flex items-start gap-2">
+        <Checkbox
+          checked={selected}
+          onCheckedChange={onToggle}
+          aria-label={`选择 ${t.name}`}
+          className="mt-1 shrink-0"
+        />
         <div
           className={cn(
             "h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
@@ -385,6 +475,7 @@ function TargetCard({
                 : "人物目标"}
             {t.parentName ? ` · 所属 ${t.parentName}` : ""}
           </div>
+          <TargetTagBadges record={tagRecord} className="mt-1" />
         </div>
         {t.thread?.isFriend && (
           <Badge

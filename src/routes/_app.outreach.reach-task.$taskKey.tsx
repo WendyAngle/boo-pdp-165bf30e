@@ -352,6 +352,13 @@ function ReachTaskDetailPage() {
           </TableBody>
         </Table>
       </Card>
+
+      <TargetTagDialog
+        open={tagOpen}
+        onOpenChange={setTagOpen}
+        targets={selectedTargets}
+        onDone={() => setSelectedKeys([])}
+      />
     </div>
   );
 }

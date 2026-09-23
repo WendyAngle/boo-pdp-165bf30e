@@ -1426,6 +1426,13 @@ export function getThreadsSnapshot(): Thread[] {
   ]);
 }
 
+/** 触达会话中已经出现过的标签（去重），用于标签下拉选项 */
+export function conversationTags(): string[] {
+  const s = new Set<string>();
+  for (const t of getThreadsSnapshot()) for (const tag of t.meta.tags) s.add(tag);
+  return [...s];
+}
+
 
 /**
  * 默认排序：SLA 紧急度优先 → 最新更新

@@ -21,6 +21,7 @@ import {
   setTargetTags,
   usedTargetTags,
 } from "@/lib/target-tags-store";
+import { conversationTags } from "@/lib/inbox-store";
 
 export interface TagTargetItem {
   /** 目标唯一键：enterprise:xxx / contact:xxx */
@@ -46,7 +47,11 @@ export function TargetTagDialog({
   const [draft, setDraft] = useState("");
   const [mode, setMode] = useState<"merge" | "replace">("merge");
 
-  const availableTags = useMemo(() => (open ? usedTargetTags() : []), [open]);
+  // 可选标签：已设置过的目标标签 + 触达会话中已有的标签
+  const availableTags = useMemo(
+    () => (open ? [...new Set([...usedTargetTags(), ...conversationTags()])] : []),
+    [open],
+  );
 
   useEffect(() => {
     if (!open) return;

@@ -236,12 +236,14 @@ function InboxPage() {
   const intent = search.intent ?? "all";
   const tag = search.tag ?? "all";
   const tagMap = useTargetTagsMap();
-  // 标签筛选项：仅取系统中已经实际设置过的目标标签
+  // 标签筛选项：系统中已设置过的目标标签 + 会话自身已有标签
   const tagOptions = useMemo(() => {
-    return usedTargetTags()
+    const names = new Set<string>(usedTargetTags());
+    for (const t of threads) for (const name of t.meta.tags) names.add(name);
+    return [...names]
       .map((name) => ({
         name,
-        count: threads.filter((t) => tagMap[targetTagKey(t)]?.tags.includes(name)).length,
+        count: threads.filter((t) => mergedTagsOf(t, tagMap).includes(name)).length,
       }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));
   }, [threads, tagMap]);
@@ -268,7 +270,7 @@ function InboxPage() {
     if (intent !== "all")
       list = list.filter((t) => scoreIntent(t).band === intent);
     if (tag !== "all")
-      list = list.filter((t) => tagMap[targetTagKey(t)]?.tags.includes(tag));
+      list = list.filter((t) => mergedTagsOf(t, tagMap).includes(tag));
     if (friend !== "all") {
       list = list.filter((t) => {
         if (friend === "pending") return Boolean(t.friendPending);

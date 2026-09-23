@@ -104,7 +104,6 @@ import { getTargetReason } from "@/lib/target-reason";
 import {
   targetTagKey,
   useTargetTagsMap,
-  TARGET_CATEGORIES,
   usedTargetTags,
   type TargetTagRecord,
 } from "@/lib/target-tags-store";
@@ -237,16 +236,13 @@ function InboxPage() {
   const intent = search.intent ?? "all";
   const tag = search.tag ?? "all";
   const tagMap = useTargetTagsMap();
-  // 标签筛选项：统计当前全部会话实际展示标签（目标分类 + 目标标签 + 会话自身标签）的出现次数
+  // 标签筛选项：仅取系统中已经实际设置过的目标标签
   const tagOptions = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const t of threads)
-      for (const tg of mergedTagsOf(t, tagMap)) m.set(tg, (m.get(tg) ?? 0) + 1);
-    // 已使用但当前没有匹配会话的分类/标签也保留为可选项（计数 0），避免「设了标签却选不到」
-    for (const c of TARGET_CATEGORIES) if (!m.has(c)) m.set(c, 0);
-    for (const c of usedTargetTags()) if (!m.has(c)) m.set(c, 0);
-    return [...m.entries()]
-      .map(([name, count]) => ({ name, count }))
+    return usedTargetTags()
+      .map((name) => ({
+        name,
+        count: threads.filter((t) => tagMap[targetTagKey(t)]?.tags.includes(name)).length,
+      }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));
   }, [threads, tagMap]);
   const starred = search.starred ?? "all";
@@ -272,7 +268,7 @@ function InboxPage() {
     if (intent !== "all")
       list = list.filter((t) => scoreIntent(t).band === intent);
     if (tag !== "all")
-      list = list.filter((t) => mergedTagsOf(t, tagMap).includes(tag));
+      list = list.filter((t) => tagMap[targetTagKey(t)]?.tags.includes(tag));
     if (friend !== "all") {
       list = list.filter((t) => {
         if (friend === "pending") return Boolean(t.friendPending);
@@ -506,7 +502,7 @@ function InboxPage() {
                 ))}
               </SelectContent>
             </Select>
-            {/* 标签过滤：选项 = 会话实际展示标签（目标分类 + 目标标签 + 会话自身标签） */}
+            {/* 标签过滤：选项仅取系统中已经设置过的目标标签 */}
             <Select
               value={tag}
               onValueChange={(v) =>

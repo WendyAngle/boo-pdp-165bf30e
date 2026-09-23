@@ -266,6 +266,8 @@ function InboxPage() {
       list = list.filter((t) => (starred === "starred" ? t.meta.starred : !t.meta.starred));
     if (intent !== "all")
       list = list.filter((t) => scoreIntent(t).band === intent);
+    if (tag !== "all")
+      list = list.filter((t) => mergedTagsOf(t, tagMap).includes(tag));
     if (friend !== "all") {
       list = list.filter((t) => {
         if (friend === "pending") return Boolean(t.friendPending);
@@ -313,7 +315,7 @@ function InboxPage() {
       );
     }
     return list;
-  }, [threads, view, q, ch, intent, starred, friend, senderKey, resolveSender]);
+  }, [threads, view, q, ch, intent, tag, tagMap, starred, friend, senderKey, resolveSender]);
 
   const currentId = search.tid ?? filtered[0]?.id;
   const current = threads.find((t) => t.id === currentId);

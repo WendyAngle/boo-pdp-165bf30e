@@ -270,7 +270,7 @@ function InboxPage() {
     if (intent !== "all")
       list = list.filter((t) => scoreIntent(t).band === intent);
     if (tag !== "all")
-      list = list.filter((t) => tagMap[targetTagKey(t)]?.tags.includes(tag));
+      list = list.filter((t) => mergedTagsOf(t, tagMap).includes(tag));
     if (friend !== "all") {
       list = list.filter((t) => {
         if (friend === "pending") return Boolean(t.friendPending);

@@ -34,6 +34,7 @@ const KEY = "boo:target-tags:v1";
 
 type Store = Record<string, TargetTagRecord>;
 
+const SERVER_EMPTY: Store = {};
 let store: Store = {};
 let loaded = false;
 
@@ -88,7 +89,7 @@ export function useTargetTagsMap(): Store {
       load();
       return store;
     },
-    () => store,
+    () => SERVER_EMPTY,
   );
 }
 

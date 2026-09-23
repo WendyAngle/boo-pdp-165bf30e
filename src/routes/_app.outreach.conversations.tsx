@@ -104,6 +104,8 @@ import { getTargetReason } from "@/lib/target-reason";
 import {
   targetTagKey,
   useTargetTagsMap,
+  TARGET_CATEGORIES,
+  usedTargetTags,
   type TargetTagRecord,
 } from "@/lib/target-tags-store";
 import { resolveThreadProfile } from "@/lib/thread-profile";
@@ -142,6 +144,8 @@ const searchSchema = z.object({
   q: z.string().optional(),
   /** 意向档位过滤：高/中/低/全部（左侧列表顶部 Tab） */
   intent: z.enum(["all", "high", "mid", "low"]).optional(),
+  /** 标签过滤：按会话展示标签（目标分类/目标标签/会话标签）过滤 */
+  tag: z.string().optional(),
   /** 加星过滤 */
   starred: z.enum(["all", "starred", "unstarred"]).optional(),
   /** 好友关系过滤（社媒渠道）：全部 / 对方待通过 / 对方已通过 / 对方已解除 */
@@ -231,6 +235,20 @@ function InboxPage() {
   // 避免出现「右侧展示了会话，中间列表却提示"该视图下暂无会话"」的错位。
   const view: ViewKey = search.view ?? "all";
   const intent = search.intent ?? "all";
+  const tag = search.tag ?? "all";
+  const tagMap = useTargetTagsMap();
+  // 标签筛选项：统计当前全部会话实际展示标签（目标分类 + 目标标签 + 会话自身标签）的出现次数
+  const tagOptions = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const t of threads)
+      for (const tg of mergedTagsOf(t, tagMap)) m.set(tg, (m.get(tg) ?? 0) + 1);
+    // 已使用但当前没有匹配会话的分类/标签也保留为可选项（计数 0），避免「设了标签却选不到」
+    for (const c of TARGET_CATEGORIES) if (!m.has(c)) m.set(c, 0);
+    for (const c of usedTargetTags()) if (!m.has(c)) m.set(c, 0);
+    return [...m.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));
+  }, [threads, tagMap]);
   const starred = search.starred ?? "all";
   const friend = search.friend ?? "all";
   const [scorePanelOpen, setScorePanelOpen] = useState(true);
@@ -253,6 +271,8 @@ function InboxPage() {
       list = list.filter((t) => (starred === "starred" ? t.meta.starred : !t.meta.starred));
     if (intent !== "all")
       list = list.filter((t) => scoreIntent(t).band === intent);
+    if (tag !== "all")
+      list = list.filter((t) => mergedTagsOf(t, tagMap).includes(tag));
     if (friend !== "all") {
       list = list.filter((t) => {
         if (friend === "pending") return Boolean(t.friendPending);
@@ -300,7 +320,7 @@ function InboxPage() {
       );
     }
     return list;
-  }, [threads, view, q, ch, intent, starred, friend, senderKey, resolveSender]);
+  }, [threads, view, q, ch, intent, tag, tagMap, starred, friend, senderKey, resolveSender]);
 
   const currentId = search.tid ?? filtered[0]?.id;
   const current = threads.find((t) => t.id === currentId);
@@ -454,7 +474,7 @@ function InboxPage() {
         {/* 中栏：会话列表 */}
         <div className="w-[320px] xl:w-[380px] shrink-0 border-r flex flex-col min-h-0">
           {/* 意向档位过滤：合并为单个下拉框，默认「全部意向」—— 与右侧 AI 意向评分同源 */}
-          <div className="px-3 pt-2 pb-1.5 border-b shrink-0">
+          <div className="px-3 pt-2 pb-1.5 border-b shrink-0 flex items-center gap-2">
             <Select
               value={intent}
               onValueChange={(v) =>
@@ -486,6 +506,33 @@ function InboxPage() {
                 ))}
               </SelectContent>
             </Select>
+            {/* 标签过滤：选项 = 会话实际展示标签（目标分类 + 目标标签 + 会话自身标签） */}
+            <Select
+              value={tag}
+              onValueChange={(v) =>
+                goto({ tag: v === "all" ? undefined : v, tid: undefined })
+              }
+            >
+              <SelectTrigger className="h-8 w-full text-xs">
+                <SelectValue placeholder="全部标签" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span>全部标签</span>
+                    <span className="tabular-nums text-muted-foreground">{counts.all}</span>
+                  </span>
+                </SelectItem>
+                {tagOptions.map((opt) => (
+                  <SelectItem key={opt.name} value={opt.name}>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span>{opt.name}</span>
+                      <span className="tabular-nums text-muted-foreground">{opt.count}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           {/* 结果条：显示当前筛选与匹配数量 */}
           <div className="px-3 py-2 border-b bg-muted/20 shrink-0 flex items-center justify-between text-[11px] text-muted-foreground">
@@ -496,10 +543,10 @@ function InboxPage() {
               </span>
               条会话
             </span>
-            {(view !== "all" || ch !== "all" || senderKey !== "all" || q || intent !== "all" || starred !== "all") && (
+            {(view !== "all" || ch !== "all" || senderKey !== "all" || q || intent !== "all" || tag !== "all" || starred !== "all") && (
               <button
                 onClick={() =>
-                  goto({ view: "all", ch: "all", sender: "all", q: "", intent: undefined, starred: "all", tid: undefined })
+                  goto({ view: "all", ch: "all", sender: "all", q: "", intent: undefined, tag: undefined, starred: "all", tid: undefined })
                 }
                 className="text-primary hover:underline"
               >

@@ -277,18 +277,40 @@ function ReachTaskDetailPage() {
             目标明细
             <span className="ml-2 text-xs text-muted-foreground font-normal">
               共 {entries.length} 个
+              {selectedTargets.length > 0 ? ` · 已选 ${selectedTargets.length} 个目标` : ""}
             </span>
           </div>
-          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
-            <Link to="/outreach/reach-targets" search={{ task: taskKey }}>
-              <Users className="h-3.5 w-3.5" />
-              查看目标资料
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="outline" className="h-8 gap-1.5">
+              <Link to="/outreach/reach-targets" search={{ task: taskKey }}>
+                <Users className="h-3.5 w-3.5" />
+                查看目标资料
+              </Link>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5"
+              disabled={selectedTargets.length === 0}
+              onClick={() => setTagOpen(true)}
+            >
+              <Tags className="h-3.5 w-3.5" />
+              设置标签 / 分类
+            </Button>
+          </div>
         </div>
         <Table>
           <TableHeader>
             <TableRow className="bg-primary/5 hover:bg-primary/5">
+              <TableHead className="w-[44px]">
+                <Checkbox
+                  checked={allSelected}
+                  aria-label="全选当前目标"
+                  onCheckedChange={(v) =>
+                    setSelectedKeys(v ? visibleTargets.map((t) => t.key) : [])
+                  }
+                />
+              </TableHead>
               <TableHead className="min-w-[200px]">目标</TableHead>
               <TableHead className="w-[220px]">联系方式 / 明细</TableHead>
               <TableHead className="w-[100px]">类型</TableHead>
@@ -297,8 +319,15 @@ function ReachTaskDetailPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entries.slice(0, 100).map((r) => (
+            {visible.map((r) => (
               <TableRow key={r.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedKeys.includes(targetTagKey(r))}
+                    aria-label={`选择 ${r.targetName}`}
+                    onCheckedChange={() => toggleKey(targetTagKey(r))}
+                  />
+                </TableCell>
                 <TableCell>
                   <div className="font-medium">{r.targetName}</div>
                   {r.parentRef?.name && (
@@ -306,6 +335,7 @@ function ReachTaskDetailPage() {
                       {r.parentRef.name}
                     </div>
                   )}
+                  <TargetTagBadges record={tagMap[targetTagKey(r)]} className="mt-1" />
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground break-all">
                   {r.detail ?? "—"}

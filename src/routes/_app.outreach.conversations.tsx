@@ -615,7 +615,7 @@ function ThreadRow({
 }) {
   const isUnread = thread.meta.unread > 0;
   const last = thread.messages[thread.messages.length - 1];
-  const targetTags = thread.meta.tags;
+  const targetTags = mergedTagsOf(thread, useTargetTagsMap());
   const sender = useThreadSenderResolver()(thread);
   const woken =
     thread.meta.wokenAt &&
@@ -847,7 +847,7 @@ function ThreadDetail({
   onToggleScorePanel?: () => void;
 }) {
   const [reply, setReply] = useState("");
-  const tagMapDetail: Record<string, TargetTagRecord> = {};
+  const tagMapDetail = useTargetTagsMap();
 
 
   const detailSender = useThreadSenderResolver()(thread);

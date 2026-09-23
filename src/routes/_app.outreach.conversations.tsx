@@ -584,6 +584,21 @@ function relTime(iso: string) {
   return formatDateTime(iso).slice(0, 10);
 }
 
+/** 会话展示标签 = 目标分类 + 目标标签 + 会话自身标签 */
+function mergedTagsOf(
+  thread: Thread,
+  map: Record<string, TargetTagRecord>,
+): string[] {
+  const rec = map[targetTagKey(thread)];
+  return [
+    ...new Set([
+      ...(rec?.category ? [rec.category] : []),
+      ...(rec?.tags ?? []),
+      ...thread.meta.tags,
+    ]),
+  ];
+}
+
 function ThreadRow({
   thread,
   active,
@@ -595,6 +610,7 @@ function ThreadRow({
 }) {
   const isUnread = thread.meta.unread > 0;
   const last = thread.messages[thread.messages.length - 1];
+  const targetTags = mergedTagsOf(thread, useTargetTagsMap());
   const sender = useThreadSenderResolver()(thread);
   const woken =
     thread.meta.wokenAt &&

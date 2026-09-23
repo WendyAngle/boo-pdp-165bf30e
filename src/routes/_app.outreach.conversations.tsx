@@ -731,11 +731,11 @@ function ThreadRow({
               }
               return null;
             })()}
-            {thread.meta.tags && thread.meta.tags.length > 0 && (
+            {targetTags.length > 0 && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex items-center gap-1 ml-auto shrink-0 overflow-hidden">
-                    {thread.meta.tags.slice(0, 1).map((tag) => (
+                    {targetTags.slice(0, 1).map((tag) => (
                       <Badge
                         key={tag}
                         variant="outline"
@@ -744,19 +744,19 @@ function ThreadRow({
                         {tag}
                       </Badge>
                     ))}
-                    {thread.meta.tags.length > 1 && (
+                    {targetTags.length > 1 && (
                       <Badge
                         variant="outline"
                         className="h-4 py-0 px-1.5 text-[10px] bg-muted/50 text-foreground/80 border-border/70 shrink-0"
                       >
-                        +{thread.meta.tags.length - 1}
+                        +{targetTags.length - 1}
                       </Badge>
                     )}
                   </div>
                 </TooltipTrigger>
                 <TooltipContent side="top" align="start" className="max-w-xs">
                   <div className="flex flex-wrap gap-1">
-                    {thread.meta.tags.map((tag) => (
+                    {targetTags.map((tag) => (
                       <Badge
                         key={tag}
                         variant="outline"
@@ -1142,7 +1142,7 @@ function ThreadDetail({
                   已人工接管 · {thread.meta.humanTakeover.byName}
                 </Badge>
               )}
-              {thread.meta.tags.map((t) => (
+              {mergedTagsOf(thread, tagMapDetail).map((t) => (
                 <Badge key={t} variant="outline" className="text-[11px]">
                   {t}
                 </Badge>

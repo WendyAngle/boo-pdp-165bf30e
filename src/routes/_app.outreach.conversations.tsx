@@ -142,6 +142,8 @@ const searchSchema = z.object({
   q: z.string().optional(),
   /** 意向档位过滤：高/中/低/全部（左侧列表顶部 Tab） */
   intent: z.enum(["all", "high", "mid", "low"]).optional(),
+  /** 标签过滤：按会话展示标签（目标分类/目标标签/会话标签）过滤 */
+  tag: z.string().optional(),
   /** 加星过滤 */
   starred: z.enum(["all", "starred", "unstarred"]).optional(),
   /** 好友关系过滤（社媒渠道）：全部 / 对方待通过 / 对方已通过 / 对方已解除 */
@@ -231,6 +233,17 @@ function InboxPage() {
   // 避免出现「右侧展示了会话，中间列表却提示"该视图下暂无会话"」的错位。
   const view: ViewKey = search.view ?? "all";
   const intent = search.intent ?? "all";
+  const tag = search.tag ?? "all";
+  const tagMap = useTargetTagsMap();
+  // 标签筛选项：统计当前全部会话实际展示标签（目标分类 + 目标标签 + 会话自身标签）的出现次数
+  const tagOptions = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const t of threads)
+      for (const tg of mergedTagsOf(t, tagMap)) m.set(tg, (m.get(tg) ?? 0) + 1);
+    return [...m.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "zh"));
+  }, [threads, tagMap]);
   const starred = search.starred ?? "all";
   const friend = search.friend ?? "all";
   const [scorePanelOpen, setScorePanelOpen] = useState(true);

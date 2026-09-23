@@ -100,6 +100,28 @@ function ReachTaskDetailPage() {
   );
   const cost = entries.reduce((n, r) => n + (r.cost ?? 0), 0);
 
+  /* 标签 / 分类：以目标为维度，多条触达记录指向同一目标时只算一个 */
+  const tagMap = useTargetTagsMap();
+  const visible = useMemo(() => entries.slice(0, 100), [entries]);
+  const visibleTargets = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const r of visible) if (!m.has(targetTagKey(r))) m.set(targetTagKey(r), r.targetName);
+    return [...m].map(([key, name]) => ({ key, name }));
+  }, [visible]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [tagOpen, setTagOpen] = useState(false);
+  useEffect(() => {
+    setSelectedKeys([]);
+  }, [taskKey]);
+  const selectedTargets = visibleTargets.filter((t) => selectedKeys.includes(t.key));
+  const allSelected =
+    visibleTargets.length > 0 && selectedTargets.length === visibleTargets.length;
+  const toggleKey = (key: string) =>
+    setSelectedKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+
+
   if (entries.length === 0) {
     return (
       <div className="p-8 space-y-4">

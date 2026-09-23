@@ -137,6 +137,5 @@ export function usedTargetTags(): string[] {
   load();
   const s = new Set<string>();
   for (const v of Object.values(store)) for (const t of v.tags) s.add(t);
-  for (const t of PRESET_TARGET_TAGS) s.delete(t);
   return [...s];
 }

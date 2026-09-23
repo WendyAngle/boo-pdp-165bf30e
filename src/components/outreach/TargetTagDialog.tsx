@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Plus, Tags, X } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Tags, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -13,10 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
-  PRESET_TARGET_TAGS,
-  TARGET_CATEGORIES,
   getTargetTags,
   setTargetTags,
   usedTargetTags,
@@ -46,7 +46,7 @@ export function TargetTagDialog({
   const [draft, setDraft] = useState("");
   const [mode, setMode] = useState<"merge" | "replace">("merge");
 
-  const custom = useMemo(() => (open ? usedTargetTags() : []), [open]);
+  const availableTags = useMemo(() => (open ? usedTargetTags() : []), [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -95,9 +95,6 @@ export function TargetTagDialog({
     onDone?.();
   };
 
-  const allTags = [...PRESET_TARGET_TAGS, ...custom.filter((c) => !tags.includes(c))];
-  const shown = [...new Set([...allTags, ...tags])];
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
@@ -128,47 +125,45 @@ export function TargetTagDialog({
         )}
 
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">客户分类（单选）</Label>
-          <div className="flex flex-wrap gap-2">
-            {TARGET_CATEGORIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setCategory(category === c ? undefined : c)}
-                className={cn(
-                  "px-2.5 h-7 rounded-md border text-xs transition-colors",
-                  category === c
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background hover:bg-muted",
-                )}
-              >
-                {category === c && <Check className="h-3 w-3 mr-1 inline" />}
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
           <Label className="text-xs text-muted-foreground">客户标签（多选）</Label>
-          <div className="flex flex-wrap gap-2">
-            {shown.map((t) => (
-              <button
-                key={t}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
                 type="button"
-                onClick={() => toggleTag(t)}
-                className={cn(
-                  "px-2.5 h-7 rounded-md border text-xs transition-colors",
-                  tags.includes(t)
-                    ? "bg-primary/10 text-primary border-primary/40"
-                    : "bg-background hover:bg-muted",
-                )}
+                variant="outline"
+                className="h-9 w-full justify-between px-3 font-normal"
               >
-                {tags.includes(t) && <Check className="h-3 w-3 mr-1 inline" />}
-                {t}
-              </button>
-            ))}
-          </div>
+                <span className={cn("truncate", tags.length === 0 && "text-muted-foreground")}> 
+                  {tags.length > 0 ? `已选择 ${tags.length} 个标签` : "选择系统中已设置的标签"}
+                </span>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-1" align="start">
+              {availableTags.length === 0 ? (
+                <div className="px-2 py-5 text-center text-xs text-muted-foreground">
+                  暂无已设置标签，可在下方手动添加
+                </div>
+              ) : (
+                availableTags.map((t) => {
+                  const checked = tags.includes(t);
+                  return (
+                    <Button
+                      key={t}
+                      type="button"
+                      variant="ghost"
+                      onClick={() => toggleTag(t)}
+                      className="h-8 w-full justify-start gap-2 px-2 text-sm font-normal"
+                    >
+                      <Checkbox checked={checked} className="pointer-events-none" />
+                      <span className="flex-1 text-left">{t}</span>
+                      {checked && <Check className="h-3.5 w-3.5 text-primary" />}
+                    </Button>
+                  );
+                })
+              )}
+            </PopoverContent>
+          </Popover>
           <div className="flex items-center gap-2">
             <Input
               value={draft}
@@ -179,7 +174,7 @@ export function TargetTagDialog({
                   addDraft();
                 }
               }}
-              placeholder="自定义标签，回车添加"
+              placeholder="手动输入新标签，回车添加"
               className="h-8 text-sm"
             />
             <Button type="button" size="sm" variant="outline" className="h-8" onClick={addDraft}>

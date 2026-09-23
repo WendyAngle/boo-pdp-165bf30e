@@ -268,6 +268,8 @@ if (typeof window !== "undefined") {
   });
 }
 
+const SERVER_EMPTY_ACCOUNTS: SocialAccount[] = [];
+
 export function useSocialAccounts(): SocialAccount[] {
   return useSyncExternalStore(
     (cb) => {
@@ -278,7 +280,7 @@ export function useSocialAccounts(): SocialAccount[] {
       void version;
       return cache;
     },
-    () => [],
+    () => SERVER_EMPTY_ACCOUNTS,
   );
 }
 

@@ -6,10 +6,7 @@ import { groupKeyOf } from "./reach-tasks";
 export type ReachStatsChannel =
   | "email"
   | "phone"
-  | "Facebook"
-  | "TikTok"
-  | "WhatsApp"
-  | "other-social";
+  | "Facebook";
 
 export interface ReachStatsRow {
   key: ReachStatsChannel;
@@ -47,9 +44,6 @@ const CHANNELS: Array<{ key: ReachStatsChannel; label: string }> = [
   { key: "email", label: "邮件" },
   { key: "phone", label: "短信" },
   { key: "Facebook", label: "Facebook" },
-  { key: "TikTok", label: "TikTok" },
-  { key: "WhatsApp", label: "WhatsApp" },
-  { key: "other-social", label: "其他社媒" },
 ];
 
 function channelOf(entry: LedgerEntry): ReachStatsChannel | null {
@@ -57,9 +51,7 @@ function channelOf(entry: LedgerEntry): ReachStatsChannel | null {
   if (entry.channel === "phone") return "phone";
   if (entry.channel !== "social") return null;
   if (entry.platform === "Facebook") return "Facebook";
-  if (entry.platform === "TikTok") return "TikTok";
-  if (entry.platform === "WhatsApp") return "WhatsApp";
-  return "other-social";
+  return null;
 }
 
 function rate(successes: number, targets: number) {
@@ -152,7 +144,7 @@ export function aggregateReachStats(
 
   const channels = CHANNELS.flatMap(({ key, label }) => {
     const bucket = buckets.get(key);
-    if (!bucket || bucket.targets.size === 0) return [];
+    if (!bucket) return [];
     return [
       {
         key,

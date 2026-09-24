@@ -823,8 +823,16 @@ function ChannelBadge({ channel, platform }: { channel: ReachChannel; platform?:
 function TaskStatusBadge({
   status,
 }: {
-  status: "completed" | "running" | "paused";
+  status: "completed" | "running" | "paused" | "terminated";
 }) {
+  if (status === "terminated") {
+    return (
+      <Badge variant="outline" className="gap-1 font-normal bg-rose-50 text-rose-700 border-rose-200">
+        <Square className="h-3 w-3" />
+        已终止
+      </Badge>
+    );
+  }
   if (status === "paused") {
     return (
       <Badge variant="outline" className="gap-1 font-normal bg-slate-100 text-slate-600 border-slate-200">

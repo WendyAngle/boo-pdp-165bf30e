@@ -38,13 +38,13 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         <div>
           <h2 className="text-base font-semibold">渠道月度效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            按月查看 Facebook、邮件和短信的计划目标数、实际目标数、触达成功数，以及目标填充率与触达成功率
+            按月查看 Facebook、邮件和短信的计划目标数、已触达数与目标填充率
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；成功指发送/请求成功送达，不代表客户回复。
+            统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；已触达指发送/请求成功送达，不代表客户回复。
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            目标填充率 = 实际目标数 ÷ 计划目标数（衡量找目标的能力）；触达成功率 = 触达成功数 ÷ 实际发起数（已出结果的目标，衡量执行质量）。
+            目标填充率 = 已触达数 ÷ 计划目标数，衡量目标池供给与找目标的能力；填充率偏低说明计划目标数虚高或来源可用数据不足。
           </p>
         </div>
         <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
@@ -123,24 +123,20 @@ function MonthlyStatsCard({
       </div>
       {months.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
               <th className="px-4 py-3 text-left font-medium">月份</th>
               <th className="px-3 py-3 text-right font-medium">任务数</th>
               <th className="px-3 py-3 text-right font-medium">计划目标数</th>
-              <th className="px-3 py-3 text-right font-medium">实际目标数</th>
-              <th className="px-3 py-3 text-right font-medium">目标填充率</th>
-              <th className="px-3 py-3 text-right font-medium">触达成功数</th>
-              <th className="px-4 py-3 text-right font-medium">触达成功率</th>
+              <th className="px-3 py-3 text-right font-medium">已触达数</th>
+              <th className="px-4 py-3 text-right font-medium">目标填充率</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
               <td className="px-4 py-3 font-medium">{month.label}</td>
               <td className="px-3 py-3 text-right tabular-nums">{month.tasks}</td>
               <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">{month.planned}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{month.targets}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.fillRate)}</td>
               <td className="px-3 py-3 text-right text-base font-semibold tabular-nums text-primary">{month.successes}</td>
-              <td className="px-4 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
+              <td className="px-4 py-3 text-right text-base font-semibold tabular-nums">{formatRate(month.fillRate)}</td>
             </tr>)}</tbody>
           </table>
         </div>

@@ -171,6 +171,9 @@ function ReachPage() {
     "all",
   );
   const [kw, setKw] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "running" | "paused" | "completed" | "terminated"
+  >("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -205,7 +208,7 @@ function ReachPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [channel, kw]);
+  }, [channel, kw, statusFilter]);
 
   const channelCounts = useMemo(() => {
     let email = 0;
@@ -285,9 +288,17 @@ function ReachPage() {
   }, [filtered, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
 
 
+  const visibleGroups = useMemo(
+    () =>
+      statusFilter === "all"
+        ? taskGroups
+        : taskGroups.filter((g) => g.status === statusFilter),
+    [taskGroups, statusFilter],
+  );
+
   const taskPageData = useMemo(
-    () => taskGroups.slice((page - 1) * pageSize, page * pageSize),
-    [taskGroups, page],
+    () => visibleGroups.slice((page - 1) * pageSize, page * pageSize),
+    [visibleGroups, page],
   );
 
 
@@ -491,6 +502,24 @@ function ReachPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">任务状态</span>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}
+            >
+              <SelectTrigger className="h-9 w-[130px] bg-background">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem value="running">执行中</SelectItem>
+                <SelectItem value="paused">已暂停</SelectItem>
+                <SelectItem value="completed">已完成</SelectItem>
+                <SelectItem value="terminated">已终止</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="relative flex-1 min-w-[220px]">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -500,13 +529,14 @@ function ReachPage() {
               className="pl-9 h-9 bg-background"
             />
           </div>
-          {(kw || channel !== "all") && (
+          {(kw || channel !== "all" || statusFilter !== "all") && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setKw("");
                 setChannel("all");
+                setStatusFilter("all");
               }}
               className="gap-1"
             >
@@ -517,7 +547,7 @@ function ReachPage() {
           <div className="text-sm text-muted-foreground ml-auto">
             共{" "}
             <span className="text-foreground font-semibold">
-              {taskGroups.length}
+              {visibleGroups.length}
             </span>{" "}
             个任务
           </div>
@@ -665,7 +695,7 @@ function ReachPage() {
             <ListPagination
               page={page}
               pageSize={pageSize}
-              total={taskGroups.length}
+              total={visibleGroups.length}
               onPageChange={setPage}
             />
           </div>

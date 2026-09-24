@@ -772,8 +772,31 @@ function ReachPage() {
               onClick={() => {
                 if (!terminateConfirm) return;
                 terminateTask(terminateConfirm.key);
+                // 终止即生成「终止服务退款」流水：（计划目标数 - 触达成功数）× 单目标积分
+                const taskEntries = ledger.filter(
+                  (e) => e.kind === "reach" && groupKeyOf(e) === terminateConfirm.key,
+                );
+                const first = taskEntries[0];
+                const cfg = resolveTaskConfig(
+                  terminateConfirm.key,
+                  taskEntries,
+                  first ? reachAction(first) : "",
+                );
+                const successes = taskEntries.filter(
+                  (e) => getReachStatus(e, Date.now()) === "success",
+                ).length;
+                const refund = recordTerminateRefund({
+                  taskName: terminateConfirm.name,
+                  planned: cfg.targetCap ?? taskEntries.length,
+                  successes,
+                  platform: first?.platform,
+                  channel: first?.channel,
+                  costPerTarget: cfg.costPerTarget,
+                });
                 toast.success(`已终止：${terminateConfirm.name}`, {
-                  description: "未达成目标的积分将自动退还至账户。",
+                  description: refund
+                    ? `已退还 ${refund.cost} 积分至账户，可在消费明细查看。`
+                    : "该任务已无未达成目标，无需退还积分。",
                 });
                 setTerminateConfirm(null);
               }}

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { ENTERPRISES } from "@/data/enterprises";
+import { useHydrated } from "@/hooks/use-hydrated";
 
 export type LedgerKind =
   | "view"
@@ -275,6 +276,7 @@ function writeLedger(arr: LedgerEntry[]) {
 }
 
 let ledger: LedgerEntry[] = readLedger();
+const EMPTY_LEDGER: LedgerEntry[] = [];
 let ledgerVersion = 0;
 const ledgerListeners = new Set<() => void>();
 
@@ -635,8 +637,9 @@ export function fixFeedbackRewardAmount(ticketId: string, credits: number) {
 }
 
 export function useLedger(): LedgerEntry[] {
+  const hydrated = useHydrated();
   useSyncExternalStore(subscribeLedger, getLedgerVersion, getLedgerVersion);
-  return ledger;
+  return hydrated ? ledger : EMPTY_LEDGER;
 }
 
 export function getAllLedger(): LedgerEntry[] {

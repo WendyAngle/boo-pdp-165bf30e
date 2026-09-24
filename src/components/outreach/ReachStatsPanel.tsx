@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { BarChart3, CheckCircle2, Mail, Phone, Send, Target, TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -47,14 +45,10 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
     () => aggregateReachStats(ledger, year, now),
     [ledger, year, now],
   );
-  const hasData = stats.summary.targets > 0;
-
-  const scrollToMonth = (month: number) => {
-    document.getElementById(`reach-stats-month-${month}`)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
+  const activeMonths = useMemo(
+    () => stats.months.filter((month) => month.targets > 0),
+    [stats.months],
+  );
 
   return (
     <div className="space-y-4">
@@ -96,7 +90,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
           </div>
         </div>
         <ChartContainer config={chartConfig} className="h-[320px] w-full aspect-auto">
-          <ComposedChart data={stats.months} margin={{ top: 8, right: 0, left: -12, bottom: 0 }}>
+          <ComposedChart data={activeMonths} margin={{ top: 8, right: 0, left: -12, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
             <YAxis yAxisId="count" allowDecimals={false} tickLine={false} axisLine={false} />
@@ -128,20 +122,11 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
       </Card>
 
       <section aria-labelledby="monthly-stats-heading">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 id="monthly-stats-heading" className="text-sm font-semibold">月度效果明细</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">按月查看邮件、短信、Facebook 的触达效果</p>
-          </div>
-          <div className="flex max-w-full gap-1 overflow-x-auto pb-1" aria-label="快速定位月份">
-            {stats.months.map((month) => (
-              <Button key={month.month} variant="outline" size="sm" className="h-8 shrink-0 px-2.5" onClick={() => scrollToMonth(month.month)}>
-                {month.label}
-              </Button>
-            ))}
-          </div>
+        <div className="mb-3">
+          <h3 id="monthly-stats-heading" className="text-sm font-semibold">月度效果对比</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">仅展示有触达数据的月份，可横向比较总体及各渠道效果</p>
         </div>
-        {!hasData ? (
+        {activeMonths.length === 0 ? (
           <Card className="flex min-h-48 flex-col items-center justify-center gap-3 p-8 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <BarChart3 className="h-6 w-6" />
@@ -152,88 +137,97 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
             </div>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {stats.months.map((month) => (
-              <MonthCard
-                key={month.month}
-                month={month}
-                channels={stats.channels}
-                isCurrentMonth={year === current.year && month.month === current.month}
-              />
-            ))}
-          </div>
+          <MonthlyComparison months={activeMonths} channels={stats.channels} />
         )}
       </section>
     </div>
   );
 }
 
-function MonthCard({
-  month,
+function MonthlyComparison({
+  months,
   channels,
-  isCurrentMonth,
 }: {
-  month: ReturnType<typeof aggregateReachStats>["months"][number];
+  months: ReturnType<typeof aggregateReachStats>["months"];
   channels: ReturnType<typeof aggregateReachStats>["channels"];
-  isCurrentMonth: boolean;
 }) {
-  const metrics = [
-    { label: "任务数", value: month.tasks },
-    { label: "目标数", value: month.targets },
-    { label: "成功数", value: month.successes },
-    { label: "成功率", value: formatRate(month.successRate) },
-  ];
-
   return (
-    <Card id={`reach-stats-month-${month.month}`} className="scroll-mt-4 overflow-hidden">
-      <div className="flex flex-col gap-4 border-b bg-muted/20 p-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2">
-          <h4 className="text-xl font-semibold">{month.label}</h4>
-          {isCurrentMonth ? <Badge variant="secondary">本月</Badge> : null}
-        </div>
-        <div className="grid grid-cols-4 gap-3 sm:min-w-[420px]">
-          {metrics.map((metric) => (
-            <div key={metric.label} className="min-w-0 text-center">
-              <div className="text-xs text-muted-foreground">{metric.label}</div>
-              <div className="mt-1 text-lg font-semibold tabular-nums sm:text-xl">{metric.value}</div>
-            </div>
-          ))}
-        </div>
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[980px] border-collapse text-sm">
+          <thead>
+            <tr className="border-b bg-muted/30">
+              <th className="px-4 py-3 text-left font-medium" rowSpan={2}>月份</th>
+              <th className="border-l px-3 py-2 text-center font-medium" colSpan={4}>总体效果</th>
+              {channels.map((channel) => (
+                <th key={channel.key} className="border-l px-3 py-2 text-center font-medium" colSpan={3}>
+                  <span className="inline-flex items-center gap-1.5"><ChannelIcon channel={channel.key} />{channel.label}</span>
+                </th>
+              ))}
+            </tr>
+            <tr className="border-b bg-muted/20 text-xs text-muted-foreground">
+              <th className="border-l px-3 py-2 font-normal">任务数</th>
+              <th className="px-3 py-2 font-normal">目标数</th>
+              <th className="px-3 py-2 font-normal">成功数</th>
+              <th className="px-3 py-2 font-normal">成功率</th>
+              {channels.map((channel) => (
+                <MonthColumnHead key={channel.key} />
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {months.map((month) => (
+              <tr key={month.month} className="border-b last:border-b-0 hover:bg-muted/20">
+                <td className="px-4 py-4 text-base font-semibold">{month.label}</td>
+                <MetricCell value={month.tasks} bordered />
+                <MetricCell value={month.targets} />
+                <MetricCell value={month.successes} emphasis />
+                <MetricCell value={formatRate(month.successRate)} emphasis />
+                {channels.map((channel) => {
+                  const value = channel.months[month.month - 1];
+                  return (
+                    <ChannelMonthCells
+                      key={channel.key}
+                      targets={value?.targets ?? 0}
+                      successes={value?.successes ?? 0}
+                      successRate={value?.successRate ?? null}
+                    />
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
-      {month.targets === 0 ? (
-        <div className="px-5 py-6 text-center text-sm text-muted-foreground">本月暂无触达数据</div>
-      ) : (
-        <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          {channels.map((channel) => {
-            const channelMonth = channel.months[month.month - 1];
-            return (
-              <div key={channel.key} className="p-5">
-                <div className="mb-4 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <ChannelIcon channel={channel.key} />
-                  </span>
-                  <span className="text-sm font-semibold">{channel.label}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <MonthlyMetric label="目标数" value={channelMonth?.targets ?? 0} />
-                  <MonthlyMetric label="成功数" value={channelMonth?.successes ?? 0} />
-                  <MonthlyMetric label="成功率" value={formatRate(channelMonth?.successRate ?? null)} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </Card>
   );
 }
 
-function MonthlyMetric({ label, value }: { label: string; value: React.ReactNode }) {
+function MonthColumnHead() {
   return (
-    <div className="min-w-0">
-      <div className="text-[10px] text-muted-foreground">{label}</div>
-      <div className="mt-0.5 text-xs font-medium tabular-nums">{value}</div>
-    </div>
+    <>
+      <th className="border-l px-3 py-2 font-normal">目标</th>
+      <th className="px-3 py-2 font-normal">成功</th>
+      <th className="px-3 py-2 font-normal">成功率</th>
+    </>
+  );
+}
+
+function ChannelMonthCells({ targets, successes, successRate }: { targets: number; successes: number; successRate: number | null }) {
+  return (
+    <>
+      <MetricCell value={targets} bordered />
+      <MetricCell value={successes} />
+      <MetricCell value={formatRate(successRate)} />
+    </>
+  );
+}
+
+function MetricCell({ value, bordered = false, emphasis = false }: { value: React.ReactNode; bordered?: boolean; emphasis?: boolean }) {
+  return (
+    <td className={`${bordered ? "border-l" : ""} px-3 py-4 text-center tabular-nums ${emphasis ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
+      {value}
+    </td>
   );
 }
 

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
-import { BarChart3, CheckCircle2, Send, Target, TrendingUp } from "lucide-react";
+import { BarChart3, CheckCircle2, Mail, MessageCircle, Phone, Send, Target, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   ChartContainer,
@@ -22,20 +23,45 @@ import {
   aggregateReachStats,
   beijingYearMonth,
   reachStatsYears,
+  type ReachStatsChannel,
 } from "@/lib/reach-stats";
 
+const CHANNEL_COLORS: Record<ReachStatsChannel, string> = {
+  email: "var(--chart-1)",
+  phone: "var(--chart-2)",
+  Facebook: "var(--chart-3)",
+  TikTok: "var(--chart-4)",
+  WhatsApp: "var(--chart-5)",
+  "other-social": "var(--primary)",
+};
+
 const chartConfig = {
-  targets: { label: "目标数", color: "var(--chart-3)" },
-  successes: { label: "成功数", color: "var(--chart-2)" },
+  email: { label: "邮件", color: CHANNEL_COLORS.email },
+  phone: { label: "短信", color: CHANNEL_COLORS.phone },
+  Facebook: { label: "Facebook", color: CHANNEL_COLORS.Facebook },
+  TikTok: { label: "TikTok", color: CHANNEL_COLORS.TikTok },
+  WhatsApp: { label: "WhatsApp", color: CHANNEL_COLORS.WhatsApp },
+  "other-social": { label: "其他社媒", color: CHANNEL_COLORS["other-social"] },
 } satisfies ChartConfig;
 
 export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: number }) {
   const current = beijingYearMonth(now);
   const years = useMemo(() => reachStatsYears(ledger, now), [ledger, now]);
   const [year, setYear] = useState(current.year);
+  const [trendMetric, setTrendMetric] = useState<"targets" | "successes">("targets");
   const stats = useMemo(
     () => aggregateReachStats(ledger, year, now),
     [ledger, year, now],
+  );
+  const trendData = useMemo(
+    () => stats.months.map((month) => ({
+      label: month.label,
+      ...Object.fromEntries(stats.channels.map((channel) => [
+        channel.key,
+        channel.months[month.month - 1]?.[trendMetric] ?? 0,
+      ])),
+    })),
+    [stats, trendMetric],
   );
 
   return (
@@ -71,19 +97,48 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
       </div>
 
       <Card className="p-5">
-        <div className="mb-4">
-          <h3 className="text-sm font-semibold">月度触达趋势</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">{year} 年 1–12 月目标数与成功数变化</p>
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">月度触达趋势</h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">{year} 年各渠道 1–12 月变化</p>
+          </div>
+          <div className="flex rounded-md border bg-muted/30 p-0.5" aria-label="趋势指标">
+            <Button
+              size="sm"
+              variant={trendMetric === "targets" ? "secondary" : "ghost"}
+              className="h-7 px-3"
+              onClick={() => setTrendMetric("targets")}
+            >
+              目标数
+            </Button>
+            <Button
+              size="sm"
+              variant={trendMetric === "successes" ? "secondary" : "ghost"}
+              className="h-7 px-3"
+              onClick={() => setTrendMetric("successes")}
+            >
+              成功数
+            </Button>
+          </div>
         </div>
         <ChartContainer config={chartConfig} className="h-[280px] w-full aspect-auto">
-          <LineChart data={stats.months} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+          <LineChart data={trendData} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
             <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
             <ChartLegend content={<ChartLegendContent />} />
-            <Line type="monotone" dataKey="targets" stroke="var(--color-targets)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
-            <Line type="monotone" dataKey="successes" stroke="var(--color-successes)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            {stats.channels.map((channel) => (
+              <Line
+                key={channel.key}
+                type="monotone"
+                dataKey={channel.key}
+                stroke={`var(--color-${channel.key})`}
+                strokeWidth={2.25}
+                dot={{ r: 2.5 }}
+                activeDot={{ r: 5 }}
+              />
+            ))}
           </LineChart>
         </ChartContainer>
       </Card>
@@ -101,7 +156,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
             </div>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="space-y-4">
             {stats.channels.map((row) => (
               <ChannelCard key={row.key} row={row} />
             ))}
@@ -122,25 +177,56 @@ function ChannelCard({ row }: { row: ReturnType<typeof aggregateReachStats>["cha
 
   return (
     <Card className="p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Send className="h-4 w-4" />
+            <ChannelIcon channel={row.key} />
           </div>
-          <h4 className="font-semibold">{row.label}</h4>
+          <div>
+            <h4 className="font-semibold">{row.label}</h4>
+            <span className="text-xs text-muted-foreground">年度汇总</span>
+          </div>
         </div>
-        <span className="text-xs text-muted-foreground">年度汇总</span>
+        <div className="grid w-full grid-cols-4 gap-2 sm:w-auto sm:min-w-[360px]">
+          {metrics.map((metric) => (
+            <div key={metric.label} className="min-w-0 text-center">
+              <div className="text-xs text-muted-foreground">{metric.label}</div>
+              <div className="mt-1 text-lg font-semibold tabular-nums">{metric.value}</div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-4 gap-2 border-t pt-4">
-        {metrics.map((metric) => (
-          <div key={metric.label} className="min-w-0 text-center">
-            <div className="text-xs text-muted-foreground">{metric.label}</div>
-            <div className="mt-1 text-lg font-semibold tabular-nums">{metric.value}</div>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md border bg-border sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+        {row.months.map((month) => (
+          <div key={month.month} className="bg-card p-3">
+            <div className="mb-2 text-xs font-semibold">{month.label}</div>
+            <div className="grid grid-cols-4 gap-1 text-center">
+              <MonthlyMetric label="任务" value={month.tasks} />
+              <MonthlyMetric label="目标" value={month.targets} />
+              <MonthlyMetric label="成功" value={month.successes} />
+              <MonthlyMetric label="成功率" value={formatRate(month.successRate)} />
+            </div>
           </div>
         ))}
       </div>
     </Card>
   );
+}
+
+function MonthlyMetric({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <div className="text-[10px] text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-xs font-medium tabular-nums">{value}</div>
+    </div>
+  );
+}
+
+function ChannelIcon({ channel }: { channel: ReachStatsChannel }) {
+  if (channel === "email") return <Mail className="h-4 w-4" />;
+  if (channel === "phone") return <Phone className="h-4 w-4" />;
+  if (channel === "WhatsApp") return <MessageCircle className="h-4 w-4" />;
+  return <Send className="h-4 w-4" />;
 }
 
 function StatsCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {

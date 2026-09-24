@@ -81,7 +81,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               对上方 Facebook 渠道按任务「寻找目标方式」细分，三种来源合计与 Facebook 渠道数据一致
             </p>
           </div>
-          <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
             {fbSources.map((source) => (
               <MonthlyStatsCard
                 key={source.key}

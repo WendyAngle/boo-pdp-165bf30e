@@ -123,7 +123,7 @@ type TaskGroup = {
   aiGenerated: boolean;
   createdAt: string;
   lastAt: string;
-  status: "completed" | "running" | "paused" | "terminated";
+  status: "completed" | "running" | "paused" | "pending" | "terminated";
 };
 
 
@@ -175,7 +175,7 @@ function ReachPage() {
   );
   const [kw, setKw] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "running" | "paused" | "completed" | "terminated"
+    "all" | "pending" | "running" | "paused" | "completed" | "terminated"
   >("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -542,6 +542,7 @@ function ReachPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem value="pending">待执行</SelectItem>
                 <SelectItem value="running">执行中</SelectItem>
                 <SelectItem value="paused">已暂停</SelectItem>
                 <SelectItem value="completed">已完成</SelectItem>
@@ -671,7 +672,7 @@ function ReachPage() {
 
                   <TableCell className="text-right">
                     {g.channel === "social" &&
-                    (g.status === "running" || g.status === "paused") ? (
+                    (g.status === "running" || g.status === "paused" || g.status === "pending") ? (
                       <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="outline"
@@ -906,7 +907,7 @@ function ChannelBadge({ channel, platform }: { channel: ReachChannel; platform?:
 function TaskStatusBadge({
   status,
 }: {
-  status: "completed" | "running" | "paused" | "terminated";
+  status: "completed" | "running" | "paused" | "pending" | "terminated";
 }) {
   if (status === "terminated") {
     return (
@@ -921,6 +922,14 @@ function TaskStatusBadge({
       <Badge variant="outline" className="gap-1 font-normal bg-slate-100 text-slate-600 border-slate-200">
         <PauseCircle className="h-3 w-3" />
         已暂停
+      </Badge>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <Badge variant="outline" className="gap-1 font-normal bg-sky-50 text-sky-700 border-sky-200">
+        <Clock className="h-3 w-3" />
+        待执行
       </Badge>
     );
   }

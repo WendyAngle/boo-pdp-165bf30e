@@ -123,24 +123,20 @@ function MonthlyStatsCard({
       </div>
       {months.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[560px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
               <th className="px-4 py-3 text-left font-medium">月份</th>
               <th className="px-3 py-3 text-right font-medium">任务数</th>
               <th className="px-3 py-3 text-right font-medium">计划目标数</th>
-              <th className="px-3 py-3 text-right font-medium">实际目标数</th>
-              <th className="px-3 py-3 text-right font-medium">目标填充率</th>
-              <th className="px-3 py-3 text-right font-medium">触达成功数</th>
-              <th className="px-4 py-3 text-right font-medium">触达成功率</th>
+              <th className="px-3 py-3 text-right font-medium">已触达数</th>
+              <th className="px-4 py-3 text-right font-medium">目标填充率</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
               <td className="px-4 py-3 font-medium">{month.label}</td>
               <td className="px-3 py-3 text-right tabular-nums">{month.tasks}</td>
               <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">{month.planned}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{month.targets}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.fillRate)}</td>
               <td className="px-3 py-3 text-right text-base font-semibold tabular-nums text-primary">{month.successes}</td>
-              <td className="px-4 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
+              <td className="px-4 py-3 text-right text-base font-semibold tabular-nums">{formatRate(month.fillRate)}</td>
             </tr>)}</tbody>
           </table>
         </div>

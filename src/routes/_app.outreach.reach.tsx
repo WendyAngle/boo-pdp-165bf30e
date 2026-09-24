@@ -611,30 +611,43 @@ function ReachPage() {
                   <TableCell className="text-right">
                     {g.channel === "social" &&
                     (g.status === "running" || g.status === "paused") ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 gap-1.5"
-                        onClick={() =>
-                          setPauseConfirm({
-                            key: g.key,
-                            name: g.name,
-                            paused: g.status === "paused",
-                          })
-                        }
-                      >
-                        {g.status === "paused" ? (
-                          <>
-                            <Play className="h-3.5 w-3.5" />
-                            继续执行
-                          </>
-                        ) : (
-                          <>
-                            <Pause className="h-3.5 w-3.5" />
-                            暂停
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          onClick={() =>
+                            setPauseConfirm({
+                              key: g.key,
+                              name: g.name,
+                              paused: g.status === "paused",
+                            })
+                          }
+                        >
+                          {g.status === "paused" ? (
+                            <>
+                              <Play className="h-3.5 w-3.5" />
+                              继续执行
+                            </>
+                          ) : (
+                            <>
+                              <Pause className="h-3.5 w-3.5" />
+                              暂停
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          onClick={() =>
+                            setTerminateConfirm({ key: g.key, name: g.name })
+                          }
+                        >
+                          <Square className="h-3.5 w-3.5" />
+                          终止
+                        </Button>
+                      </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}

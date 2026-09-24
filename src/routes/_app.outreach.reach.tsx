@@ -721,6 +721,35 @@ function ReachPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog
+        open={!!terminateConfirm}
+        onOpenChange={(o) => !o && setTerminateConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>终止触达任务</AlertDialogTitle>
+            <AlertDialogDescription>
+              任务终止后将不可恢复，同时系统会自动将未达成的目标积分退还，确定要继续么
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!terminateConfirm) return;
+                terminateTask(terminateConfirm.key);
+                toast.success(`已终止：${terminateConfirm.name}`, {
+                  description: "未达成目标的积分将自动退还至账户。",
+                });
+                setTerminateConfirm(null);
+              }}
+            >
+              确认终止
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </TooltipProvider>
   );

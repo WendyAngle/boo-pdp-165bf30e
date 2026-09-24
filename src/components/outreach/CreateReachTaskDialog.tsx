@@ -652,6 +652,7 @@ export function CreateReachTaskDialog({
       content: finalContent,
       aiGenerated: needsContent ? aiUsed : false,
       action,
+      findMode,
     });
     saveReachTaskConfig({
       taskKey: `s:${name.trim()}:${platform}`,

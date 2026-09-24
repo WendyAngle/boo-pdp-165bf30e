@@ -1465,6 +1465,7 @@ export function useThreads(): Thread[] {
     ...getDemoFriendPendingThreads(),
     ...getDemoFriendRemovedThreads(),
     ...getDemoTikTokThreads(),
+    ...getDemoFbSourceThreads(),
   ]);
 }
 
@@ -1481,6 +1482,7 @@ export function getThreadsSnapshot(): Thread[] {
     ...getDemoFriendPendingThreads(),
     ...getDemoFriendRemovedThreads(),
     ...getDemoTikTokThreads(),
+    ...getDemoFbSourceThreads(),
   ]);
 }
 

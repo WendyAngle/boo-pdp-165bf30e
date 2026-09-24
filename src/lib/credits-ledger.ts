@@ -252,7 +252,7 @@ export interface LedgerEntry {
 }
 
 const LEDGER_KEY = "boo:ledger:v2";
-const LEDGER_SEED_VERSION = "v23";
+const LEDGER_SEED_VERSION = "v24";
 const LEDGER_SEED_FLAG = `boo:ledger:${LEDGER_SEED_VERSION}:seeded`;
 const REVEAL_KEY = "boo:reveal:v1";
 const UNLOCK_KEY = "boo:unlocked:v1";
@@ -1428,6 +1428,34 @@ export function seedDemoLedgerIfEmpty() {
       reachContact(26, 0, "phone", 11 * D + 310, "failed", "多次拨打无人接听"),
       // ---- 失败（不可重试）----
       reachContact(32, 0, "social", 12 * D + 360, "failed", "账号已失效或停用"),
+      // ---- 历史月份触达（7 月 / 8 月）：用于效果统计的按月对比演示 ----
+      // 8 月（约 25–54 天前）：邮件 / 短信 / Facebook 均有成功与失败，成功率有差异
+      reachEnt(1, "email", 28 * D + 130, "success"),
+      reachEnt(4, "email", 31 * D + 90, "success"),
+      reachContact(8, 0, "email", 33 * D + 45, "failed", "对方邮件服务器退信"),
+      reachEnt(12, "email", 36 * D + 200, "success"),
+      reachContact(16, 1, "email", 40 * D + 60, "success"),
+      reachEnt(20, "email", 44 * D + 150, "failed", "邮箱无效（地址不存在）"),
+      reachContact(24, 0, "phone", 29 * D + 80, "success"),
+      reachEnt(27, "phone", 34 * D + 120, "success"),
+      reachContact(29, 1, "phone", 38 * D + 30, "failed", "多次拨打无人接听"),
+      reachEnt(33, "phone", 42 * D + 240, "success"),
+      { ...reachEnt(2, "social", 30 * D + 100, "success", undefined, "Facebook"), findMode: "smart" as const },
+      { ...reachEnt(6, "social", 35 * D + 70, "success", undefined, "Facebook"), findMode: "post" as const },
+      { ...reachContact(10, 0, "social", 39 * D + 160, "failed", "消息被平台拦截", "Facebook"), findMode: "post" as const },
+      { ...reachEnt(14, "social", 43 * D + 50, "success", undefined, "Facebook"), findMode: "group" as const },
+      { ...reachContact(18, 0, "social", 47 * D + 110, "success", undefined, "Facebook"), findMode: "smart" as const },
+      // 7 月（约 56–85 天前）：量更少、成功率偏低，体现月度差异
+      reachEnt(3, "email", 58 * D + 140, "success"),
+      reachEnt(9, "email", 63 * D + 80, "failed", "对方邮件服务器退信"),
+      reachContact(13, 0, "email", 68 * D + 200, "success"),
+      reachEnt(17, "email", 74 * D + 60, "failed", "邮箱无效（地址不存在）"),
+      reachContact(21, 0, "phone", 60 * D + 100, "success"),
+      reachEnt(25, "phone", 66 * D + 180, "failed", "对方手机关机或无信号"),
+      reachContact(30, 1, "phone", 72 * D + 40, "success"),
+      { ...reachEnt(5, "social", 62 * D + 90, "success", undefined, "Facebook"), findMode: "smart" as const },
+      { ...reachEnt(11, "social", 70 * D + 130, "failed", "消息被平台拦截", "Facebook"), findMode: "group" as const },
+      { ...reachContact(15, 0, "social", 78 * D + 70, "success", undefined, "Facebook"), findMode: "post" as const },
       // ---- 触达任务 · 社媒（Facebook / TikTok 加好友 · 私信）----
       // 渠道 = 社媒；明细区分 Facebook平台加好友 / Facebook平台私信 / TikTok平台私信
       // 覆盖 待触达 / 触达中 / 触达成功 / 触达失败 四种状态，时间分散在近两周

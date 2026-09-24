@@ -19,6 +19,7 @@ import {
   Pause,
   Play,
   PauseCircle,
+  Square,
   BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +28,10 @@ import {
   toggleTaskPaused,
   seedDemoPausedTasksIfNeeded,
 } from "@/lib/reach-task-pause";
+import {
+  useTerminatedTaskKeys,
+  terminateTask,
+} from "@/lib/reach-task-terminate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -114,7 +119,7 @@ type TaskGroup = {
   aiGenerated: boolean;
   createdAt: string;
   lastAt: string;
-  status: "completed" | "running" | "paused";
+  status: "completed" | "running" | "paused" | "terminated";
 };
 
 
@@ -139,6 +144,12 @@ function ReachPage() {
   const [tab, setTab] = useState<"self" | "stats" | "managed">("self");
   const managedOrders = useManagedOrders();
   const pausedKeys = usePausedTaskKeys();
+  const terminatedKeys = useTerminatedTaskKeys();
+  // 终止任务 二次确认
+  const [terminateConfirm, setTerminateConfirm] = useState<{
+    key: string;
+    name: string;
+  } | null>(null);
   // 暂停 / 继续执行 二次确认
   const [pauseConfirm, setPauseConfirm] = useState<{
     key: string;
@@ -252,11 +263,13 @@ function ReachPage() {
           aiGenerated: false,
           createdAt: r.createdAt,
           lastAt: r.createdAt,
-          status: pausedKeys.has(key)
-            ? "paused"
-            : runningKeys.has(key)
-              ? "running"
-              : "completed",
+          status: terminatedKeys.has(key)
+            ? "terminated"
+            : pausedKeys.has(key)
+              ? "paused"
+              : runningKeys.has(key)
+                ? "running"
+                : "completed",
         };
         map.set(key, g);
       }
@@ -268,7 +281,7 @@ function ReachPage() {
       if (r.createdAt > g.lastAt) g.lastAt = r.createdAt;
     }
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
-  }, [filtered, threadByKey, runningKeys, pausedKeys]);
+  }, [filtered, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
 
 
   const taskPageData = useMemo(
@@ -599,30 +612,43 @@ function ReachPage() {
                   <TableCell className="text-right">
                     {g.channel === "social" &&
                     (g.status === "running" || g.status === "paused") ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 gap-1.5"
-                        onClick={() =>
-                          setPauseConfirm({
-                            key: g.key,
-                            name: g.name,
-                            paused: g.status === "paused",
-                          })
-                        }
-                      >
-                        {g.status === "paused" ? (
-                          <>
-                            <Play className="h-3.5 w-3.5" />
-                            继续执行
-                          </>
-                        ) : (
-                          <>
-                            <Pause className="h-3.5 w-3.5" />
-                            暂停
-                          </>
-                        )}
-                      </Button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          onClick={() =>
+                            setPauseConfirm({
+                              key: g.key,
+                              name: g.name,
+                              paused: g.status === "paused",
+                            })
+                          }
+                        >
+                          {g.status === "paused" ? (
+                            <>
+                              <Play className="h-3.5 w-3.5" />
+                              继续执行
+                            </>
+                          ) : (
+                            <>
+                              <Pause className="h-3.5 w-3.5" />
+                              暂停
+                            </>
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 gap-1.5"
+                          onClick={() =>
+                            setTerminateConfirm({ key: g.key, name: g.name })
+                          }
+                        >
+                          <Square className="h-3.5 w-3.5" />
+                          终止
+                        </Button>
+                      </div>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
@@ -679,11 +705,6 @@ function ReachPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
-              className={
-                pauseConfirm?.paused
-                  ? undefined
-                  : "bg-amber-600 hover:bg-amber-700 text-primary-foreground"
-              }
               onClick={() => {
                 if (!pauseConfirm) return;
                 toggleTaskPaused(pauseConfirm.key);
@@ -696,6 +717,35 @@ function ReachPage() {
               }}
             >
               {pauseConfirm?.paused ? "确认继续执行" : "确认暂停"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!terminateConfirm}
+        onOpenChange={(o) => !o && setTerminateConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>终止触达任务</AlertDialogTitle>
+            <AlertDialogDescription>
+              任务终止后将不可恢复，同时系统会自动将未达成的目标积分退还，确定要继续么
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (!terminateConfirm) return;
+                terminateTask(terminateConfirm.key);
+                toast.success(`已终止：${terminateConfirm.name}`, {
+                  description: "未达成目标的积分将自动退还至账户。",
+                });
+                setTerminateConfirm(null);
+              }}
+            >
+              确认终止
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -773,8 +823,16 @@ function ChannelBadge({ channel, platform }: { channel: ReachChannel; platform?:
 function TaskStatusBadge({
   status,
 }: {
-  status: "completed" | "running" | "paused";
+  status: "completed" | "running" | "paused" | "terminated";
 }) {
+  if (status === "terminated") {
+    return (
+      <Badge variant="outline" className="gap-1 font-normal bg-rose-50 text-rose-700 border-rose-200">
+        <Square className="h-3 w-3" />
+        已终止
+      </Badge>
+    );
+  }
   if (status === "paused") {
     return (
       <Badge variant="outline" className="gap-1 font-normal bg-slate-100 text-slate-600 border-slate-200">

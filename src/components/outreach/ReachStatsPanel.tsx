@@ -69,29 +69,20 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
         </Card>
-      ) : <div className="grid gap-4 md:grid-cols-2">
-        {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
-      </div>}
-
-      {hasData && fbSources.some((s) => s.targets > 0) && (
-        <div className="space-y-3 pt-2">
-          <div>
-            <h2 className="text-base font-semibold">Facebook 目标来源效果</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              对上方 Facebook 渠道按任务「寻找目标方式」细分，三种来源合计与 Facebook 渠道数据一致
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {fbSources.map((source) => (
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
+          {fbSources
+            .filter((source) => source.targets > 0)
+            .map((source) => (
               <MonthlyStatsCard
                 key={source.key}
                 icon={<SourceIcon mode={source.key} />}
                 title={source.label}
-                subtitle="Facebook"
+                subtitle="寻找目标方式"
                 months={source.months}
               />
             ))}
-          </div>
         </div>
       )}
     </div>

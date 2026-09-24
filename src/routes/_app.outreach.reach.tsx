@@ -529,13 +529,14 @@ function ReachPage() {
               className="pl-9 h-9 bg-background"
             />
           </div>
-          {(kw || channel !== "all") && (
+          {(kw || channel !== "all" || statusFilter !== "all") && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setKw("");
                 setChannel("all");
+                setStatusFilter("all");
               }}
               className="gap-1"
             >
@@ -546,7 +547,7 @@ function ReachPage() {
           <div className="text-sm text-muted-foreground ml-auto">
             共{" "}
             <span className="text-foreground font-semibold">
-              {taskGroups.length}
+              {visibleGroups.length}
             </span>{" "}
             个任务
           </div>
@@ -694,7 +695,7 @@ function ReachPage() {
             <ListPagination
               page={page}
               pageSize={pageSize}
-              total={taskGroups.length}
+              total={visibleGroups.length}
               onPageChange={setPage}
             />
           </div>

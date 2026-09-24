@@ -214,10 +214,49 @@ function ReachTaskDetailPage() {
 
           {cfg.type === "social_prospecting" && (
             <>
+              {cfg.findMode && (
+                <Field
+                  label="寻找目标方式"
+                  value={
+                    cfg.findMode === "post"
+                      ? "指定贴文搜索"
+                      : cfg.findMode === "group"
+                        ? "指定群组搜索"
+                        : "系统智能搜索"
+                  }
+                />
+              )}
               <Field label="目标地区" value={cfg.region ?? "—"} />
               <Field label="目标数量上限" value={String(cfg.targetCap ?? entries.length)} />
-              <Field label="推广产品" value={<Chips items={cfg.products ?? []} />} />
-              <Field label="目标关键词" value={<Chips items={cfg.keywords ?? []} />} />
+              {cfg.findMode === "post" || cfg.findMode === "group" ? (
+                <>
+                  <Field
+                    label={cfg.findMode === "post" ? "贴文链接" : "群组链接"}
+                    value={
+                      cfg.links?.length ? (
+                        <div className="space-y-0.5 break-all">
+                          {cfg.links.map((l) => (
+                            <div key={l}>{l}</div>
+                          ))}
+                        </div>
+                      ) : (
+                        "—"
+                      )
+                    }
+                  />
+                  {cfg.findMode === "group" && (
+                    <>
+                      <Field label="搜索目标" value={cfg.groupScopes ?? "—"} />
+                      <Field label="搜索关键词" value={<Chips items={cfg.keywords ?? []} />} />
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Field label="推广产品" value={<Chips items={cfg.products ?? []} />} />
+                  <Field label="目标关键词" value={<Chips items={cfg.keywords ?? []} />} />
+                </>
+              )}
             </>
           )}
 

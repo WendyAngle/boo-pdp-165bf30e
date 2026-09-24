@@ -1,4 +1,5 @@
 import type { LedgerEntry } from "./credits-ledger";
+import { fbSourceDemoConfig } from "./fb-source-demo";
 
 /** 触达任务类型：不同类型在详情页展示不同的配置项 */
 export type ReachTaskType =
@@ -43,6 +44,10 @@ export interface ReachTaskConfig {
   smsSign?: string;
   /** 排期 */
   schedule?: string;
+  /** Facebook 寻找目标方式与链接 */
+  findMode?: "smart" | "post" | "group";
+  links?: string[];
+  groupScopes?: string;
 }
 
 const KEY = "boo:reach-task-config:v1";
@@ -163,6 +168,27 @@ export function resolveTaskConfig(
         ? "当日额度用尽部分顺延次日 09:00 继续执行"
         : "创建后立即执行",
   };
+
+  // Facebook 指定贴文 / 指定群组 来源的演示任务：展示对应寻找方式与链接
+  const fm = entries.find((e) => e.findMode)?.findMode;
+  const demo = fbSourceDemoConfig(first?.subject);
+  if (platform === "Facebook" && (fm === "post" || fm === "group")) {
+    derived.type = saved?.type ?? "social_prospecting";
+    derived.findMode = fm;
+    if (demo) {
+      derived.region = demo.region;
+      derived.links = demo.links;
+      derived.groupScopes = demo.groupScopes;
+      derived.keywords = fm === "post" ? undefined : demo.keywords;
+    }
+    derived.products = undefined;
+    derived.targetSource =
+      fm === "post"
+        ? `指定贴文（${derived.links?.length ?? 0} 个）`
+        : `指定群组（${derived.links?.length ?? 0} 个）${derived.groupScopes ? ` · 搜索目标 ${derived.groupScopes}` : ""}`;
+  } else if (platform === "Facebook" && derived.type === "social_prospecting") {
+    derived.findMode = "smart";
+  }
 
   return { ...derived, ...(saved ?? {}) };
 }

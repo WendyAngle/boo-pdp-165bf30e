@@ -6,6 +6,7 @@ import {
 } from "@/lib/credits-ledger";
 import { addSuppression } from "@/lib/suppressions-store";
 import { deriveFriends } from "@/lib/social-friends";
+import { FB_SOURCE_DEMO_TASKS } from "@/lib/fb-source-demo";
 import {
   useProspectingTasks,
   getProspectingTasksSnapshot,
@@ -1322,6 +1323,63 @@ function getDemoTikTokThreads(): Thread[] {
 /** 上述 TikTok 场景由演示会话显式构造，避免好友池重复生成 */
 const TT_DEMO_TARGET_IDS = new Set(["ttd_1", "ttd_2", "ttd_3", "ttd_4", "ttd_5"]);
 
+/* -------------------- Facebook 指定贴文 / 指定群组 来源任务的回复会话 -------------------- */
+
+const FB_SOURCE_ACCOUNT = "@boo.global.sales";
+
+function getDemoFbSourceThreads(): Thread[] {
+  const now = Date.now();
+  const out: Thread[] = [];
+  for (const task of FB_SOURCE_DEMO_TASKS) {
+    for (const tg of task.targets) {
+      if (!tg.reply || tg.status !== "success") continue;
+      const sentAt = now - (task.min + tg.offset) * 60_000;
+      const replyAt = sentAt + tg.reply.afterH * 3600_000;
+      const id = `demo:social:fb:src:${tg.handle}`;
+      const messages: ThreadMessage[] = [
+        {
+          id: `${id}:out`,
+          direction: "outbound",
+          createdAt: new Date(sentAt).toISOString(),
+          fromName: "你",
+          fromAddress: FB_SOURCE_ACCOUNT,
+          content: task.content.replace("{name}", tg.name),
+          events: [{ type: "delivered", at: new Date(sentAt + 60_000).toISOString() }],
+        },
+        {
+          id: `${id}:in`,
+          direction: "inbound",
+          createdAt: new Date(replyAt).toISOString(),
+          fromName: tg.name,
+          fromAddress: tg.handle,
+          content: tg.reply.content,
+          contentZh: tg.reply.contentZh,
+        },
+      ];
+      const meta = ensureMeta(id, messages[0].createdAt);
+      meta.inboundMessages = [messages[1]];
+      if (meta.tags.length === 0 && tg.reply.tags) meta.tags = [...tg.reply.tags];
+      out.push({
+        id,
+        targetKind: "contact",
+        targetId: tg.handle,
+        targetName: tg.name,
+        channel: "facebook",
+        counterpartyAddress: tg.handle,
+        senderEmail: FB_SOURCE_ACCOUNT,
+        messages,
+        meta,
+        lastAt: messages[1].createdAt,
+        lastPreview: tg.reply.content.slice(0, 120),
+        lastDirection: "inbound",
+        friendSource: task.subject,
+        socialSignals: { accountAgeDays: 980, hasAvatar: true, followers: 1200, postsCount: 86 },
+      });
+    }
+  }
+  return out;
+}
+
 
 
 
@@ -1407,6 +1465,7 @@ export function useThreads(): Thread[] {
     ...getDemoFriendPendingThreads(),
     ...getDemoFriendRemovedThreads(),
     ...getDemoTikTokThreads(),
+    ...getDemoFbSourceThreads(),
   ]);
 }
 
@@ -1423,6 +1482,7 @@ export function getThreadsSnapshot(): Thread[] {
     ...getDemoFriendPendingThreads(),
     ...getDemoFriendRemovedThreads(),
     ...getDemoTikTokThreads(),
+    ...getDemoFbSourceThreads(),
   ]);
 }
 

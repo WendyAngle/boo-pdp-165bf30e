@@ -187,6 +187,7 @@ export function aggregateReachStats(
       tasks: bucket.tasks.size,
       targets: bucket.targets.size,
       successes: bucket.successes.size,
+      successRate: rate(bucket.successes.size, bucket.targets.size),
     })),
   };
 }

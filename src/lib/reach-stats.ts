@@ -43,15 +43,12 @@ export interface ReachStatsResult {
   months: ReachStatsMonth[];
 }
 
+/** 统计渠道仅保留 Facebook（邮件、短信暂不纳入） */
 const CHANNELS: Array<{ key: ReachStatsChannel; label: string }> = [
   { key: "Facebook", label: "Facebook" },
-  { key: "email", label: "邮件" },
-  { key: "phone", label: "短信" },
 ];
 
 function channelOf(entry: LedgerEntry): ReachStatsChannel | null {
-  if (entry.channel === "email") return "email";
-  if (entry.channel === "phone") return "phone";
   if (entry.channel === "social" && entry.platform === "Facebook") return "Facebook";
   return null;
 }

@@ -40,6 +40,9 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
           <p className="mt-0.5 text-xs text-muted-foreground">
             按月查看邮件、短信和 Facebook 的任务数、目标数、成功数及成功率
           </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；成功指发送/请求成功送达，不代表客户回复。
+          </p>
         </div>
         <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
           <SelectTrigger aria-label="统计年份" className="h-9 w-[112px] bg-background">

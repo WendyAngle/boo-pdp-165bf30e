@@ -96,8 +96,6 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
       )}
     </div>
   );
-    </div>
-  );
 }
 
 function ChannelMonthlyStats({ channel }: { channel: ReturnType<typeof aggregateReachStats>["channels"][number] }) {

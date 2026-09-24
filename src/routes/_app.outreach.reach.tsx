@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Zap,
@@ -73,6 +73,7 @@ import {
   syncFailedRefunds,
   REACH_CHANNEL_LABEL,
   recordTerminateRefund,
+  type LedgerEntry,
   type ReachChannel,
 } from "@/lib/credits-ledger";
 import { resolveTaskConfig } from "@/lib/reach-task-config";
@@ -84,6 +85,7 @@ import {
   MessageCircleReply,
   Users,
   MessageSquare,
+  Clock,
 } from "lucide-react";
 import { CreateReachTaskDialog } from "@/components/outreach/CreateReachTaskDialog";
 import { ManagedEmailReachDialog } from "@/components/outreach/ManagedEmailReachDialog";
@@ -122,7 +124,7 @@ type TaskGroup = {
   aiGenerated: boolean;
   createdAt: string;
   lastAt: string;
-  status: "completed" | "running" | "paused" | "terminated";
+  status: "completed" | "running" | "paused" | "pending" | "terminated";
 };
 
 
@@ -174,7 +176,7 @@ function ReachPage() {
   );
   const [kw, setKw] = useState("");
   const [statusFilter, setStatusFilter] = useState<
-    "all" | "running" | "paused" | "completed" | "terminated"
+    "all" | "pending" | "running" | "paused" | "completed" | "terminated"
   >("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -188,9 +190,9 @@ function ReachPage() {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
   }, [ledger, now]);
 
-  const filtered = useMemo(() => {
-    const k = kw.trim().toLowerCase();
-    return reachRows.filter((r) => {
+  const matchFilter = useCallback(
+    (r: LedgerEntry) => {
+      const k = kw.trim().toLowerCase();
       if (channel === "whatsapp") {
         if (r.channel !== "social" || r.platform !== "WhatsApp") return false;
       } else if (channel === "social") {
@@ -205,8 +207,32 @@ function ReachPage() {
         (r.detail ?? "").toLowerCase().includes(k) ||
         (r.platform ?? "").toLowerCase().includes(k)
       );
-    });
-  }, [reachRows, channel, kw]);
+    },
+    [channel, kw],
+  );
+
+  const filtered = useMemo(() => reachRows.filter(matchFilter), [reachRows, matchFilter]);
+
+  // 「待执行」任务：全部目标仍处于待触达，尚无任何已开始/已完成的记录
+  const pendingOnly = useMemo(() => {
+    const byKey = new Map<string, LedgerEntry[]>();
+    for (const r of ledger) {
+      if (r.kind !== "reach") continue;
+      const key = groupKeyOf(r);
+      const arr = byKey.get(key);
+      if (arr) arr.push(r);
+      else byKey.set(key, [r]);
+    }
+    const keys = new Set<string>();
+    const rows: LedgerEntry[] = [];
+    for (const [key, list] of byKey) {
+      if (list.every((r) => getReachStatus(r, now) === "pending")) {
+        keys.add(key);
+        for (const r of list) if (matchFilter(r)) rows.push(r);
+      }
+    }
+    return { keys, rows };
+  }, [ledger, now, matchFilter]);
 
   useEffect(() => {
     setPage(1);
@@ -251,7 +277,7 @@ function ReachPage() {
   // 任务视图：把逐条触达成功记录按「任务」聚合
   const taskGroups = useMemo(() => {
     const map = new Map<string, TaskGroup>();
-    for (const r of filtered) {
+    for (const r of [...filtered, ...pendingOnly.rows]) {
       const action = reachAction(r);
       const batchName = r.channel === "social" && r.subject ? r.subject : null;
       const key = groupKeyOf(r);
@@ -273,9 +299,11 @@ function ReachPage() {
             ? "terminated"
             : pausedKeys.has(key)
               ? "paused"
-              : runningKeys.has(key)
-                ? "running"
-                : "completed",
+              : pendingOnly.keys.has(key)
+                ? "pending"
+                : runningKeys.has(key)
+                  ? "running"
+                  : "completed",
         };
         map.set(key, g);
       }
@@ -287,7 +315,7 @@ function ReachPage() {
       if (r.createdAt > g.lastAt) g.lastAt = r.createdAt;
     }
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
-  }, [filtered, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
+  }, [filtered, pendingOnly, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
 
 
   const visibleGroups = useMemo(
@@ -515,6 +543,7 @@ function ReachPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem value="pending">待执行</SelectItem>
                 <SelectItem value="running">执行中</SelectItem>
                 <SelectItem value="paused">已暂停</SelectItem>
                 <SelectItem value="completed">已完成</SelectItem>
@@ -556,7 +585,7 @@ function ReachPage() {
 
         </div>
 
-        {filtered.length === 0 ? (
+        {taskGroups.length === 0 ? (
           <div className="p-16 flex flex-col items-center text-center gap-3">
             <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
               <Send className="h-7 w-7 text-muted-foreground" />
@@ -644,8 +673,9 @@ function ReachPage() {
 
                   <TableCell className="text-right">
                     {g.channel === "social" &&
-                    (g.status === "running" || g.status === "paused") ? (
+                    (g.status === "running" || g.status === "paused" || g.status === "pending") ? (
                       <div className="flex items-center justify-end gap-1.5">
+                        {g.status !== "pending" && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -670,6 +700,7 @@ function ReachPage() {
                             </>
                           )}
                         </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -692,7 +723,7 @@ function ReachPage() {
           </Table>
         )}
 
-        {filtered.length > 0 && (
+        {taskGroups.length > 0 && (
           <div className="px-5 pb-4">
             <ListPagination
               page={page}
@@ -879,7 +910,7 @@ function ChannelBadge({ channel, platform }: { channel: ReachChannel; platform?:
 function TaskStatusBadge({
   status,
 }: {
-  status: "completed" | "running" | "paused" | "terminated";
+  status: "completed" | "running" | "paused" | "pending" | "terminated";
 }) {
   if (status === "terminated") {
     return (
@@ -894,6 +925,14 @@ function TaskStatusBadge({
       <Badge variant="outline" className="gap-1 font-normal bg-slate-100 text-slate-600 border-slate-200">
         <PauseCircle className="h-3 w-3" />
         已暂停
+      </Badge>
+    );
+  }
+  if (status === "pending") {
+    return (
+      <Badge variant="outline" className="gap-1 font-normal bg-sky-50 text-sky-700 border-sky-200">
+        <Clock className="h-3 w-3" />
+        待执行
       </Badge>
     );
   }

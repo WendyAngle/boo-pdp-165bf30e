@@ -38,7 +38,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         <div>
           <h2 className="text-base font-semibold">渠道月度效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            按月查看邮件、短信和 Facebook 的任务数、目标数、成功数及成功率
+            按月查看邮件、短信和 Facebook 的任务数、目标数、触达成功数及成功率
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；成功指发送/请求成功送达，不代表客户回复。
@@ -122,7 +122,7 @@ function MonthlyStatsCard({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[460px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-              <th className="px-4 py-3 text-left font-medium">月份</th><th className="px-3 py-3 text-right font-medium">任务数</th><th className="px-3 py-3 text-right font-medium">目标数</th><th className="px-3 py-3 text-right font-medium">成功数</th><th className="px-4 py-3 text-right font-medium">成功率</th>
+              <th className="px-4 py-3 text-left font-medium">月份</th><th className="px-3 py-3 text-right font-medium">任务数</th><th className="px-3 py-3 text-right font-medium">目标数</th><th className="px-3 py-3 text-right font-medium">触达成功数</th><th className="px-4 py-3 text-right font-medium">成功率</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
               <td className="px-4 py-3 font-medium">{month.label}</td><td className="px-3 py-3 text-right tabular-nums">{month.tasks}</td><td className="px-3 py-3 text-right tabular-nums">{month.targets}</td><td className="px-3 py-3 text-right font-semibold tabular-nums">{month.successes}</td><td className="px-4 py-3 text-right font-semibold tabular-nums">{formatRate(month.successRate)}</td>

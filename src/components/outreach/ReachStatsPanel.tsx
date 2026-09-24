@@ -131,8 +131,7 @@ function MonthlyStatsCard({
               <th className="px-3 py-3 text-right font-medium">实际目标数</th>
               <th className="px-3 py-3 text-right font-medium">目标填充率</th>
               <th className="px-3 py-3 text-right font-medium">触达成功数</th>
-              <th className="px-3 py-3 text-right font-medium">触达成功率</th>
-              <th className="px-4 py-3 text-right font-medium">触达失败</th>
+              <th className="px-4 py-3 text-right font-medium">触达成功率</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
               <td className="px-4 py-3 font-medium">{month.label}</td>

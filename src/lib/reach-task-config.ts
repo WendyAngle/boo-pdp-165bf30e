@@ -183,7 +183,7 @@ export function resolveTaskConfig(
     }
     derived.products = undefined;
     // 演示数据：贴文/群组池子有限，计划目标数通常大于实际找到的目标数
-    derived.targetCap = Math.max(entries.length, Math.ceil((entries.length * (fm === "post" ? 2 : 1.6)) / 5) * 5);
+    derived.targetCap = (demo && "targetCap" in demo ? demo.targetCap : undefined) ?? Math.max(entries.length, Math.ceil((entries.length * (fm === "post" ? 2 : 1.6)) / 5) * 5);
     derived.targetSource =
       fm === "post"
         ? `指定贴文（${derived.links?.length ?? 0} 个）`

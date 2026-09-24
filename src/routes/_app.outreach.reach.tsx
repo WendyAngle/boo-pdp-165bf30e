@@ -262,11 +262,13 @@ function ReachPage() {
           aiGenerated: false,
           createdAt: r.createdAt,
           lastAt: r.createdAt,
-          status: pausedKeys.has(key)
-            ? "paused"
-            : runningKeys.has(key)
-              ? "running"
-              : "completed",
+          status: terminatedKeys.has(key)
+            ? "terminated"
+            : pausedKeys.has(key)
+              ? "paused"
+              : runningKeys.has(key)
+                ? "running"
+                : "completed",
         };
         map.set(key, g);
       }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { BarChart3, CheckCircle2, Send, Target, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -17,15 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import type { LedgerEntry } from "@/lib/credits-ledger";
 import {
   aggregateReachStats,
@@ -38,49 +29,34 @@ const chartConfig = {
   successes: { label: "成功数", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
-const MONTHS = Array.from({ length: 12 }, (_, index) => index + 1);
-
 export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: number }) {
   const current = beijingYearMonth(now);
   const years = useMemo(() => reachStatsYears(ledger, now), [ledger, now]);
   const [year, setYear] = useState(current.year);
-  const [month, setMonth] = useState(current.month);
   const stats = useMemo(
-    () => aggregateReachStats(ledger, year, month, now),
-    [ledger, year, month, now],
+    () => aggregateReachStats(ledger, year, now),
+    [ledger, year, now],
   );
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold">月度触达效果</h2>
+          <h2 className="text-base font-semibold">年度触达效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             成功指发送或请求成功送达，不代表客户回复
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
-            <SelectTrigger aria-label="统计年份" className="h-9 w-[112px] bg-background">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {years.map((item) => (
-                <SelectItem key={item} value={String(item)}>{item} 年</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={String(month)} onValueChange={(value) => setMonth(Number(value))}>
-            <SelectTrigger aria-label="统计月份" className="h-9 w-[96px] bg-background">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {MONTHS.map((item) => (
-                <SelectItem key={item} value={String(item)}>{item} 月</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
+          <SelectTrigger aria-label="统计年份" className="h-9 w-[112px] bg-background">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {years.map((item) => (
+              <SelectItem key={item} value={String(item)}>{item} 年</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -94,75 +70,76 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         />
       </div>
 
-      {stats.channels.length === 0 ? (
-        <Card className="flex min-h-72 flex-col items-center justify-center gap-3 p-8 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
-            <BarChart3 className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="font-medium">该月份暂无触达任务数据</div>
-            <div className="mt-1 text-sm text-muted-foreground">请选择其他年份或月份查看</div>
-          </div>
-        </Card>
-      ) : (
-        <>
-          <Card className="p-5">
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold">月度触达趋势</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">各渠道目标数与成功数对比</p>
-            </div>
-            <ChartContainer config={chartConfig} className="h-[260px] w-full aspect-auto">
-              <BarChart data={stats.channels} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid vertical={false} />
-                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-                <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Bar dataKey="targets" fill="var(--color-targets)" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="successes" fill="var(--color-successes)" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ChartContainer>
-          </Card>
+      <Card className="p-5">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold">月度触达趋势</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">{year} 年 1–12 月目标数与成功数变化</p>
+        </div>
+        <ChartContainer config={chartConfig} className="h-[280px] w-full aspect-auto">
+          <LineChart data={stats.months} margin={{ top: 8, right: 12, left: -16, bottom: 0 }}>
+            <CartesianGrid vertical={false} />
+            <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
+            <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
+            <ChartTooltip content={<ChartTooltipContent />} cursor={false} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Line type="monotone" dataKey="targets" stroke="var(--color-targets)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            <Line type="monotone" dataKey="successes" stroke="var(--color-successes)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+          </LineChart>
+        </ChartContainer>
+      </Card>
 
-          <Card className="overflow-hidden p-0">
-            <div className="border-b bg-muted/20 px-5 py-3">
-              <h3 className="text-sm font-semibold">渠道统计</h3>
+      <section aria-labelledby="channel-stats-heading">
+        <h3 id="channel-stats-heading" className="mb-3 text-sm font-semibold">渠道统计</h3>
+        {stats.channels.length === 0 ? (
+          <Card className="flex min-h-48 flex-col items-center justify-center gap-3 p-8 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <BarChart3 className="h-6 w-6" />
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-primary/5 hover:bg-primary/5">
-                  <TableHead>渠道</TableHead>
-                  <TableHead className="text-right">任务数</TableHead>
-                  <TableHead className="text-right">目标数</TableHead>
-                  <TableHead className="text-right">成功数</TableHead>
-                  <TableHead className="text-right">成功率</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats.channels.map((row) => (
-                  <TableRow key={row.key}>
-                    <TableCell className="font-medium">{row.label}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.tasks}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.targets}</TableCell>
-                    <TableCell className="text-right tabular-nums">{row.successes}</TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">{formatRate(row.successRate)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-              <TableFooter>
-                <TableRow>
-                  <TableCell className="font-semibold">当月合计</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">{stats.summary.tasks}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">{stats.summary.targets}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">{stats.summary.successes}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums">{formatRate(stats.summary.successRate)}</TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
+            <div>
+              <div className="font-medium">该年份暂无触达任务数据</div>
+              <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
+            </div>
           </Card>
-        </>
-      )}
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {stats.channels.map((row) => (
+              <ChannelCard key={row.key} row={row} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
+  );
+}
+
+function ChannelCard({ row }: { row: ReturnType<typeof aggregateReachStats>["channels"][number] }) {
+  const metrics = [
+    { label: "任务数", value: row.tasks },
+    { label: "目标数", value: row.targets },
+    { label: "成功数", value: row.successes },
+    { label: "成功率", value: formatRate(row.successRate) },
+  ];
+
+  return (
+    <Card className="p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <Send className="h-4 w-4" />
+          </div>
+          <h4 className="font-semibold">{row.label}</h4>
+        </div>
+        <span className="text-xs text-muted-foreground">年度汇总</span>
+      </div>
+      <div className="grid grid-cols-4 gap-2 border-t pt-4">
+        {metrics.map((metric) => (
+          <div key={metric.label} className="min-w-0 text-center">
+            <div className="text-xs text-muted-foreground">{metric.label}</div>
+            <div className="mt-1 text-lg font-semibold tabular-nums">{metric.value}</div>
+          </div>
+        ))}
+      </div>
+    </Card>
   );
 }
 

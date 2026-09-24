@@ -41,9 +41,9 @@ export interface ReachStatsResult {
 }
 
 const CHANNELS: Array<{ key: ReachStatsChannel; label: string }> = [
+  { key: "Facebook", label: "Facebook" },
   { key: "email", label: "邮件" },
   { key: "phone", label: "短信" },
-  { key: "Facebook", label: "Facebook" },
 ];
 
 function channelOf(entry: LedgerEntry): ReachStatsChannel | null {

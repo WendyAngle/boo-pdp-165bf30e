@@ -451,7 +451,7 @@ function ReachPage() {
             </TabsTrigger>
             <TabsTrigger value="stats" className="gap-1.5">
               <BarChart3 className="h-3.5 w-3.5" />
-              效果统计
+              社媒触达效果统计
             </TabsTrigger>
             <TabsTrigger value="managed" className="gap-1.5">
               <Handshake className="h-3.5 w-3.5" />

@@ -38,7 +38,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         <div>
           <h2 className="text-base font-semibold">渠道月度效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            按月查看 Facebook、邮件和短信的计划目标数、已触达数与目标填充率
+            按月查看 Facebook 的计划目标数、已触达数与目标填充率
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；已触达指发送/请求成功送达，不代表客户回复。

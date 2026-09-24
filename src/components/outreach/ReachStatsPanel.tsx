@@ -69,7 +69,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
         </Card>
-      ) : <div className="grid gap-4">
+      ) : <div className="grid gap-4 xl:grid-cols-2">
         {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
       </div>}
 

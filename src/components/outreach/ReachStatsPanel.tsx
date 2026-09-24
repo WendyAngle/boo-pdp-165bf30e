@@ -44,7 +44,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
             统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；已触达指发送/请求成功送达，不代表客户回复。
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            目标填充率 = 已触达数 ÷ 计划目标数，衡量目标池供给与找目标的能力。
+            目标填充率 = 实际目标数（已触达数）÷ 计划目标数，反映找目标的能力（关键词宽窄、贴文／群组池子大小）；填充率偏低说明该换来源或补充链接。
           </p>
         </div>
         <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>

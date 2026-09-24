@@ -85,6 +85,7 @@ import {
   MessageCircleReply,
   Users,
   MessageSquare,
+  Clock,
 } from "lucide-react";
 import { CreateReachTaskDialog } from "@/components/outreach/CreateReachTaskDialog";
 import { ManagedEmailReachDialog } from "@/components/outreach/ManagedEmailReachDialog";
@@ -584,7 +585,7 @@ function ReachPage() {
 
         </div>
 
-        {filtered.length === 0 ? (
+        {taskGroups.length === 0 ? (
           <div className="p-16 flex flex-col items-center text-center gap-3">
             <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center">
               <Send className="h-7 w-7 text-muted-foreground" />
@@ -674,6 +675,7 @@ function ReachPage() {
                     {g.channel === "social" &&
                     (g.status === "running" || g.status === "paused" || g.status === "pending") ? (
                       <div className="flex items-center justify-end gap-1.5">
+                        {g.status !== "pending" && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -698,6 +700,7 @@ function ReachPage() {
                             </>
                           )}
                         </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -720,7 +723,7 @@ function ReachPage() {
           </Table>
         )}
 
-        {filtered.length > 0 && (
+        {taskGroups.length > 0 && (
           <div className="px-5 pb-4">
             <ListPagination
               page={page}

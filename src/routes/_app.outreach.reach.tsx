@@ -171,6 +171,9 @@ function ReachPage() {
     "all",
   );
   const [kw, setKw] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "running" | "paused" | "completed" | "terminated"
+  >("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 

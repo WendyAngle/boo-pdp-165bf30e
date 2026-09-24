@@ -288,9 +288,17 @@ function ReachPage() {
   }, [filtered, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
 
 
+  const visibleGroups = useMemo(
+    () =>
+      statusFilter === "all"
+        ? taskGroups
+        : taskGroups.filter((g) => g.status === statusFilter),
+    [taskGroups, statusFilter],
+  );
+
   const taskPageData = useMemo(
-    () => taskGroups.slice((page - 1) * pageSize, page * pageSize),
-    [taskGroups, page],
+    () => visibleGroups.slice((page - 1) * pageSize, page * pageSize),
+    [visibleGroups, page],
   );
 
 

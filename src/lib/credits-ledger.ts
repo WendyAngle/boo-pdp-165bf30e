@@ -1743,6 +1743,27 @@ export function seedDemoLedgerIfEmpty() {
         aiGenerated: true,
         forcedStatus: t.status as ReachStatus,
       }))),
+      /* ---------------- 触达任务 · Facebook 指定贴文 / 指定群组 来源（按月分布） ---------------- */
+      ...FB_SOURCE_DEMO_TASKS.flatMap((task) =>
+        task.targets.map((t) => ({
+          id: makeId("r"),
+          kind: "reach" as LedgerKind,
+          cost: COST_SOCIAL_DM,
+          createdAt: isoMinutesAgo(task.min + t.offset),
+          targetKind: "contact" as TargetKind,
+          targetId: t.handle,
+          targetName: t.name,
+          platform: "Facebook" as const,
+          channel: "social" as ReachChannel,
+          subject: task.subject,
+          findMode: task.findMode,
+          detail: `Facebook平台私信 · ${t.handle}`,
+          content: task.content.replace("{name}", t.name),
+          aiGenerated: true,
+          forcedStatus: t.status,
+          ...(t.status === "failed" ? { failReason: t.failReason ?? "消息被平台拦截" } : {}),
+        })),
+      ),
       /* ---------------- 触达任务 · 已暂停（可继续执行）：TikTok 户外运动达人拓客 ---------------- */
       ...([
         { name: "Ana Beatriz", handle: "@ana.outdoor", min: 3 * D + 200, status: "success" },

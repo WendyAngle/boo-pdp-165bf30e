@@ -30,6 +30,12 @@ export interface ReachStatsSummary {
 export interface ReachStatsResult {
   summary: ReachStatsSummary;
   channels: ReachStatsRow[];
+  months: Array<{
+    month: number;
+    label: string;
+    targets: number;
+    successes: number;
+  }>;
 }
 
 const CHANNELS: Array<{ key: ReachStatsChannel; label: string }> = [
@@ -72,13 +78,12 @@ export function reachStatsYears(entries: LedgerEntry[], now = Date.now()) {
 export function aggregateReachStats(
   entries: LedgerEntry[],
   year: number,
-  month: number,
   now = Date.now(),
 ): ReachStatsResult {
   const rows = entries.filter((entry) => {
     if (entry.kind !== "reach") return false;
     const value = beijingYearMonth(entry.createdAt);
-    return value.year === year && value.month === month;
+    return value.year === year;
   });
 
   const overallTasks = new Set<string>();
@@ -88,6 +93,10 @@ export function aggregateReachStats(
     ReachStatsChannel,
     { tasks: Set<string>; targets: Set<string>; successes: Set<string> }
   >();
+  const monthBuckets = Array.from({ length: 12 }, () => ({
+    targets: new Set<string>(),
+    successes: new Set<string>(),
+  }));
 
   for (const channel of CHANNELS) {
     buckets.set(channel.key, {
@@ -103,16 +112,20 @@ export function aggregateReachStats(
     const taskKey = groupKeyOf(entry);
     const targetKey = `${taskKey}:${entry.targetKind}:${entry.targetId}`;
     const bucket = buckets.get(channel);
-    if (!bucket) continue;
+    const entryMonth = beijingYearMonth(entry.createdAt).month;
+    const monthBucket = monthBuckets[entryMonth - 1];
+    if (!bucket || !monthBucket) continue;
 
     overallTasks.add(taskKey);
     overallTargets.add(targetKey);
     bucket.tasks.add(taskKey);
     bucket.targets.add(targetKey);
+    monthBucket.targets.add(targetKey);
 
     if (getReachStatus(entry, now) === "success") {
       overallSuccesses.add(targetKey);
       bucket.successes.add(targetKey);
+      monthBucket.successes.add(targetKey);
     }
   }
 
@@ -139,5 +152,11 @@ export function aggregateReachStats(
       successRate: rate(overallSuccesses.size, overallTargets.size),
     },
     channels,
+    months: monthBuckets.map((bucket, index) => ({
+      month: index + 1,
+      label: `${index + 1}月`,
+      targets: bucket.targets.size,
+      successes: bucket.successes.size,
+    })),
   };
 }

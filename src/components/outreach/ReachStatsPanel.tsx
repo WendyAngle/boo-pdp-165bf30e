@@ -90,7 +90,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
 }
 
 function ChannelMonthlyStats({ channel }: { channel: ReturnType<typeof aggregateReachStats>["channels"][number] }) {
-  return <MonthlyStatsCard icon={<ChannelIcon channel={channel.key} />} title={channel.label} months={channel.months} />;
+  return <MonthlyStatsCard icon={<ChannelIcon channel={channel.key} />} title={channel.label} subtitle="整体汇总" months={channel.months} />;
 }
 
 function MonthlyStatsCard({

@@ -188,9 +188,9 @@ function ReachPage() {
       .sort((a, b) => (a.createdAt < b.createdAt ? 1 : a.createdAt > b.createdAt ? -1 : 0));
   }, [ledger, now]);
 
-  const filtered = useMemo(() => {
-    const k = kw.trim().toLowerCase();
-    return reachRows.filter((r) => {
+  const matchFilter = useCallback(
+    (r: LedgerEntry) => {
+      const k = kw.trim().toLowerCase();
       if (channel === "whatsapp") {
         if (r.channel !== "social" || r.platform !== "WhatsApp") return false;
       } else if (channel === "social") {
@@ -205,8 +205,32 @@ function ReachPage() {
         (r.detail ?? "").toLowerCase().includes(k) ||
         (r.platform ?? "").toLowerCase().includes(k)
       );
-    });
-  }, [reachRows, channel, kw]);
+    },
+    [channel, kw],
+  );
+
+  const filtered = useMemo(() => reachRows.filter(matchFilter), [reachRows, matchFilter]);
+
+  // 「待执行」任务：全部目标仍处于待触达，尚无任何已开始/已完成的记录
+  const pendingOnly = useMemo(() => {
+    const byKey = new Map<string, LedgerEntry[]>();
+    for (const r of ledger) {
+      if (r.kind !== "reach") continue;
+      const key = groupKeyOf(r);
+      const arr = byKey.get(key);
+      if (arr) arr.push(r);
+      else byKey.set(key, [r]);
+    }
+    const keys = new Set<string>();
+    const rows: LedgerEntry[] = [];
+    for (const [key, list] of byKey) {
+      if (list.every((r) => getReachStatus(r, now) === "pending")) {
+        keys.add(key);
+        for (const r of list) if (matchFilter(r)) rows.push(r);
+      }
+    }
+    return { keys, rows };
+  }, [ledger, now, matchFilter]);
 
   useEffect(() => {
     setPage(1);

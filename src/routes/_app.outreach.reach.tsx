@@ -298,9 +298,11 @@ function ReachPage() {
             ? "terminated"
             : pausedKeys.has(key)
               ? "paused"
-              : runningKeys.has(key)
-                ? "running"
-                : "completed",
+              : pendingOnly.keys.has(key)
+                ? "pending"
+                : runningKeys.has(key)
+                  ? "running"
+                  : "completed",
         };
         map.set(key, g);
       }

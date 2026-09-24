@@ -57,7 +57,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
         </Card>
-      ) : <div className="grid gap-4 xl:grid-cols-3">
+      ) : <div className="grid gap-4 2xl:grid-cols-3">
         {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
       </div>}
     </div>
@@ -74,7 +74,7 @@ function ChannelMonthlyStats({ channel }: { channel: ReturnType<typeof aggregate
       </div>
       {months.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[420px] text-sm">
+          <table className="w-full min-w-[460px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
               <th className="px-4 py-3 text-left font-medium">月份</th><th className="px-3 py-3 text-right font-medium">任务数</th><th className="px-3 py-3 text-right font-medium">目标数</th><th className="px-3 py-3 text-right font-medium">成功数</th><th className="px-4 py-3 text-right font-medium">成功率</th>
             </tr></thead>

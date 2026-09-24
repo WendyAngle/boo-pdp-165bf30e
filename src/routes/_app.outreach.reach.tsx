@@ -143,6 +143,12 @@ function ReachPage() {
   const [tab, setTab] = useState<"self" | "stats" | "managed">("self");
   const managedOrders = useManagedOrders();
   const pausedKeys = usePausedTaskKeys();
+  const terminatedKeys = useTerminatedTaskKeys();
+  // 终止任务 二次确认
+  const [terminateConfirm, setTerminateConfirm] = useState<{
+    key: string;
+    name: string;
+  } | null>(null);
   // 暂停 / 继续执行 二次确认
   const [pauseConfirm, setPauseConfirm] = useState<{
     key: string;

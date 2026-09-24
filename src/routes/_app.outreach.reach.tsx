@@ -19,6 +19,7 @@ import {
   Pause,
   Play,
   PauseCircle,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -82,11 +83,21 @@ import { ManagedEmailBatches } from "@/components/outreach/ManagedEmailBatches";
 import { useManagedOrders } from "@/lib/managed-email";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { UserCircle2, Plus, Handshake } from "lucide-react";
+import { ReachStatsPanel } from "@/components/outreach/ReachStatsPanel";
 
 
 
 export const Route = createFileRoute("/_app/outreach/reach")({
-  head: () => ({ meta: [{ title: "出海大数据平台 · 触达 | 出海大数据平台" }] }),
+  head: () => ({
+    meta: [
+      { title: "触达任务与效果统计 · 出海大数据平台" },
+      { name: "description", content: "管理触达任务，并按指定年月查看各渠道目标数、成功数和成功率。" },
+      { property: "og:title", content: "触达任务与效果统计 · 出海大数据平台" },
+      { property: "og:description", content: "管理触达任务，并按指定年月查看各渠道目标数、成功数和成功率。" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: ReachPage,
 });
 
@@ -125,7 +136,7 @@ function ReachPage() {
   const [now, setNow] = useState(() => Date.now());
   const [createReachOpen, setCreateReachOpen] = useState(false);
   const [managedEmailOpen, setManagedEmailOpen] = useState(false);
-  const [tab, setTab] = useState<"self" | "managed">("self");
+  const [tab, setTab] = useState<"self" | "stats" | "managed">("self");
   const managedOrders = useManagedOrders();
   const pausedKeys = usePausedTaskKeys();
   // 暂停 / 继续执行 二次确认
@@ -383,6 +394,10 @@ function ReachPage() {
               <Send className="h-3.5 w-3.5" />
               自助触达任务
             </TabsTrigger>
+            <TabsTrigger value="stats" className="gap-1.5">
+              <BarChart3 className="h-3.5 w-3.5" />
+              效果统计
+            </TabsTrigger>
             <TabsTrigger value="managed" className="gap-1.5">
               <Handshake className="h-3.5 w-3.5" />
               邮件托管批次
@@ -404,7 +419,7 @@ function ReachPage() {
                   </Link>
                 </Button>
               </>
-            ) : (
+            ) : tab === "managed" ? (
               <Button
                 size="sm"
                 className="h-9 gap-1.5"
@@ -413,9 +428,13 @@ function ReachPage() {
                 <Handshake className="h-4 w-4" />
                 邮件托管触达
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
+
+        <TabsContent value="stats" className="mt-0">
+          <ReachStatsPanel ledger={ledger} now={now} />
+        </TabsContent>
 
         <TabsContent value="managed" className="mt-0 space-y-4">
           <SourceNote

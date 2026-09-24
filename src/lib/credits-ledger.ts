@@ -865,6 +865,43 @@ export function retryFailedReach(reachId: string): LedgerEntry | null {
   return fresh;
 }
 
+/**
+ * 手动终止触达任务时记录「终止服务退款」：
+ * 退还积分 =（计划目标数 - 触达成功数）× 单目标积分。
+ * 同一任务重复调用只记录一次；未达成数 <= 0 时不产生记录。
+ */
+export function recordTerminateRefund(input: {
+  taskName: string;
+  planned: number;
+  successes: number;
+  platform?: string;
+  channel?: ReachChannel;
+  costPerTarget?: number;
+}): LedgerEntry | null {
+  const unit = input.costPerTarget ?? COST_SOCIAL_DM;
+  const remain = Math.max(0, input.planned - input.successes);
+  if (remain <= 0) return null;
+  const targetId = `s:${input.taskName}:${input.platform ?? "-"}`;
+  if (ledger.some((e) => e.kind === "terminate_refund" && e.targetId === targetId)) {
+    return null;
+  }
+  const entry: LedgerEntry = {
+    id: makeId("tr"),
+    kind: "terminate_refund",
+    cost: remain * unit,
+    createdAt: new Date().toISOString(),
+    targetKind: "enterprise",
+    targetId,
+    targetName: input.taskName,
+    platform: input.platform,
+    channel: input.channel,
+    detail: `任务终止 · 计划 ${input.planned} - 触达成功 ${input.successes} = 未达成 ${remain} 个 × ${unit} 积分`,
+  };
+  ledger = [entry, ...ledger];
+  persistLedger();
+  return entry;
+}
+
 /** True if a refund record already exists for the given reach entry id. */
 export function isReachRefunded(reachId: string): boolean {
   return ledger.some(

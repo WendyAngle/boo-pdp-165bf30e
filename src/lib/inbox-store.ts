@@ -6,6 +6,7 @@ import {
 } from "@/lib/credits-ledger";
 import { addSuppression } from "@/lib/suppressions-store";
 import { deriveFriends } from "@/lib/social-friends";
+import { FB_SOURCE_DEMO_TASKS } from "@/lib/fb-source-demo";
 import {
   useProspectingTasks,
   getProspectingTasksSnapshot,

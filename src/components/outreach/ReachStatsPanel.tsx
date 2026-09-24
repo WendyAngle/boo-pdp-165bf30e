@@ -33,9 +33,9 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
   const hasData = stats.channels.some((channel) => channel.targets > 0);
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+    <div className="mx-auto w-full max-w-3xl space-y-4">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+        <div className="min-w-0">
           <h2 className="text-base font-semibold">渠道月度效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             按月查看 Facebook 的计划目标数、已触达数与目标填充率
@@ -44,7 +44,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
             统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；已触达指发送/请求成功送达，不代表客户回复。
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            目标填充率 = 已触达数 ÷ 计划目标数，衡量目标池供给与找目标的能力；填充率偏低说明计划目标数虚高或来源可用数据不足。
+            目标填充率 = 已触达数 ÷ 计划目标数，衡量目标池供给与找目标的能力。
           </p>
         </div>
         <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
@@ -69,7 +69,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
         </Card>
-      ) : <div className="grid gap-4 xl:grid-cols-2">
+      ) : <div className="grid gap-4">
         {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
       </div>}
 
@@ -81,7 +81,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               对上方 Facebook 渠道按任务「寻找目标方式」细分，三种来源合计与 Facebook 渠道数据一致
             </p>
           </div>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4">
             {fbSources.map((source) => (
               <MonthlyStatsCard
                 key={source.key}

@@ -315,7 +315,7 @@ function ReachPage() {
       if (r.createdAt > g.lastAt) g.lastAt = r.createdAt;
     }
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
-  }, [filtered, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
+  }, [filtered, pendingOnly, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
 
 
   const visibleGroups = useMemo(

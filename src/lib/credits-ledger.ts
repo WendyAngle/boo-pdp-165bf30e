@@ -212,6 +212,8 @@ export function performReachAutoUnlocks(input: {
 export interface LedgerEntry {
   /** 用户在应用内实际产生的记录（非演示 seed） */
   userCreated?: boolean;
+  /** 社媒拓客任务的寻找目标方式：系统智能搜索 / 指定贴文搜索 / 指定群组搜索 */
+  findMode?: "smart" | "post" | "group";
   id: string;
   kind: LedgerKind;
   cost: number;
@@ -250,7 +252,7 @@ export interface LedgerEntry {
 }
 
 const LEDGER_KEY = "boo:ledger:v2";
-const LEDGER_SEED_VERSION = "v22";
+const LEDGER_SEED_VERSION = "v23";
 const LEDGER_SEED_FLAG = `boo:ledger:${LEDGER_SEED_VERSION}:seeded`;
 const REVEAL_KEY = "boo:reveal:v1";
 const UNLOCK_KEY = "boo:unlocked:v1";
@@ -514,6 +516,7 @@ export function createSocialReachBatch(input: {
   content: string;
   aiGenerated?: boolean;
   action?: "加好友" | "私信" | "关注";
+  findMode?: "smart" | "post" | "group";
 }): LedgerEntry[] {
   const action = input.action ?? "私信";
   const slug = (s: string) =>
@@ -538,6 +541,7 @@ export function createSocialReachBatch(input: {
       content: input.content,
       aiGenerated: input.aiGenerated ?? false,
       forcedStatus: "pending",
+      findMode: input.findMode ?? "smart",
       userCreated: true,
     });
   }
@@ -1458,6 +1462,7 @@ export function seedDemoLedgerIfEmpty() {
           platform: t.platform,
           detail: `${t.platform}平台${actionLabel} · ${handle}`,
           forcedStatus: t.status as ReachStatus,
+          ...(t.platform === "Facebook" ? { findMode: (t.kind === "friend" ? "smart" : "post") as "smart" | "post" } : {}),
           ...(t.failReason ? { failReason: t.failReason } : {}),
           content:
             t.kind === "friend"
@@ -1704,6 +1709,7 @@ export function seedDemoLedgerIfEmpty() {
         platform: "Facebook" as const,
         channel: "social" as ReachChannel,
         subject: "欧洲 · 家居建材群组成员拓客",
+        findMode: "group" as const,
         detail: `Facebook平台私信 · ${t.handle}`,
         content: `Hi ${t.name},\n\n我们是 Boo 出海平台，专注家居建材品类的跨境采购对接。看到您活跃于相关行业群组，想和您做一次 10 分钟的简短交流，方便吗？\n\n— Boo team`,
         aiGenerated: true,

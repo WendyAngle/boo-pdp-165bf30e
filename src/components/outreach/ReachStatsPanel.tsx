@@ -36,9 +36,9 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
     <div className="mx-auto w-full max-w-5xl space-y-4">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
-          <h2 className="text-base font-semibold">渠道月度效果</h2>
+          <h2 className="text-base font-semibold">Facebook 月度效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            按月查看 Facebook 的计划目标数、已触达数与目标填充率
+            第一张为整体汇总，其余三张按任务「寻找目标方式」分类统计，三者合计与整体一致
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；已触达指发送/请求成功送达，不代表客户回复。
@@ -69,29 +69,20 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
         </Card>
-      ) : <div className="grid gap-4 md:grid-cols-2">
-        {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
-      </div>}
-
-      {hasData && fbSources.some((s) => s.targets > 0) && (
-        <div className="space-y-3 pt-2">
-          <div>
-            <h2 className="text-base font-semibold">Facebook 目标来源效果</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              对上方 Facebook 渠道按任务「寻找目标方式」细分，三种来源合计与 Facebook 渠道数据一致
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {fbSources.map((source) => (
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
+          {fbSources
+            .filter((source) => source.targets > 0)
+            .map((source) => (
               <MonthlyStatsCard
                 key={source.key}
                 icon={<SourceIcon mode={source.key} />}
                 title={source.label}
-                subtitle="Facebook"
+                subtitle="寻找目标方式"
                 months={source.months}
               />
             ))}
-          </div>
         </div>
       )}
     </div>
@@ -99,7 +90,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
 }
 
 function ChannelMonthlyStats({ channel }: { channel: ReturnType<typeof aggregateReachStats>["channels"][number] }) {
-  return <MonthlyStatsCard icon={<ChannelIcon channel={channel.key} />} title={channel.label} months={channel.months} />;
+  return <MonthlyStatsCard icon={<ChannelIcon channel={channel.key} />} title={channel.label} subtitle="整体汇总" months={channel.months} />;
 }
 
 function MonthlyStatsCard({

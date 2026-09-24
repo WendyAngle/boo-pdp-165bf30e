@@ -276,7 +276,7 @@ function ReachPage() {
   // 任务视图：把逐条触达成功记录按「任务」聚合
   const taskGroups = useMemo(() => {
     const map = new Map<string, TaskGroup>();
-    for (const r of filtered) {
+    for (const r of [...filtered, ...pendingOnly.rows]) {
       const action = reachAction(r);
       const batchName = r.channel === "social" && r.subject ? r.subject : null;
       const key = groupKeyOf(r);

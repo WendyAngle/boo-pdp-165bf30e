@@ -27,6 +27,10 @@ import {
   toggleTaskPaused,
   seedDemoPausedTasksIfNeeded,
 } from "@/lib/reach-task-pause";
+import {
+  useTerminatedTaskKeys,
+  terminateTask,
+} from "@/lib/reach-task-terminate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {

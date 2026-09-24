@@ -208,7 +208,7 @@ function ReachPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [channel, kw]);
+  }, [channel, kw, statusFilter]);
 
   const channelCounts = useMemo(() => {
     let email = 0;

@@ -705,11 +705,6 @@ function ReachPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>取消</AlertDialogCancel>
             <AlertDialogAction
-              className={
-                pauseConfirm?.paused
-                  ? undefined
-                  : "bg-amber-600 hover:bg-amber-700 text-primary-foreground"
-              }
               onClick={() => {
                 if (!pauseConfirm) return;
                 toggleTaskPaused(pauseConfirm.key);

@@ -183,3 +183,68 @@ export function aggregateReachStats(
     })),
   };
 }
+/* ---------- Facebook 目标来源（寻找目标方式）细分统计 ---------- */
+
+export type FacebookFindMode = "smart" | "post" | "group";
+
+export const FACEBOOK_FIND_MODES: Array<{ key: FacebookFindMode; label: string }> = [
+  { key: "smart", label: "系统智能搜索" },
+  { key: "post", label: "指定贴文搜索" },
+  { key: "group", label: "指定群组搜索" },
+];
+
+export interface FacebookSourceRow {
+  key: FacebookFindMode;
+  label: string;
+  tasks: number;
+  targets: number;
+  successes: number;
+  successRate: number | null;
+  months: ReachStatsMonth[];
+}
+
+/** 仅统计 Facebook 渠道触达记录，按任务创建时选择的寻找目标方式归类；未记录方式的历史任务归入系统智能搜索 */
+export function aggregateFacebookSourceStats(
+  entries: LedgerEntry[],
+  year: number,
+  now = Date.now(),
+): FacebookSourceRow[] {
+  const mk = () => ({ tasks: new Set<string>(), targets: new Set<string>(), successes: new Set<string>() });
+  const buckets = new Map(
+    FACEBOOK_FIND_MODES.map(({ key }) => [key, { all: mk(), months: Array.from({ length: 12 }, mk) }]),
+  );
+  for (const entry of entries) {
+    if (entry.kind !== "reach" || channelOf(entry) !== "Facebook") continue;
+    const ym = beijingYearMonth(entry.createdAt);
+    if (ym.year !== year) continue;
+    const bucket = buckets.get(entry.findMode ?? "smart");
+    if (!bucket) continue;
+    const taskKey = groupKeyOf(entry);
+    const targetKey = `${taskKey}:${entry.targetKind}:${entry.targetId}`;
+    const success = getReachStatus(entry, now) === "success";
+    for (const b of [bucket.all, bucket.months[ym.month - 1]!]) {
+      b.tasks.add(taskKey);
+      b.targets.add(targetKey);
+      if (success) b.successes.add(targetKey);
+    }
+  }
+  return FACEBOOK_FIND_MODES.map(({ key, label }) => {
+    const b = buckets.get(key)!;
+    return {
+      key,
+      label,
+      tasks: b.all.tasks.size,
+      targets: b.all.targets.size,
+      successes: b.all.successes.size,
+      successRate: rate(b.all.successes.size, b.all.targets.size),
+      months: b.months.map((m, i) => ({
+        month: i + 1,
+        label: `${i + 1}月`,
+        tasks: m.tasks.size,
+        targets: m.targets.size,
+        successes: m.successes.size,
+        successRate: rate(m.successes.size, m.targets.size),
+      })),
+    };
+  });
+}

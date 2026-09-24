@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { BarChart3, Mail, Phone, Send } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
+import { BarChart3, FileText, Mail, Phone, Send, Sparkles, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/select";
 import type { LedgerEntry } from "@/lib/credits-ledger";
 import {
+  aggregateFacebookSourceStats,
   aggregateReachStats,
+  type FacebookFindMode,
   beijingYearMonth,
   reachStatsYears,
   type ReachStatsChannel,
@@ -22,6 +24,10 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
   const [year, setYear] = useState(current.year);
   const stats = useMemo(
     () => aggregateReachStats(ledger, year, now),
+    [ledger, year, now],
+  );
+  const fbSources = useMemo(
+    () => aggregateFacebookSourceStats(ledger, year, now),
     [ledger, year, now],
   );
   const hasData = stats.channels.some((channel) => channel.targets > 0);
@@ -60,17 +66,54 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
       ) : <div className="grid gap-4 2xl:grid-cols-3">
         {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
       </div>}
+
+      {hasData && fbSources.some((s) => s.targets > 0) && (
+        <div className="space-y-3 pt-2">
+          <div>
+            <h2 className="text-base font-semibold">Facebook 目标来源效果</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              对上方 Facebook 渠道按任务「寻找目标方式」细分，三种来源合计与 Facebook 渠道数据一致
+            </p>
+          </div>
+          <div className="grid gap-4 2xl:grid-cols-3">
+            {fbSources.map((source) => (
+              <MonthlyStatsCard
+                key={source.key}
+                icon={<SourceIcon mode={source.key} />}
+                title={source.label}
+                subtitle="Facebook"
+                months={source.months}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function ChannelMonthlyStats({ channel }: { channel: ReturnType<typeof aggregateReachStats>["channels"][number] }) {
-  const months = channel.months.filter((month) => month.targets > 0);
+  return <MonthlyStatsCard icon={<ChannelIcon channel={channel.key} />} title={channel.label} months={channel.months} />;
+}
+
+function MonthlyStatsCard({
+  icon,
+  title,
+  subtitle,
+  months: allMonths,
+}: {
+  icon: ReactNode;
+  title: string;
+  subtitle?: string;
+  months: ReturnType<typeof aggregateReachStats>["months"];
+}) {
+  const months = allMonths.filter((month) => month.targets > 0);
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center gap-2 border-b px-5 py-4">
-        <span className="text-primary"><ChannelIcon channel={channel.key} /></span>
-        <h3 className="font-semibold">{channel.label}</h3>
+        <span className="text-primary">{icon}</span>
+        <h3 className="font-semibold">{title}</h3>
+        {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
       </div>
       {months.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
@@ -92,6 +135,12 @@ function ChannelIcon({ channel }: { channel: ReachStatsChannel }) {
   if (channel === "email") return <Mail className="h-4 w-4" />;
   if (channel === "phone") return <Phone className="h-4 w-4" />;
   return <Send className="h-4 w-4" />;
+}
+
+function SourceIcon({ mode }: { mode: FacebookFindMode }) {
+  if (mode === "smart") return <Sparkles className="h-4 w-4" />;
+  if (mode === "post") return <FileText className="h-4 w-4" />;
+  return <Users className="h-4 w-4" />;
 }
 
 function formatRate(value: number | null) {

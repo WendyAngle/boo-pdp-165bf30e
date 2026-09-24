@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Bar, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
+import { useEffect, useMemo, useState } from "react";
+import { Bar, CartesianGrid, Cell, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import { BarChart3, CheckCircle2, Mail, Phone, Send, Target, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -49,6 +49,14 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
     () => stats.months.filter((month) => month.targets > 0),
     [stats.months],
   );
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
+  const selectedMonthStats = activeMonths.find((month) => month.month === selectedMonth)
+    ?? activeMonths.at(-1)
+    ?? null;
+
+  useEffect(() => {
+    setSelectedMonth(activeMonths.at(-1)?.month ?? null);
+  }, [year, activeMonths]);
 
   return (
     <div className="space-y-4">
@@ -82,52 +90,8 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         />
       </div>
 
-      <Card className="p-5">
-        <div className="mb-5">
-          <div>
-            <h3 className="text-sm font-semibold">月度效果对比</h3>
-            <p className="mt-0.5 text-xs text-muted-foreground">同时比较每月触达规模与成功率</p>
-          </div>
-        </div>
-        <ChartContainer config={chartConfig} className="h-[320px] w-full aspect-auto">
-          <ComposedChart data={activeMonths} margin={{ top: 8, right: 0, left: -12, bottom: 0 }}>
-            <CartesianGrid vertical={false} />
-            <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
-            <YAxis yAxisId="count" allowDecimals={false} tickLine={false} axisLine={false} />
-            <YAxis
-              yAxisId="rate"
-              orientation="right"
-              domain={[0, 100]}
-              tickFormatter={(value) => `${value}%`}
-              tickLine={false}
-              axisLine={false}
-              width={42}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent formatter={(value, name) => (
-                <div className="flex flex-1 items-center justify-between gap-6">
-                  <span className="text-muted-foreground">{chartConfig[name as keyof typeof chartConfig]?.label}</span>
-                  <span className="font-mono font-medium tabular-nums">
-                    {name === "successRate" ? (value === null ? "—" : `${value}%`) : Number(value).toLocaleString()}
-                  </span>
-                </div>
-              )} />}
-            />
-            <ChartLegend content={<ChartLegendContent />} />
-            <Bar yAxisId="count" dataKey="targets" fill="var(--color-targets)" radius={[3, 3, 0, 0]} maxBarSize={26} />
-            <Bar yAxisId="count" dataKey="successes" fill="var(--color-successes)" radius={[3, 3, 0, 0]} maxBarSize={26} />
-            <Line yAxisId="rate" type="monotone" dataKey="successRate" stroke="var(--color-successRate)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls={false} />
-          </ComposedChart>
-        </ChartContainer>
-      </Card>
-
-      <section aria-labelledby="monthly-stats-heading">
-        <div className="mb-3">
-          <h3 id="monthly-stats-heading" className="text-sm font-semibold">月度效果对比</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">仅展示有触达数据的月份，可横向比较总体及各渠道效果</p>
-        </div>
-        {activeMonths.length === 0 ? (
-          <Card className="flex min-h-48 flex-col items-center justify-center gap-3 p-8 text-center">
+      {activeMonths.length === 0 ? (
+        <Card className="flex min-h-64 flex-col items-center justify-center gap-3 p-8 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <BarChart3 className="h-6 w-6" />
             </div>
@@ -135,99 +99,129 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="font-medium">该年份暂无触达任务数据</div>
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
+        </Card>
+      ) : (
+        <>
+          <Card className="p-5">
+            <div className="mb-5">
+              <h3 className="text-sm font-semibold">月度效果趋势</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">比较各月触达规模与成功率，点击月份查看渠道构成</p>
+            </div>
+            <ChartContainer config={chartConfig} className="h-[320px] w-full aspect-auto">
+              <ComposedChart
+                data={activeMonths}
+                margin={{ top: 8, right: 0, left: -12, bottom: 0 }}
+                className="cursor-pointer"
+                onClick={(state) => {
+                  const month = state?.activePayload?.[0]?.payload?.month;
+                  if (typeof month === "number") setSelectedMonth(month);
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={10} />
+                <YAxis yAxisId="count" allowDecimals={false} tickLine={false} axisLine={false} />
+                <YAxis
+                  yAxisId="rate"
+                  orientation="right"
+                  domain={[0, 100]}
+                  tickFormatter={(value) => `${value}%`}
+                  tickLine={false}
+                  axisLine={false}
+                  width={42}
+                />
+                <ChartTooltip
+                  content={<ChartTooltipContent formatter={(value, name) => (
+                    <div className="flex flex-1 items-center justify-between gap-6">
+                      <span className="text-muted-foreground">{chartConfig[name as keyof typeof chartConfig]?.label}</span>
+                      <span className="font-mono font-medium tabular-nums">
+                        {name === "successRate" ? (value === null ? "—" : `${value}%`) : Number(value).toLocaleString()}
+                      </span>
+                    </div>
+                  )} />}
+                />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Bar yAxisId="count" dataKey="targets" fill="var(--color-targets)" radius={[3, 3, 0, 0]} maxBarSize={26}>
+                  {activeMonths.map((month) => <Cell key={month.month} fillOpacity={month.month === selectedMonthStats?.month ? 1 : 0.38} />)}
+                </Bar>
+                <Bar yAxisId="count" dataKey="successes" fill="var(--color-successes)" radius={[3, 3, 0, 0]} maxBarSize={26}>
+                  {activeMonths.map((month) => <Cell key={month.month} fillOpacity={month.month === selectedMonthStats?.month ? 1 : 0.38} />)}
+                </Bar>
+                <Line yAxisId="rate" type="monotone" dataKey="successRate" stroke="var(--color-successRate)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} connectNulls={false} />
+              </ComposedChart>
+            </ChartContainer>
           </Card>
-        ) : (
-          <MonthlyComparison months={activeMonths} channels={stats.channels} />
-        )}
-      </section>
+
+          {selectedMonthStats ? (
+            <MonthlyChannelAnalysis month={selectedMonthStats} channels={stats.channels} />
+          ) : null}
+        </>
+      )}
     </div>
   );
 }
 
-function MonthlyComparison({
-  months,
+function MonthlyChannelAnalysis({
+  month,
   channels,
 }: {
-  months: ReturnType<typeof aggregateReachStats>["months"];
+  month: ReturnType<typeof aggregateReachStats>["months"][number];
   channels: ReturnType<typeof aggregateReachStats>["channels"];
 }) {
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[980px] border-collapse text-sm">
-          <thead>
-            <tr className="border-b bg-muted/30">
-              <th className="px-4 py-3 text-left font-medium" rowSpan={2}>月份</th>
-              <th className="border-l px-3 py-2 text-center font-medium" colSpan={4}>总体效果</th>
-              {channels.map((channel) => (
-                <th key={channel.key} className="border-l px-3 py-2 text-center font-medium" colSpan={3}>
-                  <span className="inline-flex items-center gap-1.5"><ChannelIcon channel={channel.key} />{channel.label}</span>
-                </th>
-              ))}
-            </tr>
-            <tr className="border-b bg-muted/20 text-xs text-muted-foreground">
-              <th className="border-l px-3 py-2 font-normal">任务数</th>
-              <th className="px-3 py-2 font-normal">目标数</th>
-              <th className="px-3 py-2 font-normal">成功数</th>
-              <th className="px-3 py-2 font-normal">成功率</th>
-              {channels.map((channel) => (
-                <MonthColumnHead key={channel.key} />
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {months.map((month) => (
-              <tr key={month.month} className="border-b last:border-b-0 hover:bg-muted/20">
-                <td className="px-4 py-4 text-base font-semibold">{month.label}</td>
-                <MetricCell value={month.tasks} bordered />
-                <MetricCell value={month.targets} />
-                <MetricCell value={month.successes} emphasis />
-                <MetricCell value={formatRate(month.successRate)} emphasis />
-                {channels.map((channel) => {
-                  const value = channel.months[month.month - 1];
-                  return (
-                    <ChannelMonthCells
-                      key={channel.key}
-                      targets={value?.targets ?? 0}
-                      successes={value?.successes ?? 0}
-                      successRate={value?.successRate ?? null}
-                    />
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section aria-labelledby="channel-analysis-heading" className="space-y-3">
+      <div>
+        <h3 id="channel-analysis-heading" className="text-sm font-semibold">{month.label}渠道效果</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">查看所选月份的总体结果及各渠道构成</p>
       </div>
-    </Card>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-4">
+        <MonthMetric label="任务数" value={month.tasks} />
+        <MonthMetric label="目标数" value={month.targets} />
+        <MonthMetric label="成功数" value={month.successes} />
+        <MonthMetric label="成功率" value={formatRate(month.successRate)} />
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        {channels.map((channel) => {
+          const value = channel.months[month.month - 1];
+          const hasData = (value?.targets ?? 0) > 0;
+          return (
+            <Card key={channel.key} className="p-5">
+              <div className="mb-4 flex items-center gap-2 font-medium">
+                <span className="text-primary"><ChannelIcon channel={channel.key} /></span>
+                {channel.label}
+              </div>
+              {hasData && value ? (
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  <ChannelMetric label="任务数" value={value.tasks} />
+                  <ChannelMetric label="目标数" value={value.targets} />
+                  <ChannelMetric label="成功数" value={value.successes} emphasis />
+                  <ChannelMetric label="成功率" value={formatRate(value.successRate)} emphasis />
+                </dl>
+              ) : (
+                <div className="flex h-[76px] items-center justify-center text-sm text-muted-foreground">本月暂无数据</div>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
-function MonthColumnHead() {
+function MonthMetric({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <>
-      <th className="border-l px-3 py-2 font-normal">目标</th>
-      <th className="px-3 py-2 font-normal">成功</th>
-      <th className="px-3 py-2 font-normal">成功率</th>
-    </>
+    <div className="bg-background px-4 py-3 text-center">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
+    </div>
   );
 }
 
-function ChannelMonthCells({ targets, successes, successRate }: { targets: number; successes: number; successRate: number | null }) {
+function ChannelMetric({ label, value, emphasis = false }: { label: string; value: React.ReactNode; emphasis?: boolean }) {
   return (
-    <>
-      <MetricCell value={targets} bordered />
-      <MetricCell value={successes} />
-      <MetricCell value={formatRate(successRate)} />
-    </>
-  );
-}
-
-function MetricCell({ value, bordered = false, emphasis = false }: { value: React.ReactNode; bordered?: boolean; emphasis?: boolean }) {
-  return (
-    <td className={`${bordered ? "border-l" : ""} px-3 py-4 text-center tabular-nums ${emphasis ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-      {value}
-    </td>
+    <div>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className={`mt-1 text-lg tabular-nums ${emphasis ? "font-semibold text-foreground" : "text-muted-foreground"}`}>{value}</dd>
+    </div>
   );
 }
 

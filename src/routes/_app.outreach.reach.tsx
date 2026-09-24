@@ -23,6 +23,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
+import { FB_DEMO_TERMINATED_KEYS } from "@/lib/fb-source-demo";
 import {
   usePausedTaskKeys,
   toggleTaskPaused,
@@ -263,7 +264,7 @@ function ReachPage() {
           aiGenerated: false,
           createdAt: r.createdAt,
           lastAt: r.createdAt,
-          status: terminatedKeys.has(key)
+          status: terminatedKeys.has(key) || FB_DEMO_TERMINATED_KEYS.has(key)
             ? "terminated"
             : pausedKeys.has(key)
               ? "paused"

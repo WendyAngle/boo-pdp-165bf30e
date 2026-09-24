@@ -7,6 +7,7 @@ export type LedgerKind =
   | "view"
   | "reach"
   | "refund"
+  | "terminate_refund"
   | "recharge"
   | "ai_generate"
   | "social_account_purchase"
@@ -253,7 +254,7 @@ export interface LedgerEntry {
 }
 
 const LEDGER_KEY = "boo:ledger:v2";
-const LEDGER_SEED_VERSION = "v25";
+const LEDGER_SEED_VERSION = "v26";
 const LEDGER_SEED_FLAG = `boo:ledger:${LEDGER_SEED_VERSION}:seeded`;
 const REVEAL_KEY = "boo:reveal:v1";
 const UNLOCK_KEY = "boo:unlocked:v1";
@@ -1765,6 +1766,23 @@ export function seedDemoLedgerIfEmpty() {
           ...(t.status === "failed" ? { failReason: t.failReason ?? "消息被平台拦截" } : {}),
         })),
       ),
+      /* ---------------- 终止服务退款：已终止任务退还（计划目标数 - 触达成功数）× 50 ---------------- */
+      ...FB_SOURCE_DEMO_TASKS.filter((task) => task.terminatedMin != null && task.targetCap != null).map((task) => {
+        const successes = task.targets.filter((t) => t.status === "success").length;
+        const remain = task.targetCap! - successes;
+        return {
+          id: makeId("tr"),
+          kind: "terminate_refund" as LedgerKind,
+          cost: remain * COST_SOCIAL_DM,
+          createdAt: isoMinutesAgo(task.terminatedMin!),
+          targetKind: "enterprise" as TargetKind,
+          targetId: `s:${task.subject}:Facebook`,
+          targetName: task.subject,
+          platform: "Facebook" as const,
+          channel: "social" as ReachChannel,
+          detail: `任务终止 · 计划 ${task.targetCap} - 触达成功 ${successes} = 未达成 ${remain} 个 × ${COST_SOCIAL_DM} 积分`,
+        };
+      }),
       /* ---------------- 触达任务 · 已暂停（可继续执行）：TikTok 户外运动达人拓客 ---------------- */
       ...([
         { name: "Ana Beatriz", handle: "@ana.outdoor", min: 3 * D + 200, status: "success" },

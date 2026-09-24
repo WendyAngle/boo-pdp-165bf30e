@@ -30,6 +30,10 @@ export interface FbSourceDemoTask {
   keywords?: string[];
   content: string;
   targets: FbSourceDemoTarget[];
+  /** 计划目标数（不填时按演示规则推算） */
+  targetCap?: number;
+  /** 已终止任务：终止距今分钟数；终止后按（计划目标数 - 触达成功数）× 50 退还积分 */
+  terminatedMin?: number;
 }
 
 export const FB_SOURCE_DEMO_TASKS: FbSourceDemoTask[] = [
@@ -96,7 +100,54 @@ export const FB_SOURCE_DEMO_TASKS: FbSourceDemoTask[] = [
       { name: "Hassan Rahimi", handle: "@hassan.rahimi", offset: 140, status: "failed", failReason: "对方已关闭陌生人私信" },
     ],
   },
+  {
+    subject: "英国 · 宠物用品贴文互动用户私信",
+    findMode: "post",
+    min: 26 * D,
+    region: "英国",
+    links: ["https://www.facebook.com/petsupplies.uk/posts/pfbid02PetCareDeals2026"],
+    content:
+      "Hi {name},\n\n看到您在宠物用品贴文下的互动，我们是宠物窝垫与牵引用品源头工厂，支持小批量定制，方便聊聊吗？\n\n— Boo team",
+    targetCap: 20,
+    terminatedMin: 24 * D,
+    targets: [
+      { name: "Oliver Hughes", handle: "@oliver.hughes.pets", offset: 0, status: "success",
+        reply: { content: "Do you offer private label dog beds?", contentZh: "你们提供狗窝贴牌吗？", afterH: 8 } },
+      { name: "Emily Clarke", handle: "@emily.clarke", offset: 25, status: "success" },
+      { name: "George Walker", handle: "@george.walker", offset: 55, status: "failed", failReason: "对方已关闭陌生人私信" },
+      { name: "Chloe Evans", handle: "@chloe.evans.uk", offset: 80, status: "success" },
+      { name: "Harry Wright", handle: "@harry.wright", offset: 110, status: "success" },
+    ],
+  },
+  {
+    subject: "东南亚 · 美妆代工群组成员拓客",
+    findMode: "group",
+    min: 11 * D,
+    region: "马来西亚",
+    links: ["https://www.facebook.com/groups/sea.beauty.oem"],
+    groupScopes: "群组成员",
+    keywords: ["cosmetics OEM", "skincare brand", "美妆代工"],
+    content:
+      "Hi {name},\n\n我们在东南亚美妆代工群里看到了您，我们是护肤品 OEM/ODM 工厂，可提供 Halal 认证配方，方便简单沟通吗？\n\n— Boo team",
+    targetCap: 30,
+    terminatedMin: 8 * D,
+    targets: [
+      { name: "Nurul Aina", handle: "@nurul.aina", offset: 0, status: "success",
+        reply: { content: "Yes, please share your MOQ for serum.", contentZh: "可以，请发一下精华液的起订量。", afterH: 4, tags: ["高意向"] } },
+      { name: "Siti Rahman", handle: "@siti.rahman", offset: 20, status: "success" },
+      { name: "Tan Wei Ling", handle: "@tan.weiling", offset: 45, status: "success" },
+      { name: "Aisyah Omar", handle: "@aisyah.omar", offset: 70, status: "failed", failReason: "消息被平台拦截" },
+      { name: "Lim Jia Hui", handle: "@lim.jiahui", offset: 95, status: "success" },
+      { name: "Farah Aziz", handle: "@farah.aziz", offset: 120, status: "success" },
+      { name: "Chen Mei", handle: "@chen.mei.my", offset: 150, status: "success" },
+    ],
+  },
 ];
+
+/** 演示用已终止任务的 key（与 groupKeyOf 口径一致） */
+export const FB_DEMO_TERMINATED_KEYS = new Set(
+  FB_SOURCE_DEMO_TASKS.filter((t) => t.terminatedMin != null).map((t) => `s:${t.subject}:Facebook`),
+);
 
 /** 已有「欧洲 · 家居建材群组成员拓客」任务的配置（群组链接），与新增任务同口径展示 */
 export const FB_EXISTING_GROUP_TASK = {

@@ -98,6 +98,7 @@ export const Route = createFileRoute("/_app/outreach/billing")({
             "all",
             "consume",
             "refund",
+            "terminate_refund",
             "recharge",
             "expire",
             "package_recharge",
@@ -114,7 +115,7 @@ import { formatDateTime as fmtTime } from "@/lib/format-date";
 
 /** 收入类流水（正向记账） */
 function isIncome(e: LedgerEntry) {
-  return e.kind === "refund" || e.kind === "recharge" || e.kind === "feedback_reward";
+  return e.kind === "refund" || e.kind === "terminate_refund" || e.kind === "recharge" || e.kind === "feedback_reward";
 }
 
 function BillingPage() {
@@ -135,6 +136,7 @@ function BillingPage() {
     | "all"
     | "consume"
     | "refund"
+    | "terminate_refund"
     | "recharge"
     | "expire"
     | "package_recharge"
@@ -163,6 +165,7 @@ function BillingPage() {
         const consumeKinds: LedgerKind[] = ["view", "reach", "ai_generate"];
         if (tab === "consume" && !consumeKinds.includes(e.kind)) return false;
         else if (tab === "refund" && e.kind !== "refund") return false;
+        else if (tab === "terminate_refund" && e.kind !== "terminate_refund") return false;
         else if (tab === "recharge" && e.kind !== "recharge") return false;
         else if (tab === "feedback_reward" && e.kind !== "feedback_reward") return false;
         else if (tab === "expire" || tab === "package_recharge" || tab === "recharge_refund")
@@ -197,7 +200,7 @@ function BillingPage() {
     const viewSum = all.filter((e) => e.kind === "view").reduce((s, e) => s + e.cost, 0);
     const reachSum = all.filter((e) => e.kind === "reach").reduce((s, e) => s + e.cost, 0);
     const aiSum = all.filter((e) => e.kind === "ai_generate").reduce((s, e) => s + e.cost, 0);
-    const refundSum = all.filter((e) => e.kind === "refund").reduce((s, e) => s + e.cost, 0);
+    const refundSum = all.filter((e) => e.kind === "refund" || e.kind === "terminate_refund").reduce((s, e) => s + e.cost, 0);
     const rechargeSum = all.filter((e) => e.kind === "recharge").reduce((s, e) => s + e.cost, 0);
     const rechargeCount = all.filter((e) => e.kind === "recharge").length;
     return {
@@ -237,7 +240,7 @@ function BillingPage() {
     .filter((e) => e.kind === "view" || e.kind === "reach" || e.kind === "ai_generate")
     .reduce((s, e) => s + e.cost, 0);
   const filteredRefund = filtered
-    .filter((e) => e.kind === "refund")
+    .filter((e) => e.kind === "refund" || e.kind === "terminate_refund")
     .reduce((s, e) => s + e.cost, 0);
   const filteredRecharge = filtered
     .filter((e) => e.kind === "recharge")
@@ -264,7 +267,7 @@ function BillingPage() {
     };
     const opLabel = (e: LedgerEntry) => {
       if (e.kind === "view") return VIEW_ACTION[e.field!] ?? "";
-      if (e.kind === "reach" || e.kind === "refund")
+      if (e.kind === "reach" || e.kind === "refund" || e.kind === "terminate_refund")
         return e.channel
           ? e.channel === "social" && e.platform === "WhatsApp"
             ? "触达 WhatsApp"
@@ -275,7 +278,7 @@ function BillingPage() {
     };
     const detailText = (e: LedgerEntry) => {
       const prefix =
-        e.kind === "refund" ? "触达失败退还 · " : e.kind === "recharge" ? "套餐充值 · " : "";
+        e.kind === "refund" ? "触达失败退还 · " : e.kind === "terminate_refund" ? "终止服务退还 · " : e.kind === "recharge" ? "套餐充值 · " : "";
       const target =
         e.kind === "recharge"
           ? e.orderNo
@@ -293,6 +296,8 @@ function BillingPage() {
         fmtTime(e.createdAt),
         e.kind === "refund"
           ? "服务失败退款"
+          : e.kind === "terminate_refund"
+            ? "终止服务退款"
           : e.kind === "recharge"
             ? "充值"
             : e.kind === "feedback_reward"
@@ -480,6 +485,12 @@ function BillingPage() {
                 <span className="inline-flex items-center gap-1.5">
                   <Undo2 className="h-3.5 w-3.5 text-emerald-600" />
                   服务失败退款
+                </span>
+              </SelectItem>
+              <SelectItem value="terminate_refund">
+                <span className="inline-flex items-center gap-1.5">
+                  <Undo2 className="h-3.5 w-3.5 text-emerald-600" />
+                  终止服务退款
                 </span>
               </SelectItem>
               <SelectItem value="recharge">
@@ -804,6 +815,14 @@ function KindBadge({ entry }: { entry: LedgerEntry }) {
       </span>
     );
   }
+  if (entry.kind === "terminate_refund") {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-medium bg-emerald-50 text-emerald-700 border-emerald-200">
+        <Undo2 className="h-3 w-3" />
+        终止服务退款
+      </span>
+    );
+  }
   if (entry.kind === "recharge") {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-xs font-medium bg-primary/10 text-primary border-primary/20">
@@ -941,6 +960,8 @@ function DetailCell({ entry: e }: { entry: LedgerEntry }) {
   const prefix =
     e.kind === "refund"
       ? "触达失败退还 · "
+      : e.kind === "terminate_refund"
+        ? "终止服务退还 · "
       : e.kind === "recharge"
         ? "套餐充值 · "
         : "";

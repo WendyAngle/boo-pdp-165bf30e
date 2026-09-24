@@ -127,7 +127,7 @@ function plannedByTask(rows: LedgerEntry[]) {
   }
   const result = new Map<string, number>();
   for (const [k, list] of groups) {
-    const cap = resolveTaskConfig(k, list, list[0]?.action ?? "").targetCap;
+    const cap = resolveTaskConfig(k, list, "").targetCap;
     result.set(k, cap ?? list.length);
   }
   return result;

@@ -131,8 +131,7 @@ function MonthlyStatsCard({
               <th className="px-3 py-3 text-right font-medium">实际目标数</th>
               <th className="px-3 py-3 text-right font-medium">目标填充率</th>
               <th className="px-3 py-3 text-right font-medium">触达成功数</th>
-              <th className="px-3 py-3 text-right font-medium">触达成功率</th>
-              <th className="px-4 py-3 text-right font-medium">触达失败</th>
+              <th className="px-4 py-3 text-right font-medium">触达成功率</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
               <td className="px-4 py-3 font-medium">{month.label}</td>
@@ -141,15 +140,7 @@ function MonthlyStatsCard({
               <td className="px-3 py-3 text-right tabular-nums">{month.targets}</td>
               <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.fillRate)}</td>
               <td className="px-3 py-3 text-right text-base font-semibold tabular-nums text-primary">{month.successes}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
-              <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
-                {month.retryable + month.nonRetryable === 0 ? "—" : (
-                  <div className="space-y-0.5">
-                    <div>可再触达 <span className="font-medium text-foreground">{month.retryable}</span></div>
-                    <div>不建议再触达 <span className="font-medium text-foreground">{month.nonRetryable}</span></div>
-                  </div>
-                )}
-              </td>
+              <td className="px-4 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
             </tr>)}</tbody>
           </table>
         </div>

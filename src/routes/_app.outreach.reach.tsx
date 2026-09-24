@@ -19,6 +19,7 @@ import {
   Pause,
   Play,
   PauseCircle,
+  Square,
   BarChart3,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -280,7 +281,7 @@ function ReachPage() {
       if (r.createdAt > g.lastAt) g.lastAt = r.createdAt;
     }
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
-  }, [filtered, threadByKey, runningKeys, pausedKeys]);
+  }, [filtered, threadByKey, runningKeys, pausedKeys, terminatedKeys]);
 
 
   const taskPageData = useMemo(

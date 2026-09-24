@@ -140,15 +140,7 @@ function MonthlyStatsCard({
               <td className="px-3 py-3 text-right tabular-nums">{month.targets}</td>
               <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.fillRate)}</td>
               <td className="px-3 py-3 text-right text-base font-semibold tabular-nums text-primary">{month.successes}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
-              <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
-                {month.retryable + month.nonRetryable === 0 ? "—" : (
-                  <div className="space-y-0.5">
-                    <div>可再触达 <span className="font-medium text-foreground">{month.retryable}</span></div>
-                    <div>不建议再触达 <span className="font-medium text-foreground">{month.nonRetryable}</span></div>
-                  </div>
-                )}
-              </td>
+              <td className="px-4 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
             </tr>)}</tbody>
           </table>
         </div>

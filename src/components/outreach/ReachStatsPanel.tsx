@@ -38,10 +38,13 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         <div>
           <h2 className="text-base font-semibold">渠道月度效果</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            按月查看邮件、短信和 Facebook 的任务数、目标数、触达成功数及成功率
+            按月查看 Facebook、邮件和短信的计划目标数、实际目标数、触达成功数，以及目标填充率与触达成功率
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
             统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；成功指发送/请求成功送达，不代表客户回复。
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            目标填充率 = 实际目标数 ÷ 计划目标数（衡量找目标的能力）；触达成功率 = 触达成功数 ÷ 实际发起数（已出结果的目标，衡量执行质量）。
           </p>
         </div>
         <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
@@ -66,7 +69,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               <div className="mt-1 text-sm text-muted-foreground">请选择其他年份查看</div>
             </div>
         </Card>
-      ) : <div className="grid gap-4 2xl:grid-cols-3">
+      ) : <div className="grid gap-4">
         {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
       </div>}
 
@@ -78,7 +81,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
               对上方 Facebook 渠道按任务「寻找目标方式」细分，三种来源合计与 Facebook 渠道数据一致
             </p>
           </div>
-          <div className="grid gap-4 2xl:grid-cols-3">
+          <div className="grid gap-4">
             {fbSources.map((source) => (
               <MonthlyStatsCard
                 key={source.key}
@@ -120,12 +123,33 @@ function MonthlyStatsCard({
       </div>
       {months.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[460px] text-sm">
+          <table className="w-full min-w-[720px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-              <th className="px-4 py-3 text-left font-medium">月份</th><th className="px-3 py-3 text-right font-medium">任务数</th><th className="px-3 py-3 text-right font-medium">目标数</th><th className="px-3 py-3 text-right font-medium">触达成功数</th><th className="px-4 py-3 text-right font-medium">成功率</th>
+              <th className="px-4 py-3 text-left font-medium">月份</th>
+              <th className="px-3 py-3 text-right font-medium">任务数</th>
+              <th className="px-3 py-3 text-right font-medium">计划目标数</th>
+              <th className="px-3 py-3 text-right font-medium">实际目标数</th>
+              <th className="px-3 py-3 text-right font-medium">目标填充率</th>
+              <th className="px-3 py-3 text-right font-medium">触达成功数</th>
+              <th className="px-3 py-3 text-right font-medium">触达成功率</th>
+              <th className="px-4 py-3 text-right font-medium">触达失败</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
-              <td className="px-4 py-3 font-medium">{month.label}</td><td className="px-3 py-3 text-right tabular-nums">{month.tasks}</td><td className="px-3 py-3 text-right tabular-nums">{month.targets}</td><td className="px-3 py-3 text-right font-semibold tabular-nums">{month.successes}</td><td className="px-4 py-3 text-right font-semibold tabular-nums">{formatRate(month.successRate)}</td>
+              <td className="px-4 py-3 font-medium">{month.label}</td>
+              <td className="px-3 py-3 text-right tabular-nums">{month.tasks}</td>
+              <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">{month.planned}</td>
+              <td className="px-3 py-3 text-right tabular-nums">{month.targets}</td>
+              <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.fillRate)}</td>
+              <td className="px-3 py-3 text-right text-base font-semibold tabular-nums text-primary">{month.successes}</td>
+              <td className="px-3 py-3 text-right tabular-nums">{formatRate(month.successRate)}</td>
+              <td className="px-4 py-3 text-right text-xs tabular-nums text-muted-foreground">
+                {month.retryable + month.nonRetryable === 0 ? "—" : (
+                  <div className="space-y-0.5">
+                    <div>可再触达 <span className="font-medium text-foreground">{month.retryable}</span></div>
+                    <div>不建议再触达 <span className="font-medium text-foreground">{month.nonRetryable}</span></div>
+                  </div>
+                )}
+              </td>
             </tr>)}</tbody>
           </table>
         </div>

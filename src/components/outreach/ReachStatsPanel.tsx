@@ -116,27 +116,27 @@ function MonthlyStatsCard({
   const months = allMonths.filter((month) => month.targets > 0);
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center gap-2 border-b px-5 py-4">
+      <div className="flex items-center gap-2 border-b px-4 py-3">
         <span className="text-primary">{icon}</span>
-        <h3 className="font-semibold">{title}</h3>
+        <h3 className="text-sm font-semibold">{title}</h3>
         {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
       </div>
-      {months.length === 0 ? <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
+      {months.length === 0 ? <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[380px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-              <th className="px-4 py-3 text-left font-medium">月份</th>
-              <th className="px-3 py-3 text-right font-medium">任务数</th>
-              <th className="px-3 py-3 text-right font-medium">计划目标数</th>
-              <th className="px-3 py-3 text-right font-medium">已触达数</th>
-              <th className="px-4 py-3 text-right font-medium">目标填充率</th>
+              <th className="w-[18%] px-3 py-2 text-left font-medium">月份</th>
+              <th className="w-[15%] px-2 py-2 text-right font-medium">任务数</th>
+              <th className="w-[22%] px-2 py-2 text-right font-medium">计划目标数</th>
+              <th className="w-[20%] px-2 py-2 text-right font-medium">已触达数</th>
+              <th className="w-[25%] px-3 py-2 text-right font-medium">目标填充率</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
-              <td className="px-4 py-3 font-medium">{month.label}</td>
-              <td className="px-3 py-3 text-right tabular-nums">{month.tasks}</td>
-              <td className="px-3 py-3 text-right tabular-nums text-muted-foreground">{month.planned}</td>
-              <td className="px-3 py-3 text-right text-base font-semibold tabular-nums text-primary">{month.successes}</td>
-              <td className="px-4 py-3 text-right text-base font-semibold tabular-nums">{formatRate(month.fillRate)}</td>
+              <td className="px-3 py-2 font-medium">{month.label}</td>
+              <td className="px-2 py-2 text-right tabular-nums">{month.tasks}</td>
+              <td className="px-2 py-2 text-right tabular-nums text-muted-foreground">{month.planned}</td>
+              <td className="px-2 py-2 text-right font-semibold tabular-nums text-primary">{month.successes}</td>
+              <td className="px-3 py-2 text-right font-semibold tabular-nums">{formatRate(month.fillRate)}</td>
             </tr>)}</tbody>
           </table>
         </div>

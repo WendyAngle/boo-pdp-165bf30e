@@ -240,6 +240,8 @@ export interface LedgerEntry {
   aiGenerated?: boolean;
   // demo / override: when set, getReachStatus returns this value directly
   forcedStatus?: ReachStatus;
+  /** 目标实际执行时间（ISO）；历史记录的 createdAt 为目标明细执行时间。 */
+  executedAt?: string;
   // reach-only: 因当日账号额度不足而顺延执行的时间（ISO），到点前恒为「待触达」
   scheduledAt?: string;
   // reach-only: populated when status is failed
@@ -350,6 +352,7 @@ export function createReach(input: {
   /** 顺延执行时间（ISO）：额度不足时排队到次日 */
   scheduledAt?: string;
   userCreated?: boolean;
+  executedAt?: string;
 }): LedgerEntry {
   const { cost, ...rest } = input;
   const entry: LedgerEntry = {

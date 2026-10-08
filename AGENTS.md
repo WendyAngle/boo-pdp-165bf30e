@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Social reach statistics share one execution-time resolver for year selection, monthly totals and source breakdowns; prefer explicit actual execution timestamps and retain the target-record execution timestamp fallback for historical data so all views stay consistent.

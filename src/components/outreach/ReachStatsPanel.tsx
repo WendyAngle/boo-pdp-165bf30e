@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { BarChart3, FileText, Mail, Phone, Send, Sparkles, Users } from "lucide-react";
+import { BarChart3, FileText, Send, Sparkles, Users } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -30,7 +30,7 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
     () => aggregateFacebookSourceStats(ledger, year, now),
     [ledger, year, now],
   );
-  const hasData = stats.channels.some((channel) => channel.targets > 0);
+   const hasData = stats.summary.successes > 0;
 
   return (
     <div className="w-full space-y-4">
@@ -41,10 +41,10 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
             第一张为整体汇总，其余三张按任务「寻找目标方式」分类统计，三者合计与整体一致
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            统计规则：数据按任务创建时间归入对应月份（跨月执行的任务计入创建当月）；已触达指发送/请求成功送达，不代表客户回复。
+            统计规则：已触达目标按实际执行时间归入对应月份（北京时间）；跨月任务分别计入执行当月。已触达指发送/请求成功送达，不代表客户回复。
           </p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            目标填充率 = 实际目标数（已触达数）÷ 计划目标数，反映找目标的能力（关键词宽窄、贴文／群组池子大小）；填充率偏低说明该换来源或补充链接。
+            任务数为当月有已触达目标的任务去重数；同一任务跨月执行时会在各月分别计数，全年任务数按任务去重，不累加月度任务数。
           </p>
         </div>
         <Select value={String(year)} onValueChange={(value) => setYear(Number(value))}>
@@ -73,7 +73,6 @@ export function ReachStatsPanel({ ledger, now }: { ledger: LedgerEntry[]; now: n
         <div className="grid gap-4 md:grid-cols-2">
           {stats.channels.map((channel) => <ChannelMonthlyStats key={channel.key} channel={channel} />)}
           {fbSources
-            .filter((source) => source.targets > 0)
             .map((source) => (
               <MonthlyStatsCard
                 key={source.key}
@@ -104,7 +103,7 @@ function MonthlyStatsCard({
   subtitle?: string;
   months: ReturnType<typeof aggregateReachStats>["months"];
 }) {
-  const months = allMonths.filter((month) => month.targets > 0);
+   const months = allMonths.filter((month) => month.successes > 0);
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center gap-2 border-b px-4 py-3">
@@ -114,20 +113,16 @@ function MonthlyStatsCard({
       </div>
       {months.length === 0 ? <div className="flex h-24 items-center justify-center text-sm text-muted-foreground">该年份暂无数据</div> : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[380px] text-sm">
+          <table className="w-full min-w-[240px] text-sm">
             <thead><tr className="border-b bg-muted/30 text-xs text-muted-foreground">
-              <th className="w-[18%] px-3 py-2 text-left font-medium">月份</th>
-              <th className="w-[15%] px-2 py-2 text-right font-medium">任务数</th>
-              <th className="w-[22%] px-2 py-2 text-right font-medium">计划目标数</th>
-              <th className="w-[20%] px-2 py-2 text-right font-medium">已触达数</th>
-              <th className="w-[25%] px-3 py-2 text-right font-medium">目标填充率</th>
+              <th className="w-1/3 px-3 py-2 text-left font-medium">月份</th>
+              <th className="w-1/3 px-3 py-2 text-right font-medium">任务数</th>
+              <th className="w-1/3 px-3 py-2 text-right font-medium">已触达数</th>
             </tr></thead>
             <tbody>{months.map((month) => <tr key={month.month} className="border-b last:border-0">
               <td className="px-3 py-2 font-medium">{month.label}</td>
-              <td className="px-2 py-2 text-right tabular-nums">{month.tasks}</td>
-              <td className="px-2 py-2 text-right tabular-nums text-muted-foreground">{month.planned}</td>
-              <td className="px-2 py-2 text-right font-semibold tabular-nums text-primary">{month.successes}</td>
-              <td className="px-3 py-2 text-right font-semibold tabular-nums">{formatRate(month.fillRate)}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{month.tasks}</td>
+              <td className="px-3 py-2 text-right font-semibold tabular-nums text-primary">{month.successes}</td>
             </tr>)}</tbody>
           </table>
         </div>
@@ -137,8 +132,6 @@ function MonthlyStatsCard({
 }
 
 function ChannelIcon({ channel }: { channel: ReachStatsChannel }) {
-  if (channel === "email") return <Mail className="h-4 w-4" />;
-  if (channel === "phone") return <Phone className="h-4 w-4" />;
   return <Send className="h-4 w-4" />;
 }
 
@@ -146,8 +139,4 @@ function SourceIcon({ mode }: { mode: FacebookFindMode }) {
   if (mode === "smart") return <Sparkles className="h-4 w-4" />;
   if (mode === "post") return <FileText className="h-4 w-4" />;
   return <Users className="h-4 w-4" />;
-}
-
-function formatRate(value: number | null) {
-  return value === null ? "—" : `${value}%`;
 }

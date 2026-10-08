@@ -101,9 +101,9 @@ export const Route = createFileRoute("/_app/outreach/reach")({
   head: () => ({
     meta: [
       { title: "触达任务与效果统计 · 出海大数据平台" },
-      { name: "description", content: "管理触达任务，并按指定年份查看月度趋势及各渠道目标数、成功数和成功率。" },
+      { name: "description", content: "管理触达任务，按目标实际执行月份查看 Facebook 整体及寻找目标方式的任务数和已触达数。" },
       { property: "og:title", content: "触达任务与效果统计 · 出海大数据平台" },
-      { property: "og:description", content: "管理触达任务，并按指定年份查看月度趋势及各渠道目标数、成功数和成功率。" },
+      { property: "og:description", content: "管理触达任务，按目标实际执行月份查看 Facebook 整体及寻找目标方式的任务数和已触达数。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

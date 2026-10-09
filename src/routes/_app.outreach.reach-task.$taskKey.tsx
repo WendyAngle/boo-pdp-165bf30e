@@ -147,7 +147,6 @@ function ReachTaskDetailPage() {
   useEffect(() => {
     setSelectedKeys([]);
     setTagFilter("all");
-    setCategoryFilter("all");
   }, [taskKey]);
   const selectedTargets = visibleTargets.filter((t) => selectedKeys.includes(t.key));
   const allSelected =

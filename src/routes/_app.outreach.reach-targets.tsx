@@ -180,10 +180,30 @@ function ReachTargetsPage() {
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
   }, [rows, threadByKey]);
 
+  /** 当前范围内目标实际使用过的分类 / 标签，作为筛选选项 */
+  const categoryOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of targets) {
+      const c = tagMap[targetTagKey(t)]?.category;
+      if (c) s.add(c);
+    }
+    return [...s].sort();
+  }, [targets, tagMap]);
+  const tagOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const t of targets) {
+      for (const tg of tagMap[targetTagKey(t)]?.tags ?? []) s.add(tg);
+    }
+    return [...s].sort();
+  }, [targets, tagMap]);
+
   const filtered = useMemo(() => {
     const k = kw.trim().toLowerCase();
     return targets.filter((t) => {
       if (kind !== "all" && t.targetKind !== kind) return false;
+      const rec = tagMap[targetTagKey(t)];
+      if (categoryFilter !== "all" && rec?.category !== categoryFilter) return false;
+      if (tagFilter !== "all" && !(rec?.tags ?? []).includes(tagFilter)) return false;
       if (!k) return true;
       return (
         t.name.toLowerCase().includes(k) ||

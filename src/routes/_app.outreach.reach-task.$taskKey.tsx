@@ -109,7 +109,37 @@ function ReachTaskDetailPage() {
 
   /* 标签 / 分类：以目标为维度，多条触达记录指向同一目标时只算一个 */
   const tagMap = useTargetTagsMap();
-  const visible = useMemo(() => entries.slice(0, 100), [entries]);
+  const [tagFilter, setTagFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  /** 当前任务目标实际使用过的分类 / 标签，作为筛选选项 */
+  const categoryOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of entries) {
+      const c = tagMap[targetTagKey(r)]?.category;
+      if (c) s.add(c);
+    }
+    return [...s].sort();
+  }, [entries, tagMap]);
+  const tagOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of entries) {
+      for (const t of tagMap[targetTagKey(r)]?.tags ?? []) s.add(t);
+    }
+    return [...s].sort();
+  }, [entries, tagMap]);
+
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter((r) => {
+        const rec = tagMap[targetTagKey(r)];
+        if (categoryFilter !== "all" && rec?.category !== categoryFilter) return false;
+        if (tagFilter !== "all" && !(rec?.tags ?? []).includes(tagFilter)) return false;
+        return true;
+      }),
+    [entries, tagMap, tagFilter, categoryFilter],
+  );
+  const visible = useMemo(() => filteredEntries.slice(0, 100), [filteredEntries]);
   const visibleTargets = useMemo(() => {
     const m = new Map<string, string>();
     for (const r of visible) if (!m.has(targetTagKey(r))) m.set(targetTagKey(r), r.targetName);

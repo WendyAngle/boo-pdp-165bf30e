@@ -383,7 +383,7 @@ function ReachTargetsPage() {
               className="pl-9 h-9 bg-background"
             />
           </div>
-          {(kw || kind !== "all") && (
+          {(kw || kind !== "all" || tagFilter !== "all" || categoryFilter !== "all") && (
             <Button
               variant="ghost"
               size="sm"
@@ -391,6 +391,8 @@ function ReachTargetsPage() {
               onClick={() => {
                 setKw("");
                 setKind("all");
+                setTagFilter("all");
+                setCategoryFilter("all");
               }}
             >
               <X className="h-3.5 w-3.5" />

@@ -212,11 +212,11 @@ function ReachTargetsPage() {
         (t.platform ?? "").toLowerCase().includes(k)
       );
     });
-  }, [targets, kw, kind]);
+  }, [targets, kw, kind, tagFilter, categoryFilter, tagMap]);
 
   useEffect(() => {
     setPage(1);
-  }, [kw, kind, task]);
+  }, [kw, kind, tagFilter, categoryFilter, task]);
 
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
 

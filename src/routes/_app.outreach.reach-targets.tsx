@@ -107,6 +107,8 @@ function ReachTargetsPage() {
 
   const [kw, setKw] = useState("");
   const [kind, setKind] = useState<"all" | "enterprise" | "contact">("all");
+  const [tagFilter, setTagFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
   const pageSize = 12;
   const tagMap = useTargetTagsMap();

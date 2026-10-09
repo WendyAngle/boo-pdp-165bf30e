@@ -108,7 +108,6 @@ function ReachTargetsPage() {
   const [kw, setKw] = useState("");
   const [kind, setKind] = useState<"all" | "enterprise" | "contact">("all");
   const [tagFilter, setTagFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
   const pageSize = 12;
   const tagMap = useTargetTagsMap();
@@ -180,19 +179,13 @@ function ReachTargetsPage() {
     return [...map.values()].sort((a, b) => (a.lastAt < b.lastAt ? 1 : -1));
   }, [rows, threadByKey]);
 
-  /** 当前范围内目标实际使用过的分类 / 标签，作为筛选选项 */
-  const categoryOptions = useMemo(() => {
-    const s = new Set<string>();
-    for (const t of targets) {
-      const c = tagMap[targetTagKey(t)]?.category;
-      if (c) s.add(c);
-    }
-    return [...s].sort();
-  }, [targets, tagMap]);
+  /** 当前范围内目标实际使用过的分类 / 标签（同一体系），作为筛选选项 */
   const tagOptions = useMemo(() => {
     const s = new Set<string>();
     for (const t of targets) {
-      for (const tg of tagMap[targetTagKey(t)]?.tags ?? []) s.add(tg);
+      const rec = tagMap[targetTagKey(t)];
+      if (rec?.category) s.add(rec.category);
+      for (const tg of rec?.tags ?? []) s.add(tg);
     }
     return [...s].sort();
   }, [targets, tagMap]);
@@ -202,8 +195,12 @@ function ReachTargetsPage() {
     return targets.filter((t) => {
       if (kind !== "all" && t.targetKind !== kind) return false;
       const rec = tagMap[targetTagKey(t)];
-      if (categoryFilter !== "all" && rec?.category !== categoryFilter) return false;
-      if (tagFilter !== "all" && !(rec?.tags ?? []).includes(tagFilter)) return false;
+      if (
+        tagFilter !== "all" &&
+        rec?.category !== tagFilter &&
+        !(rec?.tags ?? []).includes(tagFilter)
+      )
+        return false;
       if (!k) return true;
       return (
         t.name.toLowerCase().includes(k) ||
@@ -212,11 +209,11 @@ function ReachTargetsPage() {
         (t.platform ?? "").toLowerCase().includes(k)
       );
     });
-  }, [targets, kw, kind, tagFilter, categoryFilter, tagMap]);
+  }, [targets, kw, kind, tagFilter, tagMap]);
 
   useEffect(() => {
     setPage(1);
-  }, [kw, kind, tagFilter, categoryFilter, task]);
+  }, [kw, kind, tagFilter, task]);
 
   const pageData = filtered.slice((page - 1) * pageSize, page * pageSize);
 
@@ -343,29 +340,13 @@ function ReachTargetsPage() {
             </Select>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">分类</span>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="h-9 w-[140px] bg-background">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全部分类</SelectItem>
-                {categoryOptions.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">标签</span>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">分类/标签</span>
             <Select value={tagFilter} onValueChange={setTagFilter}>
-              <SelectTrigger className="h-9 w-[140px] bg-background">
+              <SelectTrigger className="h-9 w-[150px] bg-background">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部标签</SelectItem>
+                <SelectItem value="all">全部分类/标签</SelectItem>
                 {tagOptions.map((t) => (
                   <SelectItem key={t} value={t}>
                     {t}
@@ -383,7 +364,7 @@ function ReachTargetsPage() {
               className="pl-9 h-9 bg-background"
             />
           </div>
-          {(kw || kind !== "all" || tagFilter !== "all" || categoryFilter !== "all") && (
+          {(kw || kind !== "all" || tagFilter !== "all") && (
             <Button
               variant="ghost"
               size="sm"
@@ -392,7 +373,6 @@ function ReachTargetsPage() {
                 setKw("");
                 setKind("all");
                 setTagFilter("all");
-                setCategoryFilter("all");
               }}
             >
               <X className="h-3.5 w-3.5" />

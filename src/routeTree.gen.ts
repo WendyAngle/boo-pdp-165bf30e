@@ -12,60 +12,60 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppOutreachIndexRouteImport } from './routes/_app.outreach.index'
-import { Route as AppOutreachUsersRouteImport } from './routes/_app.outreach.users'
-import { Route as AppOutreachUnlockedRouteImport } from './routes/_app.outreach.unlocked'
-import { Route as AppOutreachSuppressionsRouteImport } from './routes/_app.outreach.suppressions'
-import { Route as AppOutreachSearchRouteImport } from './routes/_app.outreach.search'
-import { Route as AppOutreachRechargeRouteImport } from './routes/_app.outreach.recharge'
-import { Route as AppOutreachReachTargetsRouteImport } from './routes/_app.outreach.reach-targets'
-import { Route as AppOutreachReachEmptyRouteImport } from './routes/_app.outreach.reach-empty'
-import { Route as AppOutreachReachRouteImport } from './routes/_app.outreach.reach'
-import { Route as AppOutreachMyProfileRouteImport } from './routes/_app.outreach.my-profile'
-import { Route as AppOutreachManualListsRouteImport } from './routes/_app.outreach.manual-lists'
-import { Route as AppOutreachMailboxesRouteImport } from './routes/_app.outreach.mailboxes'
-import { Route as AppOutreachLeadsRouteImport } from './routes/_app.outreach.leads'
-import { Route as AppOutreachInvoicesRouteImport } from './routes/_app.outreach.invoices'
-import { Route as AppOutreachFootprintsEmptyRouteImport } from './routes/_app.outreach.footprints-empty'
-import { Route as AppOutreachFootprintsRouteImport } from './routes/_app.outreach.footprints'
-import { Route as AppOutreachFavoritesEmptyRouteImport } from './routes/_app.outreach.favorites-empty'
-import { Route as AppOutreachFavoritesRouteImport } from './routes/_app.outreach.favorites'
-import { Route as AppOutreachEnterpriseRouteImport } from './routes/_app.outreach.enterprise'
-import { Route as AppOutreachConversationsRouteImport } from './routes/_app.outreach.conversations'
-import { Route as AppOutreachComplianceRouteImport } from './routes/_app.outreach.compliance'
-import { Route as AppOutreachBillsRouteImport } from './routes/_app.outreach.bills'
-import { Route as AppOutreachBillingEmptyRouteImport } from './routes/_app.outreach.billing-empty'
-import { Route as AppOutreachBillingRouteImport } from './routes/_app.outreach.billing'
 import { Route as AppOutreachAgentsRouteImport } from './routes/_app.outreach.agents'
-import { Route as AppOutreachVoiceScriptsIndexRouteImport } from './routes/_app.outreach.voice-scripts.index'
-import { Route as AppOutreachProductsIndexRouteImport } from './routes/_app.outreach.products.index'
-import { Route as AppOutreachEnterpriseIndexRouteImport } from './routes/_app.outreach.enterprise.index'
-import { Route as AppOutreachVoiceScriptsScriptIdRouteImport } from './routes/_app.outreach.voice-scripts.$scriptId'
-import { Route as AppOutreachSocialReachRouteImport } from './routes/_app.outreach.social.reach'
-import { Route as AppOutreachSocialFriendsRouteImport } from './routes/_app.outreach.social.friends'
-import { Route as AppOutreachSocialDmRouteImport } from './routes/_app.outreach.social.dm'
-import { Route as AppOutreachSocialAccountsRouteImport } from './routes/_app.outreach.social.accounts'
-import { Route as AppOutreachReachTaskTaskKeyRouteImport } from './routes/_app.outreach.reach-task.$taskKey'
-import { Route as AppOutreachProductsHsRouteImport } from './routes/_app.outreach.products.$hs'
-import { Route as AppOutreachEnterpriseIdRouteImport } from './routes/_app.outreach.enterprise.$id'
-import { Route as AppOutreachAdminVoiceTemplatesRouteImport } from './routes/_app.outreach.admin.voice-templates'
-import { Route as AppOutreachAdminSmsTemplatesRouteImport } from './routes/_app.outreach.admin.sms-templates'
-import { Route as AppOutreachAdminSmsRoutingRouteImport } from './routes/_app.outreach.admin.sms-routing'
-import { Route as AppOutreachAdminSmsProvidersRouteImport } from './routes/_app.outreach.admin.sms-providers'
-import { Route as AppOutreachAdminManagedEmailRouteImport } from './routes/_app.outreach.admin.managed-email'
-import { Route as AppOutreachAdminInvoiceReviewRouteImport } from './routes/_app.outreach.admin.invoice-review'
-import { Route as AppOutreachAdminEmailProvidersRouteImport } from './routes/_app.outreach.admin.email-providers'
-import { Route as AppOutreachAdminEmailAccountsRouteImport } from './routes/_app.outreach.admin.email-accounts'
+import { Route as AppOutreachBillingRouteImport } from './routes/_app.outreach.billing'
+import { Route as AppOutreachBillingEmptyRouteImport } from './routes/_app.outreach.billing-empty'
+import { Route as AppOutreachBillsRouteImport } from './routes/_app.outreach.bills'
+import { Route as AppOutreachComplianceRouteImport } from './routes/_app.outreach.compliance'
+import { Route as AppOutreachConversationsRouteImport } from './routes/_app.outreach.conversations'
+import { Route as AppOutreachEnterpriseRouteImport } from './routes/_app.outreach.enterprise'
+import { Route as AppOutreachFavoritesRouteImport } from './routes/_app.outreach.favorites'
+import { Route as AppOutreachFavoritesEmptyRouteImport } from './routes/_app.outreach.favorites-empty'
+import { Route as AppOutreachFootprintsRouteImport } from './routes/_app.outreach.footprints'
+import { Route as AppOutreachFootprintsEmptyRouteImport } from './routes/_app.outreach.footprints-empty'
+import { Route as AppOutreachInvoicesRouteImport } from './routes/_app.outreach.invoices'
+import { Route as AppOutreachLeadsRouteImport } from './routes/_app.outreach.leads'
+import { Route as AppOutreachMailboxesRouteImport } from './routes/_app.outreach.mailboxes'
+import { Route as AppOutreachManualListsRouteImport } from './routes/_app.outreach.manual-lists'
+import { Route as AppOutreachMyProfileRouteImport } from './routes/_app.outreach.my-profile'
+import { Route as AppOutreachReachRouteImport } from './routes/_app.outreach.reach'
+import { Route as AppOutreachReachEmptyRouteImport } from './routes/_app.outreach.reach-empty'
+import { Route as AppOutreachReachTargetsRouteImport } from './routes/_app.outreach.reach-targets'
+import { Route as AppOutreachRechargeRouteImport } from './routes/_app.outreach.recharge'
+import { Route as AppOutreachSearchRouteImport } from './routes/_app.outreach.search'
+import { Route as AppOutreachSuppressionsRouteImport } from './routes/_app.outreach.suppressions'
+import { Route as AppOutreachUnlockedRouteImport } from './routes/_app.outreach.unlocked'
+import { Route as AppOutreachUsersRouteImport } from './routes/_app.outreach.users'
 import { Route as AppOutreachAdminDataFeedbackRouteImport } from './routes/_app.outreach.admin.data-feedback'
-import { Route as AppOutreachSocialReachIndexRouteImport } from './routes/_app.outreach.social.reach.index'
-import { Route as AppOutreachSocialProspectingIndexRouteImport } from './routes/_app.outreach.social.prospecting.index'
-import { Route as AppOutreachEnterpriseIdIndexRouteImport } from './routes/_app.outreach.enterprise.$id.index'
+import { Route as AppOutreachAdminEmailAccountsRouteImport } from './routes/_app.outreach.admin.email-accounts'
+import { Route as AppOutreachAdminEmailProvidersRouteImport } from './routes/_app.outreach.admin.email-providers'
+import { Route as AppOutreachAdminInvoiceReviewRouteImport } from './routes/_app.outreach.admin.invoice-review'
+import { Route as AppOutreachAdminManagedEmailRouteImport } from './routes/_app.outreach.admin.managed-email'
+import { Route as AppOutreachAdminSmsProvidersRouteImport } from './routes/_app.outreach.admin.sms-providers'
+import { Route as AppOutreachAdminSmsRoutingRouteImport } from './routes/_app.outreach.admin.sms-routing'
+import { Route as AppOutreachAdminSmsTemplatesRouteImport } from './routes/_app.outreach.admin.sms-templates'
+import { Route as AppOutreachAdminVoiceTemplatesRouteImport } from './routes/_app.outreach.admin.voice-templates'
+import { Route as AppOutreachEnterpriseIndexRouteImport } from './routes/_app.outreach.enterprise.index'
+import { Route as AppOutreachEnterpriseIdRouteImport } from './routes/_app.outreach.enterprise.$id'
+import { Route as AppOutreachProductsIndexRouteImport } from './routes/_app.outreach.products.index'
+import { Route as AppOutreachProductsHsRouteImport } from './routes/_app.outreach.products.$hs'
+import { Route as AppOutreachReachTaskTaskKeyRouteImport } from './routes/_app.outreach.reach-task.$taskKey'
+import { Route as AppOutreachSocialAccountsRouteImport } from './routes/_app.outreach.social.accounts'
+import { Route as AppOutreachSocialDmRouteImport } from './routes/_app.outreach.social.dm'
+import { Route as AppOutreachSocialFriendsRouteImport } from './routes/_app.outreach.social.friends'
+import { Route as AppOutreachSocialReachRouteImport } from './routes/_app.outreach.social.reach'
+import { Route as AppOutreachVoiceScriptsIndexRouteImport } from './routes/_app.outreach.voice-scripts.index'
+import { Route as AppOutreachVoiceScriptsScriptIdRouteImport } from './routes/_app.outreach.voice-scripts.$scriptId'
 import { Route as AppOutreachAdminManagedEmailIndexRouteImport } from './routes/_app.outreach.admin.managed-email.index'
-import { Route as AppOutreachSocialReachDmRouteImport } from './routes/_app.outreach.social.reach.dm'
-import { Route as AppOutreachSocialProspectingTaskIdRouteImport } from './routes/_app.outreach.social.prospecting.$taskId'
 import { Route as AppOutreachAdminManagedEmailOrderIdRouteImport } from './routes/_app.outreach.admin.managed-email.$orderId'
+import { Route as AppOutreachEnterpriseIdIndexRouteImport } from './routes/_app.outreach.enterprise.$id.index'
+import { Route as AppOutreachSocialProspectingIndexRouteImport } from './routes/_app.outreach.social.prospecting.index'
+import { Route as AppOutreachSocialProspectingTaskIdRouteImport } from './routes/_app.outreach.social.prospecting.$taskId'
+import { Route as AppOutreachSocialReachIndexRouteImport } from './routes/_app.outreach.social.reach.index'
+import { Route as AppOutreachSocialReachDmRouteImport } from './routes/_app.outreach.social.reach.dm'
+import { Route as AppOutreachEnterpriseIdContactIdxRouteImport } from './routes/_app.outreach.enterprise.$id.contact.$idx'
 import { Route as AppOutreachSocialReachProspectingIndexRouteImport } from './routes/_app.outreach.social.reach.prospecting.index'
 import { Route as AppOutreachSocialReachProspectingTaskIdRouteImport } from './routes/_app.outreach.social.reach.prospecting.$taskId'
-import { Route as AppOutreachEnterpriseIdContactIdxRouteImport } from './routes/_app.outreach.enterprise.$id.contact.$idx'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -81,96 +81,29 @@ const AppOutreachIndexRoute = AppOutreachIndexRouteImport.update({
   path: '/outreach/',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachUsersRoute = AppOutreachUsersRouteImport.update({
-  id: '/outreach/users',
-  path: '/outreach/users',
+const AppOutreachAgentsRoute = AppOutreachAgentsRouteImport.update({
+  id: '/outreach/agents',
+  path: '/outreach/agents',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachUnlockedRoute = AppOutreachUnlockedRouteImport.update({
-  id: '/outreach/unlocked',
-  path: '/outreach/unlocked',
+const AppOutreachBillingRoute = AppOutreachBillingRouteImport.update({
+  id: '/outreach/billing',
+  path: '/outreach/billing',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachSuppressionsRoute = AppOutreachSuppressionsRouteImport.update({
-  id: '/outreach/suppressions',
-  path: '/outreach/suppressions',
+const AppOutreachBillingEmptyRoute = AppOutreachBillingEmptyRouteImport.update({
+  id: '/outreach/billing-empty',
+  path: '/outreach/billing-empty',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachSearchRoute = AppOutreachSearchRouteImport.update({
-  id: '/outreach/search',
-  path: '/outreach/search',
+const AppOutreachBillsRoute = AppOutreachBillsRouteImport.update({
+  id: '/outreach/bills',
+  path: '/outreach/bills',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachRechargeRoute = AppOutreachRechargeRouteImport.update({
-  id: '/outreach/recharge',
-  path: '/outreach/recharge',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachReachTargetsRoute = AppOutreachReachTargetsRouteImport.update({
-  id: '/outreach/reach-targets',
-  path: '/outreach/reach-targets',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachReachEmptyRoute = AppOutreachReachEmptyRouteImport.update({
-  id: '/outreach/reach-empty',
-  path: '/outreach/reach-empty',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachReachRoute = AppOutreachReachRouteImport.update({
-  id: '/outreach/reach',
-  path: '/outreach/reach',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachMyProfileRoute = AppOutreachMyProfileRouteImport.update({
-  id: '/outreach/my-profile',
-  path: '/outreach/my-profile',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachManualListsRoute = AppOutreachManualListsRouteImport.update({
-  id: '/outreach/manual-lists',
-  path: '/outreach/manual-lists',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachMailboxesRoute = AppOutreachMailboxesRouteImport.update({
-  id: '/outreach/mailboxes',
-  path: '/outreach/mailboxes',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachLeadsRoute = AppOutreachLeadsRouteImport.update({
-  id: '/outreach/leads',
-  path: '/outreach/leads',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachInvoicesRoute = AppOutreachInvoicesRouteImport.update({
-  id: '/outreach/invoices',
-  path: '/outreach/invoices',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachFootprintsEmptyRoute =
-  AppOutreachFootprintsEmptyRouteImport.update({
-    id: '/outreach/footprints-empty',
-    path: '/outreach/footprints-empty',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachFootprintsRoute = AppOutreachFootprintsRouteImport.update({
-  id: '/outreach/footprints',
-  path: '/outreach/footprints',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachFavoritesEmptyRoute =
-  AppOutreachFavoritesEmptyRouteImport.update({
-    id: '/outreach/favorites-empty',
-    path: '/outreach/favorites-empty',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachFavoritesRoute = AppOutreachFavoritesRouteImport.update({
-  id: '/outreach/favorites',
-  path: '/outreach/favorites',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppOutreachEnterpriseRoute = AppOutreachEnterpriseRouteImport.update({
-  id: '/outreach/enterprise',
-  path: '/outreach/enterprise',
+const AppOutreachComplianceRoute = AppOutreachComplianceRouteImport.update({
+  id: '/outreach/compliance',
+  path: '/outreach/compliance',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOutreachConversationsRoute =
@@ -179,133 +112,102 @@ const AppOutreachConversationsRoute =
     path: '/outreach/conversations',
     getParentRoute: () => AppRoute,
   } as any)
-const AppOutreachComplianceRoute = AppOutreachComplianceRouteImport.update({
-  id: '/outreach/compliance',
-  path: '/outreach/compliance',
+const AppOutreachEnterpriseRoute = AppOutreachEnterpriseRouteImport.update({
+  id: '/outreach/enterprise',
+  path: '/outreach/enterprise',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachBillsRoute = AppOutreachBillsRouteImport.update({
-  id: '/outreach/bills',
-  path: '/outreach/bills',
+const AppOutreachFavoritesRoute = AppOutreachFavoritesRouteImport.update({
+  id: '/outreach/favorites',
+  path: '/outreach/favorites',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachBillingEmptyRoute = AppOutreachBillingEmptyRouteImport.update({
-  id: '/outreach/billing-empty',
-  path: '/outreach/billing-empty',
+const AppOutreachFavoritesEmptyRoute =
+  AppOutreachFavoritesEmptyRouteImport.update({
+    id: '/outreach/favorites-empty',
+    path: '/outreach/favorites-empty',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachFootprintsRoute = AppOutreachFootprintsRouteImport.update({
+  id: '/outreach/footprints',
+  path: '/outreach/footprints',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachBillingRoute = AppOutreachBillingRouteImport.update({
-  id: '/outreach/billing',
-  path: '/outreach/billing',
+const AppOutreachFootprintsEmptyRoute =
+  AppOutreachFootprintsEmptyRouteImport.update({
+    id: '/outreach/footprints-empty',
+    path: '/outreach/footprints-empty',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachInvoicesRoute = AppOutreachInvoicesRouteImport.update({
+  id: '/outreach/invoices',
+  path: '/outreach/invoices',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachAgentsRoute = AppOutreachAgentsRouteImport.update({
-  id: '/outreach/agents',
-  path: '/outreach/agents',
+const AppOutreachLeadsRoute = AppOutreachLeadsRouteImport.update({
+  id: '/outreach/leads',
+  path: '/outreach/leads',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachVoiceScriptsIndexRoute =
-  AppOutreachVoiceScriptsIndexRouteImport.update({
-    id: '/outreach/voice-scripts/',
-    path: '/outreach/voice-scripts/',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachProductsIndexRoute =
-  AppOutreachProductsIndexRouteImport.update({
-    id: '/outreach/products/',
-    path: '/outreach/products/',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachEnterpriseIndexRoute =
-  AppOutreachEnterpriseIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AppOutreachEnterpriseRoute,
-  } as any)
-const AppOutreachVoiceScriptsScriptIdRoute =
-  AppOutreachVoiceScriptsScriptIdRouteImport.update({
-    id: '/outreach/voice-scripts/$scriptId',
-    path: '/outreach/voice-scripts/$scriptId',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachSocialReachRoute = AppOutreachSocialReachRouteImport.update({
-  id: '/outreach/social/reach',
-  path: '/outreach/social/reach',
+const AppOutreachMailboxesRoute = AppOutreachMailboxesRouteImport.update({
+  id: '/outreach/mailboxes',
+  path: '/outreach/mailboxes',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachSocialFriendsRoute =
-  AppOutreachSocialFriendsRouteImport.update({
-    id: '/outreach/social/friends',
-    path: '/outreach/social/friends',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachSocialDmRoute = AppOutreachSocialDmRouteImport.update({
-  id: '/outreach/social/dm',
-  path: '/outreach/social/dm',
+const AppOutreachManualListsRoute = AppOutreachManualListsRouteImport.update({
+  id: '/outreach/manual-lists',
+  path: '/outreach/manual-lists',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachSocialAccountsRoute =
-  AppOutreachSocialAccountsRouteImport.update({
-    id: '/outreach/social/accounts',
-    path: '/outreach/social/accounts',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachReachTaskTaskKeyRoute =
-  AppOutreachReachTaskTaskKeyRouteImport.update({
-    id: '/outreach/reach-task/$taskKey',
-    path: '/outreach/reach-task/$taskKey',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachProductsHsRoute = AppOutreachProductsHsRouteImport.update({
-  id: '/outreach/products/$hs',
-  path: '/outreach/products/$hs',
+const AppOutreachMyProfileRoute = AppOutreachMyProfileRouteImport.update({
+  id: '/outreach/my-profile',
+  path: '/outreach/my-profile',
   getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachEnterpriseIdRoute = AppOutreachEnterpriseIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => AppOutreachEnterpriseRoute,
+const AppOutreachReachRoute = AppOutreachReachRouteImport.update({
+  id: '/outreach/reach',
+  path: '/outreach/reach',
+  getParentRoute: () => AppRoute,
 } as any)
-const AppOutreachAdminVoiceTemplatesRoute =
-  AppOutreachAdminVoiceTemplatesRouteImport.update({
-    id: '/outreach/admin/voice-templates',
-    path: '/outreach/admin/voice-templates',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminSmsTemplatesRoute =
-  AppOutreachAdminSmsTemplatesRouteImport.update({
-    id: '/outreach/admin/sms-templates',
-    path: '/outreach/admin/sms-templates',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminSmsRoutingRoute =
-  AppOutreachAdminSmsRoutingRouteImport.update({
-    id: '/outreach/admin/sms-routing',
-    path: '/outreach/admin/sms-routing',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminSmsProvidersRoute =
-  AppOutreachAdminSmsProvidersRouteImport.update({
-    id: '/outreach/admin/sms-providers',
-    path: '/outreach/admin/sms-providers',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminManagedEmailRoute =
-  AppOutreachAdminManagedEmailRouteImport.update({
-    id: '/outreach/admin/managed-email',
-    path: '/outreach/admin/managed-email',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminInvoiceReviewRoute =
-  AppOutreachAdminInvoiceReviewRouteImport.update({
-    id: '/outreach/admin/invoice-review',
-    path: '/outreach/admin/invoice-review',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminEmailProvidersRoute =
-  AppOutreachAdminEmailProvidersRouteImport.update({
-    id: '/outreach/admin/email-providers',
-    path: '/outreach/admin/email-providers',
+const AppOutreachReachEmptyRoute = AppOutreachReachEmptyRouteImport.update({
+  id: '/outreach/reach-empty',
+  path: '/outreach/reach-empty',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachReachTargetsRoute = AppOutreachReachTargetsRouteImport.update({
+  id: '/outreach/reach-targets',
+  path: '/outreach/reach-targets',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachRechargeRoute = AppOutreachRechargeRouteImport.update({
+  id: '/outreach/recharge',
+  path: '/outreach/recharge',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachSearchRoute = AppOutreachSearchRouteImport.update({
+  id: '/outreach/search',
+  path: '/outreach/search',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachSuppressionsRoute = AppOutreachSuppressionsRouteImport.update({
+  id: '/outreach/suppressions',
+  path: '/outreach/suppressions',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachUnlockedRoute = AppOutreachUnlockedRouteImport.update({
+  id: '/outreach/unlocked',
+  path: '/outreach/unlocked',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachUsersRoute = AppOutreachUsersRouteImport.update({
+  id: '/outreach/users',
+  path: '/outreach/users',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachAdminDataFeedbackRoute =
+  AppOutreachAdminDataFeedbackRouteImport.update({
+    id: '/outreach/admin/data-feedback',
+    path: '/outreach/admin/data-feedback',
     getParentRoute: () => AppRoute,
   } as any)
 const AppOutreachAdminEmailAccountsRoute =
@@ -314,10 +216,138 @@ const AppOutreachAdminEmailAccountsRoute =
     path: '/outreach/admin/email-accounts',
     getParentRoute: () => AppRoute,
   } as any)
-const AppOutreachAdminDataFeedbackRoute =
-  AppOutreachAdminDataFeedbackRouteImport.update({
-    id: '/outreach/admin/data-feedback',
-    path: '/outreach/admin/data-feedback',
+const AppOutreachAdminEmailProvidersRoute =
+  AppOutreachAdminEmailProvidersRouteImport.update({
+    id: '/outreach/admin/email-providers',
+    path: '/outreach/admin/email-providers',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminInvoiceReviewRoute =
+  AppOutreachAdminInvoiceReviewRouteImport.update({
+    id: '/outreach/admin/invoice-review',
+    path: '/outreach/admin/invoice-review',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminManagedEmailRoute =
+  AppOutreachAdminManagedEmailRouteImport.update({
+    id: '/outreach/admin/managed-email',
+    path: '/outreach/admin/managed-email',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminSmsProvidersRoute =
+  AppOutreachAdminSmsProvidersRouteImport.update({
+    id: '/outreach/admin/sms-providers',
+    path: '/outreach/admin/sms-providers',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminSmsRoutingRoute =
+  AppOutreachAdminSmsRoutingRouteImport.update({
+    id: '/outreach/admin/sms-routing',
+    path: '/outreach/admin/sms-routing',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminSmsTemplatesRoute =
+  AppOutreachAdminSmsTemplatesRouteImport.update({
+    id: '/outreach/admin/sms-templates',
+    path: '/outreach/admin/sms-templates',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminVoiceTemplatesRoute =
+  AppOutreachAdminVoiceTemplatesRouteImport.update({
+    id: '/outreach/admin/voice-templates',
+    path: '/outreach/admin/voice-templates',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachEnterpriseIndexRoute =
+  AppOutreachEnterpriseIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppOutreachEnterpriseRoute,
+  } as any)
+const AppOutreachEnterpriseIdRoute = AppOutreachEnterpriseIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppOutreachEnterpriseRoute,
+} as any)
+const AppOutreachProductsIndexRoute =
+  AppOutreachProductsIndexRouteImport.update({
+    id: '/outreach/products/',
+    path: '/outreach/products/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachProductsHsRoute = AppOutreachProductsHsRouteImport.update({
+  id: '/outreach/products/$hs',
+  path: '/outreach/products/$hs',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachReachTaskTaskKeyRoute =
+  AppOutreachReachTaskTaskKeyRouteImport.update({
+    id: '/outreach/reach-task/$taskKey',
+    path: '/outreach/reach-task/$taskKey',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachSocialAccountsRoute =
+  AppOutreachSocialAccountsRouteImport.update({
+    id: '/outreach/social/accounts',
+    path: '/outreach/social/accounts',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachSocialDmRoute = AppOutreachSocialDmRouteImport.update({
+  id: '/outreach/social/dm',
+  path: '/outreach/social/dm',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachSocialFriendsRoute =
+  AppOutreachSocialFriendsRouteImport.update({
+    id: '/outreach/social/friends',
+    path: '/outreach/social/friends',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachSocialReachRoute = AppOutreachSocialReachRouteImport.update({
+  id: '/outreach/social/reach',
+  path: '/outreach/social/reach',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOutreachVoiceScriptsIndexRoute =
+  AppOutreachVoiceScriptsIndexRouteImport.update({
+    id: '/outreach/voice-scripts/',
+    path: '/outreach/voice-scripts/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachVoiceScriptsScriptIdRoute =
+  AppOutreachVoiceScriptsScriptIdRouteImport.update({
+    id: '/outreach/voice-scripts/$scriptId',
+    path: '/outreach/voice-scripts/$scriptId',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachAdminManagedEmailIndexRoute =
+  AppOutreachAdminManagedEmailIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppOutreachAdminManagedEmailRoute,
+  } as any)
+const AppOutreachAdminManagedEmailOrderIdRoute =
+  AppOutreachAdminManagedEmailOrderIdRouteImport.update({
+    id: '/$orderId',
+    path: '/$orderId',
+    getParentRoute: () => AppOutreachAdminManagedEmailRoute,
+  } as any)
+const AppOutreachEnterpriseIdIndexRoute =
+  AppOutreachEnterpriseIdIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AppOutreachEnterpriseIdRoute,
+  } as any)
+const AppOutreachSocialProspectingIndexRoute =
+  AppOutreachSocialProspectingIndexRouteImport.update({
+    id: '/outreach/social/prospecting/',
+    path: '/outreach/social/prospecting/',
+    getParentRoute: () => AppRoute,
+  } as any)
+const AppOutreachSocialProspectingTaskIdRoute =
+  AppOutreachSocialProspectingTaskIdRouteImport.update({
+    id: '/outreach/social/prospecting/$taskId',
+    path: '/outreach/social/prospecting/$taskId',
     getParentRoute: () => AppRoute,
   } as any)
 const AppOutreachSocialReachIndexRoute =
@@ -326,41 +356,17 @@ const AppOutreachSocialReachIndexRoute =
     path: '/',
     getParentRoute: () => AppOutreachSocialReachRoute,
   } as any)
-const AppOutreachSocialProspectingIndexRoute =
-  AppOutreachSocialProspectingIndexRouteImport.update({
-    id: '/outreach/social/prospecting/',
-    path: '/outreach/social/prospecting/',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachEnterpriseIdIndexRoute =
-  AppOutreachEnterpriseIdIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AppOutreachEnterpriseIdRoute,
-  } as any)
-const AppOutreachAdminManagedEmailIndexRoute =
-  AppOutreachAdminManagedEmailIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AppOutreachAdminManagedEmailRoute,
-  } as any)
 const AppOutreachSocialReachDmRoute =
   AppOutreachSocialReachDmRouteImport.update({
     id: '/dm',
     path: '/dm',
     getParentRoute: () => AppOutreachSocialReachRoute,
   } as any)
-const AppOutreachSocialProspectingTaskIdRoute =
-  AppOutreachSocialProspectingTaskIdRouteImport.update({
-    id: '/outreach/social/prospecting/$taskId',
-    path: '/outreach/social/prospecting/$taskId',
-    getParentRoute: () => AppRoute,
-  } as any)
-const AppOutreachAdminManagedEmailOrderIdRoute =
-  AppOutreachAdminManagedEmailOrderIdRouteImport.update({
-    id: '/$orderId',
-    path: '/$orderId',
-    getParentRoute: () => AppOutreachAdminManagedEmailRoute,
+const AppOutreachEnterpriseIdContactIdxRoute =
+  AppOutreachEnterpriseIdContactIdxRouteImport.update({
+    id: '/contact/$idx',
+    path: '/contact/$idx',
+    getParentRoute: () => AppOutreachEnterpriseIdRoute,
   } as any)
 const AppOutreachSocialReachProspectingIndexRoute =
   AppOutreachSocialReachProspectingIndexRouteImport.update({
@@ -373,12 +379,6 @@ const AppOutreachSocialReachProspectingTaskIdRoute =
     id: '/prospecting/$taskId',
     path: '/prospecting/$taskId',
     getParentRoute: () => AppOutreachSocialReachRoute,
-  } as any)
-const AppOutreachEnterpriseIdContactIdxRoute =
-  AppOutreachEnterpriseIdContactIdxRouteImport.update({
-    id: '/contact/$idx',
-    path: '/contact/$idx',
-    getParentRoute: () => AppOutreachEnterpriseIdRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -754,158 +754,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOutreachIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/users': {
-      id: '/_app/outreach/users'
-      path: '/outreach/users'
-      fullPath: '/outreach/users'
-      preLoaderRoute: typeof AppOutreachUsersRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/unlocked': {
-      id: '/_app/outreach/unlocked'
-      path: '/outreach/unlocked'
-      fullPath: '/outreach/unlocked'
-      preLoaderRoute: typeof AppOutreachUnlockedRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/suppressions': {
-      id: '/_app/outreach/suppressions'
-      path: '/outreach/suppressions'
-      fullPath: '/outreach/suppressions'
-      preLoaderRoute: typeof AppOutreachSuppressionsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/search': {
-      id: '/_app/outreach/search'
-      path: '/outreach/search'
-      fullPath: '/outreach/search'
-      preLoaderRoute: typeof AppOutreachSearchRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/recharge': {
-      id: '/_app/outreach/recharge'
-      path: '/outreach/recharge'
-      fullPath: '/outreach/recharge'
-      preLoaderRoute: typeof AppOutreachRechargeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/reach-targets': {
-      id: '/_app/outreach/reach-targets'
-      path: '/outreach/reach-targets'
-      fullPath: '/outreach/reach-targets'
-      preLoaderRoute: typeof AppOutreachReachTargetsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/reach-empty': {
-      id: '/_app/outreach/reach-empty'
-      path: '/outreach/reach-empty'
-      fullPath: '/outreach/reach-empty'
-      preLoaderRoute: typeof AppOutreachReachEmptyRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/reach': {
-      id: '/_app/outreach/reach'
-      path: '/outreach/reach'
-      fullPath: '/outreach/reach'
-      preLoaderRoute: typeof AppOutreachReachRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/my-profile': {
-      id: '/_app/outreach/my-profile'
-      path: '/outreach/my-profile'
-      fullPath: '/outreach/my-profile'
-      preLoaderRoute: typeof AppOutreachMyProfileRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/manual-lists': {
-      id: '/_app/outreach/manual-lists'
-      path: '/outreach/manual-lists'
-      fullPath: '/outreach/manual-lists'
-      preLoaderRoute: typeof AppOutreachManualListsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/mailboxes': {
-      id: '/_app/outreach/mailboxes'
-      path: '/outreach/mailboxes'
-      fullPath: '/outreach/mailboxes'
-      preLoaderRoute: typeof AppOutreachMailboxesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/leads': {
-      id: '/_app/outreach/leads'
-      path: '/outreach/leads'
-      fullPath: '/outreach/leads'
-      preLoaderRoute: typeof AppOutreachLeadsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/invoices': {
-      id: '/_app/outreach/invoices'
-      path: '/outreach/invoices'
-      fullPath: '/outreach/invoices'
-      preLoaderRoute: typeof AppOutreachInvoicesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/footprints-empty': {
-      id: '/_app/outreach/footprints-empty'
-      path: '/outreach/footprints-empty'
-      fullPath: '/outreach/footprints-empty'
-      preLoaderRoute: typeof AppOutreachFootprintsEmptyRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/footprints': {
-      id: '/_app/outreach/footprints'
-      path: '/outreach/footprints'
-      fullPath: '/outreach/footprints'
-      preLoaderRoute: typeof AppOutreachFootprintsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/favorites-empty': {
-      id: '/_app/outreach/favorites-empty'
-      path: '/outreach/favorites-empty'
-      fullPath: '/outreach/favorites-empty'
-      preLoaderRoute: typeof AppOutreachFavoritesEmptyRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/favorites': {
-      id: '/_app/outreach/favorites'
-      path: '/outreach/favorites'
-      fullPath: '/outreach/favorites'
-      preLoaderRoute: typeof AppOutreachFavoritesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/enterprise': {
-      id: '/_app/outreach/enterprise'
-      path: '/outreach/enterprise'
-      fullPath: '/outreach/enterprise'
-      preLoaderRoute: typeof AppOutreachEnterpriseRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/conversations': {
-      id: '/_app/outreach/conversations'
-      path: '/outreach/conversations'
-      fullPath: '/outreach/conversations'
-      preLoaderRoute: typeof AppOutreachConversationsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/compliance': {
-      id: '/_app/outreach/compliance'
-      path: '/outreach/compliance'
-      fullPath: '/outreach/compliance'
-      preLoaderRoute: typeof AppOutreachComplianceRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/bills': {
-      id: '/_app/outreach/bills'
-      path: '/outreach/bills'
-      fullPath: '/outreach/bills'
-      preLoaderRoute: typeof AppOutreachBillsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/outreach/billing-empty': {
-      id: '/_app/outreach/billing-empty'
-      path: '/outreach/billing-empty'
-      fullPath: '/outreach/billing-empty'
-      preLoaderRoute: typeof AppOutreachBillingEmptyRouteImport
+    '/_app/outreach/agents': {
+      id: '/_app/outreach/agents'
+      path: '/outreach/agents'
+      fullPath: '/outreach/agents'
+      preLoaderRoute: typeof AppOutreachAgentsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/outreach/billing': {
@@ -915,144 +768,158 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOutreachBillingRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/agents': {
-      id: '/_app/outreach/agents'
-      path: '/outreach/agents'
-      fullPath: '/outreach/agents'
-      preLoaderRoute: typeof AppOutreachAgentsRouteImport
+    '/_app/outreach/billing-empty': {
+      id: '/_app/outreach/billing-empty'
+      path: '/outreach/billing-empty'
+      fullPath: '/outreach/billing-empty'
+      preLoaderRoute: typeof AppOutreachBillingEmptyRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/voice-scripts/': {
-      id: '/_app/outreach/voice-scripts/'
-      path: '/outreach/voice-scripts'
-      fullPath: '/outreach/voice-scripts/'
-      preLoaderRoute: typeof AppOutreachVoiceScriptsIndexRouteImport
+    '/_app/outreach/bills': {
+      id: '/_app/outreach/bills'
+      path: '/outreach/bills'
+      fullPath: '/outreach/bills'
+      preLoaderRoute: typeof AppOutreachBillsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/products/': {
-      id: '/_app/outreach/products/'
-      path: '/outreach/products'
-      fullPath: '/outreach/products/'
-      preLoaderRoute: typeof AppOutreachProductsIndexRouteImport
+    '/_app/outreach/compliance': {
+      id: '/_app/outreach/compliance'
+      path: '/outreach/compliance'
+      fullPath: '/outreach/compliance'
+      preLoaderRoute: typeof AppOutreachComplianceRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/enterprise/': {
-      id: '/_app/outreach/enterprise/'
-      path: '/'
-      fullPath: '/outreach/enterprise/'
-      preLoaderRoute: typeof AppOutreachEnterpriseIndexRouteImport
-      parentRoute: typeof AppOutreachEnterpriseRoute
-    }
-    '/_app/outreach/voice-scripts/$scriptId': {
-      id: '/_app/outreach/voice-scripts/$scriptId'
-      path: '/outreach/voice-scripts/$scriptId'
-      fullPath: '/outreach/voice-scripts/$scriptId'
-      preLoaderRoute: typeof AppOutreachVoiceScriptsScriptIdRouteImport
+    '/_app/outreach/conversations': {
+      id: '/_app/outreach/conversations'
+      path: '/outreach/conversations'
+      fullPath: '/outreach/conversations'
+      preLoaderRoute: typeof AppOutreachConversationsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/social/reach': {
-      id: '/_app/outreach/social/reach'
-      path: '/outreach/social/reach'
-      fullPath: '/outreach/social/reach'
-      preLoaderRoute: typeof AppOutreachSocialReachRouteImport
+    '/_app/outreach/enterprise': {
+      id: '/_app/outreach/enterprise'
+      path: '/outreach/enterprise'
+      fullPath: '/outreach/enterprise'
+      preLoaderRoute: typeof AppOutreachEnterpriseRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/social/friends': {
-      id: '/_app/outreach/social/friends'
-      path: '/outreach/social/friends'
-      fullPath: '/outreach/social/friends'
-      preLoaderRoute: typeof AppOutreachSocialFriendsRouteImport
+    '/_app/outreach/favorites': {
+      id: '/_app/outreach/favorites'
+      path: '/outreach/favorites'
+      fullPath: '/outreach/favorites'
+      preLoaderRoute: typeof AppOutreachFavoritesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/social/dm': {
-      id: '/_app/outreach/social/dm'
-      path: '/outreach/social/dm'
-      fullPath: '/outreach/social/dm'
-      preLoaderRoute: typeof AppOutreachSocialDmRouteImport
+    '/_app/outreach/favorites-empty': {
+      id: '/_app/outreach/favorites-empty'
+      path: '/outreach/favorites-empty'
+      fullPath: '/outreach/favorites-empty'
+      preLoaderRoute: typeof AppOutreachFavoritesEmptyRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/social/accounts': {
-      id: '/_app/outreach/social/accounts'
-      path: '/outreach/social/accounts'
-      fullPath: '/outreach/social/accounts'
-      preLoaderRoute: typeof AppOutreachSocialAccountsRouteImport
+    '/_app/outreach/footprints': {
+      id: '/_app/outreach/footprints'
+      path: '/outreach/footprints'
+      fullPath: '/outreach/footprints'
+      preLoaderRoute: typeof AppOutreachFootprintsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/reach-task/$taskKey': {
-      id: '/_app/outreach/reach-task/$taskKey'
-      path: '/outreach/reach-task/$taskKey'
-      fullPath: '/outreach/reach-task/$taskKey'
-      preLoaderRoute: typeof AppOutreachReachTaskTaskKeyRouteImport
+    '/_app/outreach/footprints-empty': {
+      id: '/_app/outreach/footprints-empty'
+      path: '/outreach/footprints-empty'
+      fullPath: '/outreach/footprints-empty'
+      preLoaderRoute: typeof AppOutreachFootprintsEmptyRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/products/$hs': {
-      id: '/_app/outreach/products/$hs'
-      path: '/outreach/products/$hs'
-      fullPath: '/outreach/products/$hs'
-      preLoaderRoute: typeof AppOutreachProductsHsRouteImport
+    '/_app/outreach/invoices': {
+      id: '/_app/outreach/invoices'
+      path: '/outreach/invoices'
+      fullPath: '/outreach/invoices'
+      preLoaderRoute: typeof AppOutreachInvoicesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/enterprise/$id': {
-      id: '/_app/outreach/enterprise/$id'
-      path: '/$id'
-      fullPath: '/outreach/enterprise/$id'
-      preLoaderRoute: typeof AppOutreachEnterpriseIdRouteImport
-      parentRoute: typeof AppOutreachEnterpriseRoute
-    }
-    '/_app/outreach/admin/voice-templates': {
-      id: '/_app/outreach/admin/voice-templates'
-      path: '/outreach/admin/voice-templates'
-      fullPath: '/outreach/admin/voice-templates'
-      preLoaderRoute: typeof AppOutreachAdminVoiceTemplatesRouteImport
+    '/_app/outreach/leads': {
+      id: '/_app/outreach/leads'
+      path: '/outreach/leads'
+      fullPath: '/outreach/leads'
+      preLoaderRoute: typeof AppOutreachLeadsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/sms-templates': {
-      id: '/_app/outreach/admin/sms-templates'
-      path: '/outreach/admin/sms-templates'
-      fullPath: '/outreach/admin/sms-templates'
-      preLoaderRoute: typeof AppOutreachAdminSmsTemplatesRouteImport
+    '/_app/outreach/mailboxes': {
+      id: '/_app/outreach/mailboxes'
+      path: '/outreach/mailboxes'
+      fullPath: '/outreach/mailboxes'
+      preLoaderRoute: typeof AppOutreachMailboxesRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/sms-routing': {
-      id: '/_app/outreach/admin/sms-routing'
-      path: '/outreach/admin/sms-routing'
-      fullPath: '/outreach/admin/sms-routing'
-      preLoaderRoute: typeof AppOutreachAdminSmsRoutingRouteImport
+    '/_app/outreach/manual-lists': {
+      id: '/_app/outreach/manual-lists'
+      path: '/outreach/manual-lists'
+      fullPath: '/outreach/manual-lists'
+      preLoaderRoute: typeof AppOutreachManualListsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/sms-providers': {
-      id: '/_app/outreach/admin/sms-providers'
-      path: '/outreach/admin/sms-providers'
-      fullPath: '/outreach/admin/sms-providers'
-      preLoaderRoute: typeof AppOutreachAdminSmsProvidersRouteImport
+    '/_app/outreach/my-profile': {
+      id: '/_app/outreach/my-profile'
+      path: '/outreach/my-profile'
+      fullPath: '/outreach/my-profile'
+      preLoaderRoute: typeof AppOutreachMyProfileRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/managed-email': {
-      id: '/_app/outreach/admin/managed-email'
-      path: '/outreach/admin/managed-email'
-      fullPath: '/outreach/admin/managed-email'
-      preLoaderRoute: typeof AppOutreachAdminManagedEmailRouteImport
+    '/_app/outreach/reach': {
+      id: '/_app/outreach/reach'
+      path: '/outreach/reach'
+      fullPath: '/outreach/reach'
+      preLoaderRoute: typeof AppOutreachReachRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/invoice-review': {
-      id: '/_app/outreach/admin/invoice-review'
-      path: '/outreach/admin/invoice-review'
-      fullPath: '/outreach/admin/invoice-review'
-      preLoaderRoute: typeof AppOutreachAdminInvoiceReviewRouteImport
+    '/_app/outreach/reach-empty': {
+      id: '/_app/outreach/reach-empty'
+      path: '/outreach/reach-empty'
+      fullPath: '/outreach/reach-empty'
+      preLoaderRoute: typeof AppOutreachReachEmptyRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/email-providers': {
-      id: '/_app/outreach/admin/email-providers'
-      path: '/outreach/admin/email-providers'
-      fullPath: '/outreach/admin/email-providers'
-      preLoaderRoute: typeof AppOutreachAdminEmailProvidersRouteImport
+    '/_app/outreach/reach-targets': {
+      id: '/_app/outreach/reach-targets'
+      path: '/outreach/reach-targets'
+      fullPath: '/outreach/reach-targets'
+      preLoaderRoute: typeof AppOutreachReachTargetsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/email-accounts': {
-      id: '/_app/outreach/admin/email-accounts'
-      path: '/outreach/admin/email-accounts'
-      fullPath: '/outreach/admin/email-accounts'
-      preLoaderRoute: typeof AppOutreachAdminEmailAccountsRouteImport
+    '/_app/outreach/recharge': {
+      id: '/_app/outreach/recharge'
+      path: '/outreach/recharge'
+      fullPath: '/outreach/recharge'
+      preLoaderRoute: typeof AppOutreachRechargeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/search': {
+      id: '/_app/outreach/search'
+      path: '/outreach/search'
+      fullPath: '/outreach/search'
+      preLoaderRoute: typeof AppOutreachSearchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/suppressions': {
+      id: '/_app/outreach/suppressions'
+      path: '/outreach/suppressions'
+      fullPath: '/outreach/suppressions'
+      preLoaderRoute: typeof AppOutreachSuppressionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/unlocked': {
+      id: '/_app/outreach/unlocked'
+      path: '/outreach/unlocked'
+      fullPath: '/outreach/unlocked'
+      preLoaderRoute: typeof AppOutreachUnlockedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/users': {
+      id: '/_app/outreach/users'
+      path: '/outreach/users'
+      fullPath: '/outreach/users'
+      preLoaderRoute: typeof AppOutreachUsersRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/outreach/admin/data-feedback': {
@@ -1062,26 +929,138 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOutreachAdminDataFeedbackRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/social/reach/': {
-      id: '/_app/outreach/social/reach/'
-      path: '/'
-      fullPath: '/outreach/social/reach/'
-      preLoaderRoute: typeof AppOutreachSocialReachIndexRouteImport
-      parentRoute: typeof AppOutreachSocialReachRoute
-    }
-    '/_app/outreach/social/prospecting/': {
-      id: '/_app/outreach/social/prospecting/'
-      path: '/outreach/social/prospecting'
-      fullPath: '/outreach/social/prospecting/'
-      preLoaderRoute: typeof AppOutreachSocialProspectingIndexRouteImport
+    '/_app/outreach/admin/email-accounts': {
+      id: '/_app/outreach/admin/email-accounts'
+      path: '/outreach/admin/email-accounts'
+      fullPath: '/outreach/admin/email-accounts'
+      preLoaderRoute: typeof AppOutreachAdminEmailAccountsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/enterprise/$id/': {
-      id: '/_app/outreach/enterprise/$id/'
+    '/_app/outreach/admin/email-providers': {
+      id: '/_app/outreach/admin/email-providers'
+      path: '/outreach/admin/email-providers'
+      fullPath: '/outreach/admin/email-providers'
+      preLoaderRoute: typeof AppOutreachAdminEmailProvidersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/admin/invoice-review': {
+      id: '/_app/outreach/admin/invoice-review'
+      path: '/outreach/admin/invoice-review'
+      fullPath: '/outreach/admin/invoice-review'
+      preLoaderRoute: typeof AppOutreachAdminInvoiceReviewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/admin/managed-email': {
+      id: '/_app/outreach/admin/managed-email'
+      path: '/outreach/admin/managed-email'
+      fullPath: '/outreach/admin/managed-email'
+      preLoaderRoute: typeof AppOutreachAdminManagedEmailRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/admin/sms-providers': {
+      id: '/_app/outreach/admin/sms-providers'
+      path: '/outreach/admin/sms-providers'
+      fullPath: '/outreach/admin/sms-providers'
+      preLoaderRoute: typeof AppOutreachAdminSmsProvidersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/admin/sms-routing': {
+      id: '/_app/outreach/admin/sms-routing'
+      path: '/outreach/admin/sms-routing'
+      fullPath: '/outreach/admin/sms-routing'
+      preLoaderRoute: typeof AppOutreachAdminSmsRoutingRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/admin/sms-templates': {
+      id: '/_app/outreach/admin/sms-templates'
+      path: '/outreach/admin/sms-templates'
+      fullPath: '/outreach/admin/sms-templates'
+      preLoaderRoute: typeof AppOutreachAdminSmsTemplatesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/admin/voice-templates': {
+      id: '/_app/outreach/admin/voice-templates'
+      path: '/outreach/admin/voice-templates'
+      fullPath: '/outreach/admin/voice-templates'
+      preLoaderRoute: typeof AppOutreachAdminVoiceTemplatesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/enterprise/': {
+      id: '/_app/outreach/enterprise/'
       path: '/'
-      fullPath: '/outreach/enterprise/$id/'
-      preLoaderRoute: typeof AppOutreachEnterpriseIdIndexRouteImport
-      parentRoute: typeof AppOutreachEnterpriseIdRoute
+      fullPath: '/outreach/enterprise/'
+      preLoaderRoute: typeof AppOutreachEnterpriseIndexRouteImport
+      parentRoute: typeof AppOutreachEnterpriseRoute
+    }
+    '/_app/outreach/enterprise/$id': {
+      id: '/_app/outreach/enterprise/$id'
+      path: '/$id'
+      fullPath: '/outreach/enterprise/$id'
+      preLoaderRoute: typeof AppOutreachEnterpriseIdRouteImport
+      parentRoute: typeof AppOutreachEnterpriseRoute
+    }
+    '/_app/outreach/products/': {
+      id: '/_app/outreach/products/'
+      path: '/outreach/products'
+      fullPath: '/outreach/products/'
+      preLoaderRoute: typeof AppOutreachProductsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/products/$hs': {
+      id: '/_app/outreach/products/$hs'
+      path: '/outreach/products/$hs'
+      fullPath: '/outreach/products/$hs'
+      preLoaderRoute: typeof AppOutreachProductsHsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/reach-task/$taskKey': {
+      id: '/_app/outreach/reach-task/$taskKey'
+      path: '/outreach/reach-task/$taskKey'
+      fullPath: '/outreach/reach-task/$taskKey'
+      preLoaderRoute: typeof AppOutreachReachTaskTaskKeyRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/social/accounts': {
+      id: '/_app/outreach/social/accounts'
+      path: '/outreach/social/accounts'
+      fullPath: '/outreach/social/accounts'
+      preLoaderRoute: typeof AppOutreachSocialAccountsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/social/dm': {
+      id: '/_app/outreach/social/dm'
+      path: '/outreach/social/dm'
+      fullPath: '/outreach/social/dm'
+      preLoaderRoute: typeof AppOutreachSocialDmRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/social/friends': {
+      id: '/_app/outreach/social/friends'
+      path: '/outreach/social/friends'
+      fullPath: '/outreach/social/friends'
+      preLoaderRoute: typeof AppOutreachSocialFriendsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/social/reach': {
+      id: '/_app/outreach/social/reach'
+      path: '/outreach/social/reach'
+      fullPath: '/outreach/social/reach'
+      preLoaderRoute: typeof AppOutreachSocialReachRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/voice-scripts/': {
+      id: '/_app/outreach/voice-scripts/'
+      path: '/outreach/voice-scripts'
+      fullPath: '/outreach/voice-scripts/'
+      preLoaderRoute: typeof AppOutreachVoiceScriptsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/outreach/voice-scripts/$scriptId': {
+      id: '/_app/outreach/voice-scripts/$scriptId'
+      path: '/outreach/voice-scripts/$scriptId'
+      fullPath: '/outreach/voice-scripts/$scriptId'
+      preLoaderRoute: typeof AppOutreachVoiceScriptsScriptIdRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/outreach/admin/managed-email/': {
       id: '/_app/outreach/admin/managed-email/'
@@ -1090,12 +1069,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOutreachAdminManagedEmailIndexRouteImport
       parentRoute: typeof AppOutreachAdminManagedEmailRoute
     }
-    '/_app/outreach/social/reach/dm': {
-      id: '/_app/outreach/social/reach/dm'
-      path: '/dm'
-      fullPath: '/outreach/social/reach/dm'
-      preLoaderRoute: typeof AppOutreachSocialReachDmRouteImport
-      parentRoute: typeof AppOutreachSocialReachRoute
+    '/_app/outreach/admin/managed-email/$orderId': {
+      id: '/_app/outreach/admin/managed-email/$orderId'
+      path: '/$orderId'
+      fullPath: '/outreach/admin/managed-email/$orderId'
+      preLoaderRoute: typeof AppOutreachAdminManagedEmailOrderIdRouteImport
+      parentRoute: typeof AppOutreachAdminManagedEmailRoute
+    }
+    '/_app/outreach/enterprise/$id/': {
+      id: '/_app/outreach/enterprise/$id/'
+      path: '/'
+      fullPath: '/outreach/enterprise/$id/'
+      preLoaderRoute: typeof AppOutreachEnterpriseIdIndexRouteImport
+      parentRoute: typeof AppOutreachEnterpriseIdRoute
+    }
+    '/_app/outreach/social/prospecting/': {
+      id: '/_app/outreach/social/prospecting/'
+      path: '/outreach/social/prospecting'
+      fullPath: '/outreach/social/prospecting/'
+      preLoaderRoute: typeof AppOutreachSocialProspectingIndexRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/outreach/social/prospecting/$taskId': {
       id: '/_app/outreach/social/prospecting/$taskId'
@@ -1104,12 +1097,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOutreachSocialProspectingTaskIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/outreach/admin/managed-email/$orderId': {
-      id: '/_app/outreach/admin/managed-email/$orderId'
-      path: '/$orderId'
-      fullPath: '/outreach/admin/managed-email/$orderId'
-      preLoaderRoute: typeof AppOutreachAdminManagedEmailOrderIdRouteImport
-      parentRoute: typeof AppOutreachAdminManagedEmailRoute
+    '/_app/outreach/social/reach/': {
+      id: '/_app/outreach/social/reach/'
+      path: '/'
+      fullPath: '/outreach/social/reach/'
+      preLoaderRoute: typeof AppOutreachSocialReachIndexRouteImport
+      parentRoute: typeof AppOutreachSocialReachRoute
+    }
+    '/_app/outreach/social/reach/dm': {
+      id: '/_app/outreach/social/reach/dm'
+      path: '/dm'
+      fullPath: '/outreach/social/reach/dm'
+      preLoaderRoute: typeof AppOutreachSocialReachDmRouteImport
+      parentRoute: typeof AppOutreachSocialReachRoute
+    }
+    '/_app/outreach/enterprise/$id/contact/$idx': {
+      id: '/_app/outreach/enterprise/$id/contact/$idx'
+      path: '/contact/$idx'
+      fullPath: '/outreach/enterprise/$id/contact/$idx'
+      preLoaderRoute: typeof AppOutreachEnterpriseIdContactIdxRouteImport
+      parentRoute: typeof AppOutreachEnterpriseIdRoute
     }
     '/_app/outreach/social/reach/prospecting/': {
       id: '/_app/outreach/social/reach/prospecting/'
@@ -1124,13 +1131,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/outreach/social/reach/prospecting/$taskId'
       preLoaderRoute: typeof AppOutreachSocialReachProspectingTaskIdRouteImport
       parentRoute: typeof AppOutreachSocialReachRoute
-    }
-    '/_app/outreach/enterprise/$id/contact/$idx': {
-      id: '/_app/outreach/enterprise/$id/contact/$idx'
-      path: '/contact/$idx'
-      fullPath: '/outreach/enterprise/$id/contact/$idx'
-      preLoaderRoute: typeof AppOutreachEnterpriseIdContactIdxRouteImport
-      parentRoute: typeof AppOutreachEnterpriseIdRoute
     }
   }
 }

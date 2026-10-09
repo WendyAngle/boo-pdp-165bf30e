@@ -354,7 +354,8 @@ function ReachTaskDetailPage() {
           <div className="text-sm font-semibold">
             目标明细
             <span className="ml-2 text-xs text-muted-foreground font-normal">
-              共 {entries.length} 个
+              共 {filteredEntries.length} 个
+              {filteredEntries.length !== entries.length ? `（全部 ${entries.length} 个）` : ""}
               {selectedTargets.length > 0 ? ` · 已选 ${selectedTargets.length} 个目标` : ""}
             </span>
           </div>

@@ -19,6 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -102,7 +109,37 @@ function ReachTaskDetailPage() {
 
   /* 标签 / 分类：以目标为维度，多条触达记录指向同一目标时只算一个 */
   const tagMap = useTargetTagsMap();
-  const visible = useMemo(() => entries.slice(0, 100), [entries]);
+  const [tagFilter, setTagFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
+  /** 当前任务目标实际使用过的分类 / 标签，作为筛选选项 */
+  const categoryOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of entries) {
+      const c = tagMap[targetTagKey(r)]?.category;
+      if (c) s.add(c);
+    }
+    return [...s].sort();
+  }, [entries, tagMap]);
+  const tagOptions = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of entries) {
+      for (const t of tagMap[targetTagKey(r)]?.tags ?? []) s.add(t);
+    }
+    return [...s].sort();
+  }, [entries, tagMap]);
+
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter((r) => {
+        const rec = tagMap[targetTagKey(r)];
+        if (categoryFilter !== "all" && rec?.category !== categoryFilter) return false;
+        if (tagFilter !== "all" && !(rec?.tags ?? []).includes(tagFilter)) return false;
+        return true;
+      }),
+    [entries, tagMap, tagFilter, categoryFilter],
+  );
+  const visible = useMemo(() => filteredEntries.slice(0, 100), [filteredEntries]);
   const visibleTargets = useMemo(() => {
     const m = new Map<string, string>();
     for (const r of visible) if (!m.has(targetTagKey(r))) m.set(targetTagKey(r), r.targetName);
@@ -112,6 +149,8 @@ function ReachTaskDetailPage() {
   const [tagOpen, setTagOpen] = useState(false);
   useEffect(() => {
     setSelectedKeys([]);
+    setTagFilter("all");
+    setCategoryFilter("all");
   }, [taskKey]);
   const selectedTargets = visibleTargets.filter((t) => selectedKeys.includes(t.key));
   const allSelected =
@@ -315,7 +354,8 @@ function ReachTaskDetailPage() {
           <div className="text-sm font-semibold">
             目标明细
             <span className="ml-2 text-xs text-muted-foreground font-normal">
-              共 {entries.length} 个
+              共 {filteredEntries.length} 个
+              {filteredEntries.length !== entries.length ? `（全部 ${entries.length} 个）` : ""}
               {selectedTargets.length > 0 ? ` · 已选 ${selectedTargets.length} 个目标` : ""}
             </span>
           </div>
@@ -337,6 +377,53 @@ function ReachTaskDetailPage() {
               设置标签 / 分类
             </Button>
           </div>
+        </div>
+        <div className="px-5 py-2.5 border-b flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">分类</span>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-8 w-[130px] bg-background text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部分类</SelectItem>
+                {categoryOptions.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground whitespace-nowrap">标签</span>
+            <Select value={tagFilter} onValueChange={setTagFilter}>
+              <SelectTrigger className="h-8 w-[130px] bg-background text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部标签</SelectItem>
+                {tagOptions.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {(tagFilter !== "all" || categoryFilter !== "all") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1 text-xs"
+              onClick={() => {
+                setTagFilter("all");
+                setCategoryFilter("all");
+              }}
+            >
+              清除筛选
+            </Button>
+          )}
         </div>
         <Table>
           <TableHeader>

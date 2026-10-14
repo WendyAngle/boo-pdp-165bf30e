@@ -73,7 +73,6 @@ import {
   closeThread,
   reopenThread,
   toggleStar,
-  addTag,
   sendReply,
   SNOOZE_PRESETS,
   type Thread,
@@ -108,6 +107,7 @@ import {
   type TargetTagRecord,
 } from "@/lib/target-tags-store";
 import { resolveThreadProfile } from "@/lib/thread-profile";
+import { TargetTagDialog } from "@/components/outreach/TargetTagDialog";
 
 
 
@@ -199,7 +199,14 @@ function viewLabel(v: ViewKey) {
 
 export const Route = createFileRoute("/_app/outreach/conversations")({
   head: () => ({
-    meta: [{ title: "触达会话 | 出海大数据平台" }],
+    meta: [
+      { title: "触达会话 | 出海大数据平台" },
+      { name: "description", content: "管理触达会话、客户标签与沟通记录。" },
+      { property: "og:title", content: "触达会话 | 出海大数据平台" },
+      { property: "og:description", content: "管理触达会话、客户标签与沟通记录。" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
   }),
   validateSearch: (s) => searchSchema.parse(s),
   component: InboxPage,
@@ -2108,15 +2115,11 @@ function ProfilePanel({ thread }: { thread: Thread }) {
 }
 
 function __ActionBarImpl({ thread }: { thread: Thread }) {
-  const [tagInput, setTagInput] = useState("");
-
-  const addTagHandler = () => {
-    if (tagInput.trim()) {
-      addTag(thread.id, tagInput.trim());
-      setTagInput("");
-      toast.success("已加标签");
-    }
-  };
+  const [tagOpen, setTagOpen] = useState(false);
+  const tagTargets = useMemo(
+    () => [{ key: targetTagKey(thread), name: thread.targetName }],
+    [thread.targetKind, thread.targetId, thread.targetName],
+  );
 
   return (
     <div className="flex items-center gap-1 shrink-0">
@@ -2140,37 +2143,15 @@ function __ActionBarImpl({ thread }: { thread: Thread }) {
       </Button>
 
       {/* 打标签 */}
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-8 w-8">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="设置标签 / 分类" onClick={() => setTagOpen(true)}>
             <Tag className="h-4 w-4" />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-56 p-2.5">
-          <div className="text-xs font-medium text-muted-foreground mb-1.5">
-            标签 / 分类
-          </div>
-          <div className="flex items-center gap-1">
-            <Input
-              value={tagInput}
-              onChange={(e) => setTagInput(e.target.value)}
-              placeholder="打标签"
-              className="h-7"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") addTagHandler();
-              }}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 shrink-0"
-              onClick={addTagHandler}
-            >
-              <Tag className="h-3 w-3" />
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
+        </TooltipTrigger>
+        <TooltipContent>设置标签 / 分类</TooltipContent>
+      </Tooltip>
+      <TargetTagDialog open={tagOpen} onOpenChange={setTagOpen} targets={tagTargets} />
 
     </div>
   );

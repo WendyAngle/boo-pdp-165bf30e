@@ -58,7 +58,9 @@ export function TargetTagDialog({
     setDraft("");
     setMode("merge");
     if (single) {
-      const rec = getTargetTags(targets[0]!.key);
+      const target = targets[0];
+      if (!target) return;
+      const rec = getTargetTags(target.key);
       setCategory(rec?.category);
       setTags(rec?.tags ?? []);
     } else {
@@ -93,7 +95,7 @@ export function TargetTagDialog({
     );
     toast.success(
       single
-        ? `已更新「${targets[0]!.name}」的标签 / 分类`
+        ? `已更新「${targets[0]?.name ?? ""}」的标签 / 分类`
         : `已为 ${targets.length} 个目标设置标签 / 分类`,
     );
     onOpenChange(false);
@@ -110,7 +112,7 @@ export function TargetTagDialog({
           </DialogTitle>
           <DialogDescription>
             已选择 {targets.length} 个目标
-            {single ? `：${targets[0]!.name}` : ""}。标签 / 分类跟随目标本身，会在触达会话列表同步展示。
+            {single ? `：${targets[0]?.name ?? ""}` : ""}。修改后，该目标在任务详情、触达目标和相关会话中的标签 / 分类同步更新。
           </DialogDescription>
         </DialogHeader>
 

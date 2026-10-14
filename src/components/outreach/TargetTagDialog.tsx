@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import {
@@ -51,6 +50,8 @@ export function TargetTagDialog({
   const [tags, setTags] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
   const [mode, setMode] = useState<"merge" | "replace">("merge");
+  // Compare target identities rather than array references recreated by page refreshes.
+  const targetKeysSignature = JSON.stringify(targets.map((target) => target.key));
 
   // 可选标签：已设置过的目标标签 + 触达会话中已有的标签
   const availableTags = useMemo(
@@ -68,17 +69,18 @@ export function TargetTagDialog({
     if (!open) return;
     setDraft("");
     setMode("merge");
-    if (single) {
-      const target = targets[0];
-      if (!target) return;
-      const rec = getTargetTags(target.key);
+    const keys: string[] = JSON.parse(targetKeysSignature);
+    if (keys.length === 1) {
+      const key = keys[0];
+      if (!key) return;
+      const rec = getTargetTags(key);
       setCategory(rec?.category);
       setTags(rec?.tags ?? []);
     } else {
       setCategory(undefined);
       setTags([]);
     }
-  }, [open, single, targets]);
+  }, [open, targetKeysSignature]);
 
   const toggleTag = (t: string) =>
     setTags((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]));
@@ -170,10 +172,19 @@ export function TargetTagDialog({
                       key={t}
                       type="button"
                       variant="ghost"
+                      aria-pressed={checked}
                       onClick={() => toggleTag(t)}
                       className="h-8 w-full justify-start gap-2 px-2 text-sm font-normal"
                     >
-                      <Checkbox checked={checked} className="pointer-events-none" />
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          "grid h-4 w-4 shrink-0 place-content-center rounded-sm border shadow-sm",
+                          checked ? "border-primary bg-primary text-primary-foreground" : "border-input",
+                        )}
+                      >
+                        {checked && <Check className="h-3 w-3" />}
+                      </span>
                       <span className="flex-1 text-left">{t}</span>
                       {checked && <Check className="h-3.5 w-3.5 text-primary" />}
                     </Button>

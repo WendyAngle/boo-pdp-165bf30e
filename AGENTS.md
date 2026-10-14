@@ -10,5 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Social reach statistics share one execution-time resolver for year selection, monthly totals and source breakdowns; prefer explicit actual execution timestamps and retain the target-record execution timestamp fallback for historical data so all views stay consistent.
-- Conversation and target-list tag editing reuse TargetTagDialog and targetTagKey so edits remain attached to the same target across views; pass historical conversation metadata tags as display-only information in the existing-tag summary, never implicitly write or clear them through target tag edits.
+- Conversation and target-list tag editing reuse TargetTagDialog and targetTagKey so edits remain attached to the same target across views; render display-only historical conversation metadata tags alongside selected tags below the manual-add input, deduplicate them without implicitly writing or clearing history through target edits.
 - Selected target tags in TargetTagDialog and TargetTagBadges share one badge style regardless of legacy category/tag fields, so editing and target displays stay visually consistent.

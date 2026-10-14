@@ -27,6 +27,8 @@ export interface TagTargetItem {
   /** 目标唯一键：enterprise:xxx / contact:xxx */
   key: string;
   name: string;
+  /** 会话历史标签仅用于已有信息展示，不参与目标标签写入。 */
+  historicalTags?: string[];
 }
 
 const targetTagBadgeClass =
@@ -55,6 +57,18 @@ export function TargetTagDialog({
     () => (open ? [...new Set([...usedTargetTags(), ...conversationTags()])] : []),
     [open],
   );
+
+  const existingTags = useMemo(() => {
+    if (!open) return [];
+    return [...new Set(targets.flatMap((target) => {
+      const record = getTargetTags(target.key);
+      return [
+        ...(record?.category ? [record.category] : []),
+        ...(record?.tags ?? []),
+        ...(target.historicalTags ?? []),
+      ];
+    }))];
+  }, [open, targets]);
 
   useEffect(() => {
     if (!open) return;
@@ -131,6 +145,13 @@ export function TargetTagDialog({
                 +{targets.length - 40}
               </Badge>
             )}
+          </div>
+        )}
+
+        {existingTags.length > 0 && (
+          <div className="space-y-2" aria-label="已设置标签 / 分类">
+            <Label className="text-xs text-muted-foreground">已设置标签 / 分类</Label>
+            <TargetTagBadges record={{ tags: existingTags }} max={existingTags.length} />
           </div>
         )}
 

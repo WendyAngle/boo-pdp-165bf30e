@@ -2117,8 +2117,8 @@ function ProfilePanel({ thread }: { thread: Thread }) {
 function __ActionBarImpl({ thread }: { thread: Thread }) {
   const [tagOpen, setTagOpen] = useState(false);
   const tagTargets = useMemo(
-    () => [{ key: targetTagKey(thread), name: thread.targetName }],
-    [thread.targetKind, thread.targetId, thread.targetName],
+    () => [{ key: targetTagKey(thread), name: thread.targetName, historicalTags: thread.meta.tags }],
+    [thread.targetKind, thread.targetId, thread.targetName, thread.meta.tags],
   );
 
   return (

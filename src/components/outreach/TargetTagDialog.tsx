@@ -29,6 +29,9 @@ export interface TagTargetItem {
   name: string;
 }
 
+const targetTagBadgeClass =
+  "h-5 py-0 px-1.5 text-[10px] font-normal bg-muted/50 text-foreground/80 border-border/70 hover:bg-muted/50";
+
 /** 批量设置目标的标签 / 分类 */
 export function TargetTagDialog({
   open,
@@ -192,11 +195,19 @@ export function TargetTagDialog({
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1 pt-1">
               {tags.map((t) => (
-                <Badge key={t} variant="secondary" className="text-[11px] gap-1 font-normal">
+                <Badge key={t} variant="outline" className={cn(targetTagBadgeClass, "gap-1")}>
                   {t}
-                  <button type="button" onClick={() => toggleTag(t)} aria-label={`移除 ${t}`}>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-3 w-3 shrink-0 rounded-sm p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => toggleTag(t)}
+                    aria-label={`移除 ${t}`}
+                    title={`移除 ${t}`}
+                  >
                     <X className="h-3 w-3" />
-                  </button>
+                  </Button>
                 </Badge>
               ))}
             </div>
@@ -256,7 +267,7 @@ export function TargetTagBadges({
   return (
     <div className={cn("flex flex-wrap items-center gap-1", className)}>
       {record.category && (
-        <Badge className="h-4 py-0 px-1.5 text-[10px] bg-primary/10 text-primary hover:bg-primary/10 border border-primary/30">
+        <Badge variant="outline" className={targetTagBadgeClass}>
           {record.category}
         </Badge>
       )}
@@ -264,7 +275,7 @@ export function TargetTagBadges({
         <Badge
           key={t}
           variant="outline"
-          className="h-4 py-0 px-1.5 text-[10px] bg-muted/50 text-foreground/80 border-border/70"
+          className={targetTagBadgeClass}
         >
           {t}
         </Badge>
@@ -272,7 +283,7 @@ export function TargetTagBadges({
       {rest > 0 && (
         <Badge
           variant="outline"
-          className="h-4 py-0 px-1.5 text-[10px] bg-muted/50 text-foreground/80 border-border/70"
+          className={targetTagBadgeClass}
         >
           +{rest}
         </Badge>

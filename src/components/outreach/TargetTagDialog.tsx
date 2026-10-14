@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronsUpDown, Plus, Tags, X } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Tags } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -203,21 +203,8 @@ export function TargetTagDialog({
           {displayTags.length > 0 && (
             <div className="flex flex-wrap gap-1 pt-1" aria-label="标签 / 分类">
               {displayTags.map((t) => (
-                <Badge key={t} variant="outline" className={cn(targetTagBadgeClass, "gap-1")}>
+                <Badge key={t} variant="outline" className={targetTagBadgeClass}>
                   {t}
-                  {tags.includes(t) && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-3 w-3 shrink-0 rounded-sm p-0 text-muted-foreground hover:text-foreground"
-                    onClick={() => toggleTag(t)}
-                    aria-label={`移除 ${t}`}
-                    title={`移除 ${t}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                  )}
                 </Badge>
               ))}
             </div>

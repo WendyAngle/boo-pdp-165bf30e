@@ -58,17 +58,11 @@ export function TargetTagDialog({
     [open],
   );
 
-  const existingTags = useMemo(() => {
-    if (!open) return [];
-    return [...new Set(targets.flatMap((target) => {
-      const record = getTargetTags(target.key);
-      return [
-        ...(record?.category ? [record.category] : []),
-        ...(record?.tags ?? []),
-        ...(target.historicalTags ?? []),
-      ];
-    }))];
-  }, [open, targets]);
+  const displayTags = [...new Set([
+    ...(category ? [category] : []),
+    ...tags,
+    ...(single ? targets[0]?.historicalTags ?? [] : []),
+  ])];
 
   useEffect(() => {
     if (!open) return;
@@ -148,13 +142,6 @@ export function TargetTagDialog({
           </div>
         )}
 
-        {existingTags.length > 0 && (
-          <div className="space-y-2" aria-label="已设置标签 / 分类">
-            <Label className="text-xs text-muted-foreground">已设置标签 / 分类</Label>
-            <TargetTagBadges record={{ tags: existingTags }} max={existingTags.length} />
-          </div>
-        )}
-
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground">客户标签（多选）</Label>
           <Popover>
@@ -213,11 +200,12 @@ export function TargetTagDialog({
               添加
             </Button>
           </div>
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 pt-1">
-              {tags.map((t) => (
+          {displayTags.length > 0 && (
+            <div className="flex flex-wrap gap-1 pt-1" aria-label="标签 / 分类">
+              {displayTags.map((t) => (
                 <Badge key={t} variant="outline" className={cn(targetTagBadgeClass, "gap-1")}>
                   {t}
+                  {tags.includes(t) && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -229,6 +217,7 @@ export function TargetTagDialog({
                   >
                     <X className="h-3 w-3" />
                   </Button>
+                  )}
                 </Badge>
               ))}
             </div>

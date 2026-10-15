@@ -186,23 +186,6 @@ export function IntentScorePanel({ thread }: { thread: Thread }) {
         </div>
       </div>
 
-      {/* 标签 */}
-      <div className="px-4 py-3 border-t">
-        <div className="text-[11px] font-medium text-muted-foreground mb-2">
-          标签
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {result.tags.map((t) => (
-            <Badge
-              key={t}
-              variant="outline"
-              className="text-[10px] bg-sky-50 text-sky-700 border-sky-200"
-            >
-              {t}
-            </Badge>
-          ))}
-        </div>
-      </div>
 
       {/* 下一步行动 */}
       <div className="mx-4 my-3 rounded-md border border-amber-200 bg-amber-50/60 p-3">

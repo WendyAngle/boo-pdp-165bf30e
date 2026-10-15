@@ -935,9 +935,14 @@ function ThreadDetail({
     original: HTMLTextAreaElement | null;
     translated: HTMLTextAreaElement | null;
   }>({ original: null, translated: null });
-  const attachBoxNode = useCallback(
-    (side: "original" | "translated") => (node: HTMLTextAreaElement | null) =>
-      setBoxNodes((prev) => (prev[side] === node ? prev : { ...prev, [side]: node })),
+  const attachOriginal = useCallback(
+    (node: HTMLTextAreaElement | null) =>
+      setBoxNodes((prev) => (prev.original === node ? prev : { ...prev, original: node })),
+    [],
+  );
+  const attachTranslated = useCallback(
+    (node: HTMLTextAreaElement | null) =>
+      setBoxNodes((prev) => (prev.translated === node ? prev : { ...prev, translated: node })),
     [],
   );
   /** 两侧输入框共享的高度（px）：手动拉伸一侧时同步到另一侧 */
@@ -1593,7 +1598,7 @@ function ThreadDetail({
                 <span className="font-medium text-foreground">原文</span>
               </div>
               <Textarea
-                ref={attachBoxNode("original")}
+                ref={attachOriginal}
                 onPointerDown={() => {
                   draggedSide.current = "original";
                 }}
@@ -1649,7 +1654,7 @@ function ThreadDetail({
               </div>
 
               <Textarea
-                ref={attachBoxNode("translated")}
+                ref={attachTranslated}
                 onPointerDown={() => {
                   draggedSide.current = "translated";
                 }}

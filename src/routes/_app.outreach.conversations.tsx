@@ -53,6 +53,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -899,6 +900,8 @@ function ThreadDetail({
   onToggleScorePanel?: () => void;
 }) {
   const [reply, setReply] = useState("");
+  /** 勾选后不翻译，直接发送原文 */
+  const [skipTranslation, setSkipTranslation] = useState(false);
   const tagMapDetail = useTargetTagsMap();
 
 
@@ -1022,7 +1025,9 @@ function ThreadDetail({
 
   /* ---------- 中文原文 → 目标语言译文 ---------- */
   /** 目标语言为中文时无需翻译 */
-  const needsTranslation = targetLang.code !== "zh";
+  const langNeedsTranslation = targetLang.code !== "zh";
+  /** 实际是否走翻译流程（用户可勾选直接发送原文） */
+  const needsTranslation = langNeedsTranslation && !skipTranslation;
   /** 译文是否已过期（中文原文在翻译后被改动） */
   const translationStale =
     needsTranslation && !!translated && reply.trim() !== translatedFrom;
@@ -1032,7 +1037,7 @@ function ThreadDetail({
   async function doTranslate() {
     const text = reply.trim();
     if (!text) {
-      toast.error("请先输入中文原文");
+      toast.error("请先输入原文");
       return;
     }
     setTranslating(true);
@@ -1539,13 +1544,12 @@ function ThreadDetail({
             AI 生成回复（中文）
           </Button>
         </div>
-        {needsTranslation ? (
+        {langNeedsTranslation ? (
           <div className="grid gap-2 md:grid-cols-2">
             {/* 左：中文原文 */}
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                <span className="font-medium text-foreground">中文原文</span>
-                <span>（内部撰写，不发送）</span>
+                <span className="font-medium text-foreground">原文</span>
               </div>
               <Textarea
                 value={reply}
@@ -1557,7 +1561,7 @@ function ThreadDetail({
               />
             </div>
             {/* 右：目标语言译文（实际发送） */}
-            <div className="space-y-1">
+            <div className={cn("space-y-1", skipTranslation && "opacity-50")}>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Languages className="h-3.5 w-3.5 shrink-0" />
                 <Select value={replyLang} onValueChange={setReplyLang}>
@@ -1581,13 +1585,13 @@ function ThreadDetail({
                     </SelectGroup>
                   </SelectContent>
                 </Select>
-                <span>译文（实际发送内容）</span>
+                <span>译文</span>
                 <Button
                   size="sm"
                   variant="outline"
                   className="ml-auto h-6 gap-1 px-2 text-[11px] bg-background"
                   onClick={doTranslate}
-                  disabled={translating || !reply.trim() || winInfo?.closed}
+                  disabled={translating || !reply.trim() || winInfo?.closed || skipTranslation}
                 >
                   {translating ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -1601,10 +1605,14 @@ function ThreadDetail({
               <Textarea
                 value={translated}
                 onChange={(e) => setTranslated(e.target.value)}
-                placeholder={`点击「翻译为${targetLang.zh}」生成译文，可手动微调`}
+                placeholder={
+                  skipTranslation
+                    ? "已选择直接发送原文，无需译文"
+                    : `点击「翻译为${targetLang.zh}」生成译文，可手动微调`
+                }
                 rows={6}
                 className="resize-y bg-background min-h-[60px]"
-                disabled={winInfo?.closed}
+                disabled={winInfo?.closed || skipTranslation}
               />
             </div>
           </div>
@@ -1646,6 +1654,22 @@ function ThreadDetail({
           </div>
         )}
 
+        {/* 不翻译直接发送原文 */}
+        {!winInfo?.closed && langNeedsTranslation && (
+          <div className="mt-2 flex items-center gap-2">
+            <Checkbox
+              id={`skip-translation-${thread.id}`}
+              checked={skipTranslation}
+              onCheckedChange={(v) => setSkipTranslation(v === true)}
+            />
+            <Label
+              htmlFor={`skip-translation-${thread.id}`}
+              className="text-xs font-normal cursor-pointer"
+            >
+              不需要翻译，直接发送原文
+            </Label>
+          </div>
+        )}
         {/* 译文状态提示 */}
         {!winInfo?.closed && needsTranslation && (
           <div
@@ -1660,11 +1684,11 @@ function ThreadDetail({
           >
             <Languages className="h-3.5 w-3.5 shrink-0" />
             {translationStale ? (
-              <span>中文原文已修改，右侧译文对应的是旧内容，请点击「重新翻译」后再发送。</span>
+              <span>原文已修改，右侧译文对应的是旧内容，请点击「重新翻译」后再发送。</span>
             ) : translated ? (
 
               <span>
-                已生成「{targetLang.zh}」译文，发送时以右侧译文为准，中文原文仅内部留存。
+                已生成「{targetLang.zh}」译文，发送时以右侧译文为准，原文仅内部留存。
               </span>
             ) : (
               <span>
@@ -1675,7 +1699,9 @@ function ThreadDetail({
         )}
         {!winInfo?.closed && !needsTranslation && (
           <div className="mt-2 text-xs text-muted-foreground">
-            对方语言为中文，将直接发送原文，无需翻译。
+            {langNeedsTranslation
+              ? "将直接发送左侧原文，不进行翻译。"
+              : "对方语言为中文，将直接发送原文，无需翻译。"}
           </div>
         )}
         <div className="mt-2 flex items-center gap-2">
@@ -1694,7 +1720,7 @@ function ThreadDetail({
             ) : (
               <Send className="h-4 w-4" />
             )}
-            {needsTranslation ? `发送${targetLang.zh}译文` : "发送回复"}
+            {needsTranslation ? `发送${targetLang.zh}译文` : langNeedsTranslation ? "发送原文" : "发送回复"}
           </Button>
           <Button
             variant="outline"

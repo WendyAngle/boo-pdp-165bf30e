@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { z } from "zod";
 import {
@@ -929,6 +929,52 @@ function ThreadDetail({
   const [translatedFrom, setTranslatedFrom] = useState("");
   const [translating, setTranslating] = useState(false);
   const [sending, setSending] = useState(false);
+  /* ---------- 原文 / 译文输入框：同行等高、上下边框对齐 ---------- */
+  /** 两个输入框节点（回调 ref 跟踪，切换标签页后仍能重新挂载监听） */
+  const [boxNodes, setBoxNodes] = useState<{
+    original: HTMLTextAreaElement | null;
+    translated: HTMLTextAreaElement | null;
+  }>({ original: null, translated: null });
+  const attachOriginal = useCallback(
+    (node: HTMLTextAreaElement | null) =>
+      setBoxNodes((prev) => (prev.original === node ? prev : { ...prev, original: node })),
+    [],
+  );
+  const attachTranslated = useCallback(
+    (node: HTMLTextAreaElement | null) =>
+      setBoxNodes((prev) => (prev.translated === node ? prev : { ...prev, translated: node })),
+    [],
+  );
+  /** 两侧输入框共享的高度（px）：手动拉伸一侧时同步到另一侧 */
+  const [boxHeight, setBoxHeight] = useState<number | null>(null);
+  /** 当前正在操作的一侧，保证按被拉伸的那一侧高度同步 */
+  const draggedSide = useRef<"original" | "translated" | null>(null);
+  const appliedBoxHeight = useRef<number | null>(null);
+
+  // 切换会话：恢复初始高度
+  useEffect(() => {
+    setBoxHeight(null);
+    appliedBoxHeight.current = null;
+    draggedSide.current = null;
+  }, [thread.id]);
+
+  // 两个输入框高度联动：任意一侧被拉伸，另一侧跟随，上下边框始终对齐
+  useEffect(() => {
+    const a = boxNodes.original;
+    const b = boxNodes.translated;
+    if (!a || !b) return;
+    const ro = new ResizeObserver(() => {
+      const src = draggedSide.current === "translated" ? b : a;
+      const h = Math.round(src.offsetHeight);
+      if (appliedBoxHeight.current !== null && Math.abs(h - appliedBoxHeight.current) <= 1) return;
+      appliedBoxHeight.current = h;
+      setBoxHeight(h);
+    });
+    ro.observe(a);
+    ro.observe(b);
+    return () => ro.disconnect();
+  }, [boxNodes]);
+
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const draftKey = `boo:inbox:draft:${thread.id}`;
   // 切换会话：从 localStorage 恢复该会话的草稿
@@ -1545,24 +1591,29 @@ function ThreadDetail({
           </Button>
         </div>
         {langNeedsTranslation ? (
-          <div className="grid gap-2 md:grid-cols-2">
+          <div className="grid items-start gap-2 md:grid-cols-2">
             {/* 左：中文原文 */}
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex flex-col gap-1">
+              <div className="flex h-6 items-center gap-2 text-[11px] text-muted-foreground">
                 <span className="font-medium text-foreground">原文</span>
               </div>
               <Textarea
+                ref={attachOriginal}
+                onPointerDown={() => {
+                  draggedSide.current = "original";
+                }}
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 placeholder='用中文写点什么，或点击"AI 生成回复（中文）"…'
                 rows={6}
+                style={boxHeight ? { height: boxHeight } : undefined}
                 className="resize-y bg-background min-h-[60px]"
                 disabled={winInfo?.closed}
               />
             </div>
             {/* 右：目标语言译文（实际发送） */}
-            <div className={cn("space-y-1", skipTranslation && "opacity-50")}>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div className={cn("flex flex-col gap-1", skipTranslation && "opacity-50")}>
+              <div className="flex h-6 items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Languages className="h-3.5 w-3.5 shrink-0" />
                 <Select value={replyLang} onValueChange={setReplyLang}>
                   <SelectTrigger className="h-6 w-[168px] text-[11px] bg-background">
@@ -1603,6 +1654,10 @@ function ThreadDetail({
               </div>
 
               <Textarea
+                ref={attachTranslated}
+                onPointerDown={() => {
+                  draggedSide.current = "translated";
+                }}
                 value={translated}
                 onChange={(e) => setTranslated(e.target.value)}
                 placeholder={
@@ -1611,14 +1666,15 @@ function ThreadDetail({
                     : `点击「翻译为${targetLang.zh}」生成译文，可手动微调`
                 }
                 rows={6}
+                style={boxHeight ? { height: boxHeight } : undefined}
                 className="resize-y bg-background min-h-[60px]"
                 disabled={winInfo?.closed || skipTranslation}
               />
             </div>
           </div>
         ) : (
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <div className="flex flex-col gap-1">
+            <div className="flex h-6 items-center gap-1.5 text-[11px] text-muted-foreground">
               <Languages className="h-3.5 w-3.5 shrink-0" />
               <Select value={replyLang} onValueChange={setReplyLang}>
                 <SelectTrigger className="h-6 w-[168px] text-[11px] bg-background">
@@ -1647,7 +1703,7 @@ function ThreadDetail({
               value={reply}
               onChange={(e) => setReply(e.target.value)}
               placeholder='写点什么，或点击"AI 生成回复（中文）"由 AI 起草…'
-              rows={5}
+              rows={6}
               className="resize-y bg-background min-h-[60px]"
               disabled={winInfo?.closed}
             />

@@ -1552,7 +1552,7 @@ function ThreadDetail({
                 onChange={(e) => setReply(e.target.value)}
                 placeholder='用中文写点什么，或点击"AI 生成回复（中文）"…'
                 rows={6}
-                className="resize-none bg-background"
+                className="resize-y bg-background min-h-[60px]"
                 disabled={winInfo?.closed}
               />
             </div>
@@ -1603,7 +1603,7 @@ function ThreadDetail({
                 onChange={(e) => setTranslated(e.target.value)}
                 placeholder={`点击「翻译为${targetLang.zh}」生成译文，可手动微调`}
                 rows={6}
-                className="resize-none bg-background"
+                className="resize-y bg-background min-h-[60px]"
                 disabled={winInfo?.closed}
               />
             </div>
@@ -1640,7 +1640,7 @@ function ThreadDetail({
               onChange={(e) => setReply(e.target.value)}
               placeholder='写点什么，或点击"AI 生成回复（中文）"由 AI 起草…'
               rows={5}
-              className="resize-none bg-background"
+              className="resize-y bg-background min-h-[60px]"
               disabled={winInfo?.closed}
             />
           </div>
@@ -1849,7 +1849,7 @@ function ProfileEditor({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="记录客户偏好、报价进展等…"
-            className="resize-none text-sm"
+            className="resize-y text-sm min-h-[60px]"
           />
           <Button
             size="sm"
